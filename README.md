@@ -63,9 +63,50 @@ Open the vault in your editor (Obsidian, VS Code). There is no separate UI.
   (see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
 
+## Use as an MCP server
+
+Instead of (or alongside) the `sync` CLI, you can expose the vault to any AI agent
+as MCP tools. The agent does the pulling and analysis with its own MCP servers,
+then calls these tools to read and safely persist:
+
+- `list_entities` — people/projects/teams with one-line status
+- `read_entity` — full file for one entity
+- `list_followups` — every open follow-up + recommended action across the vault
+- `search` — substring search across the vault
+- `upsert_analysis` — the safe writer: creates the file, dedupes the log, and
+  rewrites ONLY the managed analysis section (hand-notes are never touched)
+
+`upsert_analysis` reuses the same deterministic write path as the CLI, so the LLM
+still never edits files directly — re-runs stay idempotent and notes stay safe.
+
+Setup:
+
+    cd mcp && npm install
+
+Register it. Claude Code (`.mcp.json` or `claude mcp add`):
+
+    {
+      "mcpServers": {
+        "orgmind": {
+          "command": "node",
+          "args": ["/ABS/PATH/orgmind/mcp/server.mjs"],
+          "env": { "ORGMIND_VAULT": "/ABS/PATH/orgmind" }
+        }
+      }
+    }
+
+Codex (`~/.codex/config.toml`):
+
+    [mcp_servers.orgmind]
+    command = "node"
+    args = ["/ABS/PATH/orgmind/mcp/server.mjs"]
+    env = { ORGMIND_VAULT = "/ABS/PATH/orgmind" }
+
+`ORGMIND_VAULT` defaults to the repo root if unset.
+
 ## Development
 
-    npm test        # node --test, 46 tests, zero runtime dependencies
+    npm test        # node --test, 64 tests (core is zero-dep; mcp/ has its own deps)
 
 ## Data safety
 
