@@ -1,4 +1,16 @@
 node_modules/
+.DS_Store
+
+# Vault data — contains internal work info. Never commit/push.
+# Keep the folder structure via .gitkeep, ignore the entity files themselves.
 transcripts/*
 !transcripts/.gitkeep
-.DS_Store
+people/*
+!people/.gitkeep
+projects/*
+!projects/.gitkeep
+teams/*
+!teams/.gitkeep
+
+# SDD scratch (briefs, reports, review diffs, progress ledger)
+.superpowers/
