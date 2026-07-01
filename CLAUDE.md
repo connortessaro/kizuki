@@ -63,6 +63,25 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   mode, NOT `--json`: plain mode prints only the final agent message, which holds
   the ```json block).
 
+## MCP server (`mcp/`)
+
+`mcp/` is a separate subpackage that exposes the vault to any agent as MCP tools
+(`list_entities`, `read_entity`, `list_followups`, `search`, `upsert_analysis`).
+It is the conversational/interactive alternative to the `sync` CLI.
+
+- **`mcp/tools.mjs`** — handler logic (pure-ish, `vaultDir`-parameterized, unit
+  tested). `upsert_analysis` reuses `lib/apply.mjs` + `lib/vault.mjs`, so the
+  managed-section splice / log dedup / path-safety guarantees hold identically to
+  the CLI. The LLM never edits files directly here either.
+- **`mcp/server.mjs`** — thin `@modelcontextprotocol/sdk` wiring (McpServer +
+  StdioServerTransport + zod schemas). Vault dir from `ORGMIND_VAULT`, defaults to
+  repo root. Read tools are annotated read-only; `upsert_analysis` is idempotent,
+  non-destructive.
+- **Dependency isolation:** `mcp/` has its own `package.json` (SDK + zod). The
+  root/core `lib/` stays zero-dep. Do not pull the SDK into `lib/`.
+- Path safety + type validation live in `mcp/tools.mjs` (`assertName`/`assertType`)
+  before anything hits the filesystem — same guard as `parsePayload`.
+
 ## Conventions (match these)
 
 - **ESM `.mjs`, Node built-ins only. Zero runtime dependencies.** Do not add npm
