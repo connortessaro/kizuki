@@ -1,8 +1,8 @@
 # OrgMind
 
 Personal org-intelligence tool. Pulls your work activity (TalkTrack meeting
-transcripts + Slack / GitHub / Atlassian / Outlook via `codex exec` MCP servers)
-into a git-tracked markdown vault sorted by person, project, and team, then
+transcripts + Slack / GitHub / Atlassian / Outlook via your AI agent's MCP
+servers) into a git-tracked markdown vault sorted by person, project, and team, then
 rewrites a managed analysis section in each file: status, what each person needs,
 what they don't know, follow-ups, and copy-paste-ready recommended actions.
 
@@ -21,12 +21,29 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 
 ## How it works
 
-    parseArgs -> buildPrompt -> codex exec -> parsePayload -> applyPayload -> vault
+    parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> vault
 
-`codex exec` does the reading, fetching, and analysis, and returns a single
+Your AI agent does the reading, fetching, and analysis, and returns a single
 fenced JSON payload. Deterministic JS then writes the files. The LLM never edits
 files directly — so re-runs are idempotent and your hand-written notes (anything
 outside the `<!-- ORGMIND:ANALYSIS:START/END -->` markers) are never clobbered.
+
+## Choosing your AI agent
+
+OrgMind spawns whatever agent CLI you configure. The agent must take a prompt,
+run non-interactively with your MCP servers/tools, and print its final message
+(containing the fenced ```json block) to stdout.
+
+Set the command in `orgmind.config.json` in the repo root:
+
+    { "agentCmd": ["claude", "-p"] }      # Claude Code
+    { "agentCmd": ["codex", "exec"] }     # OpenAI Codex (this is the default)
+    { "agentCmd": ["gemini", "-p"] }      # Gemini CLI
+
+The prompt is appended as the final argument. If any array element is the token
+`{prompt}`, it is substituted in place instead (e.g. `["myagent", "--input", "{prompt}"]`).
+With no config file, OrgMind defaults to `codex exec`. This file is gitignored
+(it's machine-specific).
 
 ## Vault layout
 
@@ -40,8 +57,10 @@ Open the vault in your editor (Obsidian, VS Code). There is no separate UI.
 ## Requirements
 
 - Node >= 20
-- OpenAI Codex CLI (`codex`) with MCP servers configured in `~/.codex/config.toml`
-  (slack, github, atlassian/rovo, outlook)
+- An AI agent CLI that runs a prompt non-interactively and prints its final
+  message to stdout, with MCP servers configured for slack / github / atlassian /
+  outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `orgmind.config.json`
+  (see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
 
 ## Development

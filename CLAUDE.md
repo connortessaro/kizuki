@@ -6,7 +6,7 @@ Guidance for Claude Code working in this repository.
 
 OrgMind — a personal, single-operator org-intelligence CLI. It pulls the user's
 work activity (TalkTrack meeting transcripts + Slack/GitHub/Atlassian/Outlook via
-`codex exec` MCP servers) into a git-tracked markdown vault sorted by
+the configured AI agent's MCP servers) into a git-tracked markdown vault sorted by
 person/project/team, and rewrites a managed analysis section per file (status,
 needs, what they don't know, follow-ups, recommended actions with drafts).
 
@@ -28,17 +28,27 @@ node --test lib/vault.test.mjs        # one test file
 
 ## Architecture
 
-Data flow: `parseArgs → buildPrompt → runCodex → parsePayload → applyPayload → vault helpers`.
+Data flow: `parseArgs → buildPrompt → runAgent → parsePayload → applyPayload → vault helpers`.
 
-The central design decision: **`codex exec` returns one fenced JSON payload;
+The central design decision: **the AI agent returns one fenced JSON payload;
 deterministic JS writes the files.** The LLM never edits files directly. This is
 what makes re-runs idempotent and guarantees hand-written notes are never
 clobbered. Preserve this boundary — do not move file-writing into the prompt.
 
+The agent is pluggable: `runAgent(prompt) -> Promise<string>` is injected into
+`runSync`, so tests never spawn a process. The `sync` executable builds the real
+`runAgent` from `orgmind.config.json` (see `lib/agent.mjs`). The prompt is
+agent-agnostic — it names the sources but not any one agent's MCP config path.
+
 - **`lib/args.mjs`** — `parseArgs(argv)` → `{scope, sources, dryRun}`. `VALID_SOURCES`.
 - **`lib/prompt.mjs`** — `buildPrompt({scope,sources,vaultDir})` and `PAYLOAD_SHAPE`
   (the JSON contract embedded in the prompt). This contract is the source of truth
-  the parser and renderer must agree with.
+  the parser and renderer must agree with. Kept agent-agnostic (no codex-specific
+  config path).
+- **`lib/agent.mjs`** — `resolveAgent(vaultDir)` reads `orgmind.config.json`
+  (`agentCmd` array; defaults to `["codex","exec"]`), `buildAgentArgv(cmd,prompt)`
+  (substitutes a `{prompt}` token or appends the prompt), `makeRunAgent(cmd)`
+  returns the real spawner. Invalid config throws — no silent fallback.
 - **`lib/payload.mjs`** — `parsePayload(stdout)` / `extractJsonBlock`. Validates the
   payload; rejects path-unsafe entity names (no `/`, `\`, `..`).
 - **`lib/vault.mjs`** — pure string/path helpers. `spliceManagedSection` (only
@@ -47,9 +57,9 @@ clobbered. Preserve this boundary — do not move file-writing into the prompt.
   for deterministic tests).
 - **`lib/apply.mjs`** — `applyPayload(vaultDir, payload, {dryRun, now})`. Writes
   entity files, archives consumed transcripts to `transcripts/processed/`.
-- **`lib/run.mjs`** — `runSync({argv, vaultDir, runCodex})`. `runCodex` is injected
-  so tests never spawn `codex` or hit the network.
-- **`sync`** — executable. Real `runCodex` spawns `codex exec <prompt>` (plain
+- **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent})`. `runAgent` is injected
+  so tests never spawn a process or hit the network.
+- **`sync`** — executable. Resolves the agent from config and spawns it (plain
   mode, NOT `--json`: plain mode prints only the final agent message, which holds
   the ```json block).
 
