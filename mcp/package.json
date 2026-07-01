@@ -1,0 +1,12 @@
+{
+  "name": "orgmind-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing the OrgMind vault as tools (read + safe managed-section writes).",
+  "bin": { "orgmind-mcp": "./server.mjs" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  }
+}
