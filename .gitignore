@@ -1,0 +1,4 @@
+node_modules/
+transcripts/*
+!transcripts/.gitkeep
+.DS_Store
