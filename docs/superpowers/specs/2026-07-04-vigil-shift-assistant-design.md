@@ -34,15 +34,19 @@ the laptop's codex install is broken — pluggable agent config proved itself):
 - Observed weakness: run-to-run LLM variance (one dry-run invented a
   `projects/vigil` entity from repo context; entity sets differ slightly
   between runs).
+- Observed weakness #2 (re-run test): same facts re-emitted with source
+  relabeled `slack` instead of `transcript` — invented attribution defeats
+  exact-line dedup, leaving semantic duplicates in the log.
 
 Remaining v0 work:
 
 1. **Agent timeout** — `makeRunAgent` gets a configurable timeout
    (`timeoutMs` in `vigil.config.json`, default 300000); on expiry, kill the
    child and reject loudly.
-2. **Evidence guard in prompt** — payload rule: only emit entities directly
-   evidenced in transcripts or the named sources; never from the vault repo
-   itself.
+2. **Evidence guard in prompt** — payload rules: only emit entities directly
+   evidenced in transcripts or the named sources, never from the vault repo
+   itself; `source` must be the channel an item actually came from (transcript
+   files are always `"transcript"` — never relabel).
 3. **Real-data gate at work:** one week of real transcripts through `./sync`.
    Gate to v2+ (alerts, dashboard): analysis surfaces ≥1 true thing per week
    Connor would have missed.
