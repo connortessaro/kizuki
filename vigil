@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+// vigil
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { appendFile, mkdir } from "node:fs/promises";
+import { runSync } from "./lib/run.mjs";
+import { resolveAgent, makeRunAgent } from "./lib/agent.mjs";
+import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySummary } from "./lib/shift.mjs";
+import { installJob, removeJob } from "./lib/launchd.mjs";
+
+const vaultDir = dirname(fileURLToPath(import.meta.url));
+const vigilPath = join(vaultDir, "vigil");
+const [command, ...rest] = process.argv.slice(2);
+
+const USAGE = `usage: vigil <command>
+  vigil sync [person] [--source a,b] [--dry-run]  pull activity into the vault
+  vigil sync --loop                               background mode (no-op unless a shift is on)
+  vigil start                                     begin shift: sync + brief + 30-min background sync
+  vigil stop                                      end shift: final sync + day summary + remove background sync`;
+
+async function doSync(argv) {
+  const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+  const r = await runSync({ argv, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
+  const who = r.scope.kind === "person" ? r.scope.name : "all";
+  console.log(`Vigil sync — scope: ${who}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
+  if (!r.changes.length) console.log("  no changes");
+  for (const c of r.changes) console.log(`  updated ${c.path}`);
+}
+
+try {
+  if (command === "sync" && rest.includes("--loop")) {
+    if (!(await readShift(vaultDir))) process.exit(0);
+    try {
+      await doSync(rest.filter((a) => a !== "--loop"));
+    } catch (e) {
+      await mkdir(join(vaultDir, "state"), { recursive: true });
+      await appendFile(join(vaultDir, "state", "sync.log"), `${new Date().toISOString()} sync failed: ${e.message}\n`);
+      process.exit(1);
+    }
+  } else if (command === "sync") {
+    await doSync(rest);
+  } else if (command === "start") {
+    if (await readShift(vaultDir)) throw new Error("shift already started — run `vigil stop` first");
+    await startShift(vaultDir);
+    await doSync([]);
+    await installJob({ vigilPath, vaultDir });
+    console.log("\n" + (await renderBrief(vaultDir)));
+  } else if (command === "stop") {
+    if (!(await readShift(vaultDir))) throw new Error("no shift in progress");
+    await doSync([]);
+    const summaryPath = await writeDaySummary(vaultDir);
+    try {
+      await removeJob({});
+    } catch (e) {
+      console.error(`warning: could not remove launchd job: ${e.message}`);
+    }
+    await endShift(vaultDir);
+    await recordStop(vaultDir);
+    console.log(`shift ended — day summary: ${summaryPath}`);
+  } else {
+    console.error(USAGE);
+    process.exit(1);
+  }
+} catch (e) {
+  console.error(`vigil ${command ?? ""} failed: ${e.message}`);
+  process.exit(1);
+}
