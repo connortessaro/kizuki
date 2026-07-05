@@ -35,6 +35,12 @@ Milestone ladder: works once (v0, done 2026-07-04) → works daily at work (v1)
 
 ## Unranked ideas (park anything here)
 
+- Vercel eve as hosted runtime for v4 (durable sessions, Slack channels, OAuth
+  connections map onto shift-assistant 1:1) — blocked on data-safety story;
+  local-first stays for the personal/work version.
+- Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/vigil`)
+  — works across Claude Code/Codex/Cursor etc.; cheap once v1 exists.
+
 - LLM-written day summary (deterministic aggregate is v1; prose summary later).
 - Slack DM mirror for alerts (work IT permitting).
 - Vault write-lock so sync loop + MCP upsert can run concurrently.
