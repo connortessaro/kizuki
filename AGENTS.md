@@ -32,8 +32,10 @@ own. Humans approve every outward action. Do not add autonomous action-taking.
 ```bash
 npm test                       # full suite
 node --test lib/vault.test.mjs # one file
-./sync                         # run the sync CLI (spawns configured agent)
-./sync --dry-run               # compute changes, write nothing
+./vigil sync                   # run the sync CLI (spawns configured agent)
+./vigil sync --dry-run         # compute changes, write nothing
+./vigil start                  # begin shift: sync + brief + 30-min background sync
+./vigil stop                   # end shift: final sync + day summary + remove background sync
 ```
 
 ## Parallel work

@@ -11,11 +11,13 @@ actions for you. You decide.
 
 ## Usage
 
-    ./sync                          # all people/projects/teams, all sources
-    ./sync bob-smith                # only this person, all sources
-    ./sync --source slack           # all entities, only Slack
-    ./sync bob-smith --source slack,github
-    ./sync --dry-run                # show what would change, write nothing
+    ./vigil sync                          # all people/projects/teams, all sources
+    ./vigil sync bob-smith                # only this person, all sources
+    ./vigil sync --source slack           # all entities, only Slack
+    ./vigil sync bob-smith --source slack,github
+    ./vigil sync --dry-run                # show what would change, write nothing
+    ./vigil start                         # begin shift: sync + brief + 30-min background sync
+    ./vigil stop                          # end shift: final sync + day summary + remove background sync
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 
@@ -65,7 +67,7 @@ Open the vault in your editor (Obsidian, VS Code). There is no separate UI.
 
 ## Use as an MCP server
 
-Instead of (or alongside) the `sync` CLI, you can expose the vault to any AI agent
+Instead of (or alongside) the `vigil` CLI, you can expose the vault to any AI agent
 as MCP tools. The agent does the pulling and analysis with its own MCP servers,
 then calls these tools to read and safely persist:
 

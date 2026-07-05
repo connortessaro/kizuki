@@ -21,9 +21,11 @@ Design + plan: `docs/2026-06-30-vigil-design.md`,
 ```bash
 npm test                              # node --test — full suite (46 tests)
 node --test lib/vault.test.mjs        # one test file
-./sync                                # run the CLI (calls `codex exec`)
-./sync <person> --source slack        # scoped run
-./sync --dry-run                      # compute changes, write nothing
+./vigil sync                          # run the CLI (calls `codex exec`)
+./vigil sync <person> --source slack  # scoped run
+./vigil sync --dry-run                # compute changes, write nothing
+./vigil start                         # begin shift: sync + brief + 30-min background sync
+./vigil stop                          # end shift: final sync + day summary + remove background sync
 ```
 
 ## Architecture
@@ -36,7 +38,7 @@ what makes re-runs idempotent and guarantees hand-written notes are never
 clobbered. Preserve this boundary — do not move file-writing into the prompt.
 
 The agent is pluggable: `runAgent(prompt) -> Promise<string>` is injected into
-`runSync`, so tests never spawn a process. The `sync` executable builds the real
+`runSync`, so tests never spawn a process. The `vigil` executable builds the real
 `runAgent` from `vigil.config.json` (see `lib/agent.mjs`). The prompt is
 agent-agnostic — it names the sources but not any one agent's MCP config path.
 
@@ -59,15 +61,17 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   entity files, archives consumed transcripts to `transcripts/processed/`.
 - **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent})`. `runAgent` is injected
   so tests never spawn a process or hit the network.
-- **`sync`** — executable. Resolves the agent from config and spawns it (plain
-  mode, NOT `--json`: plain mode prints only the final agent message, which holds
-  the ```json block).
+- **`vigil`** — executable. Dispatches subcommands (`sync`/`sync --loop`/`start`/`stop`).
+  Resolves the agent from config and spawns it (plain mode, NOT `--json`: plain
+  mode prints only the final agent message, which holds the ```json block).
+  `start`/`stop` wire in shift state, brief/day-summary rendering (`lib/shift.mjs`),
+  and the background launchd job (`lib/launchd.mjs`).
 
 ## MCP server (`mcp/`)
 
 `mcp/` is a separate subpackage that exposes the vault to any agent as MCP tools
 (`list_entities`, `read_entity`, `list_followups`, `search`, `upsert_analysis`).
-It is the conversational/interactive alternative to the `sync` CLI.
+It is the conversational/interactive alternative to the `vigil` CLI.
 
 - **`mcp/tools.mjs`** — handler logic (pure-ish, `vaultDir`-parameterized, unit
   tested). `upsert_analysis` reuses `lib/apply.mjs` + `lib/vault.mjs`, so the
@@ -115,7 +119,7 @@ force-add files under those folders; never push work data to a remote.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`) exists only in
   the main checkout — it is gitignored, so worktrees see empty folders. Code
   work in worktrees can never touch real work data.
-- **One vault writer at a time.** There is no write lock yet: do not run `./sync`
+- **One vault writer at a time.** There is no write lock yet: do not run `./vigil sync`
   and MCP `upsert_analysis` against the main checkout concurrently.
 - `AGENTS.md` mirrors this file for non-Claude agents (Codex at work). Keep the
   two in sync when either changes.
