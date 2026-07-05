@@ -13,7 +13,7 @@ const runAgent = makeRunAgent(cmd);
 runSync({ argv: process.argv.slice(2), vaultDir, runAgent })
   .then((r) => {
     const who = r.scope.kind === "person" ? r.scope.name : "all";
-    console.log(`OrgMind sync — scope: ${who}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
+    console.log(`Vigil sync — scope: ${who}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
     if (!r.changes.length) console.log("  no changes");
     for (const c of r.changes) console.log(`  updated ${c.path}`);
   })

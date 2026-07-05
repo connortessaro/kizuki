@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { upsertAnalysis, readEntity, listEntities, listFollowups, search } from "./tools.mjs";
 
 async function makeVault() {
-  const dir = await mkdtemp(join(tmpdir(), "orgmind-mcp-"));
+  const dir = await mkdtemp(join(tmpdir(), "vigil-mcp-"));
   for (const d of ["people", "projects", "teams", "transcripts"]) await mkdir(join(dir, d), { recursive: true });
   return dir;
 }
@@ -40,7 +40,7 @@ test("upsertAnalysis preserves hand-notes outside the markers", async () => {
   const path = join(v, "people", "bob.md");
   let c = await readFile(path, "utf8");
   const { writeFile } = await import("node:fs/promises");
-  await writeFile(path, c.replace("<!-- ORGMIND:ANALYSIS:START -->", "> HANDNOTE keep me\n<!-- ORGMIND:ANALYSIS:START -->"));
+  await writeFile(path, c.replace("<!-- VIGIL:ANALYSIS:START -->", "> HANDNOTE keep me\n<!-- VIGIL:ANALYSIS:START -->"));
   await upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "two" } });
   const after = await readFile(path, "utf8");
   assert.match(after, /HANDNOTE keep me/);

@@ -1,4 +1,4 @@
-# OrgMind — design (v1, weekend build)
+# Vigil — design (v1, weekend build)
 
 ## Problem
 Connor (solo SWE) doesn't struggle with coding — he struggles tracking what different people/teams want, what they know and don't know, and what still needs to happen, across many channels. He wants a personal tool that ingests his work communication, organizes it by person/project/team, and tells him his next best move: who to follow up with, what to say, whether to write a Confluence doc or send a Slack message — with a draft ready to use.
