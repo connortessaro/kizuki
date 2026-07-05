@@ -1,4 +1,4 @@
-# OrgMind
+# Vigil
 
 Personal org-intelligence tool. Pulls your work activity (TalkTrack meeting
 transcripts + Slack / GitHub / Atlassian / Outlook via your AI agent's MCP
@@ -26,15 +26,15 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 Your AI agent does the reading, fetching, and analysis, and returns a single
 fenced JSON payload. Deterministic JS then writes the files. The LLM never edits
 files directly — so re-runs are idempotent and your hand-written notes (anything
-outside the `<!-- ORGMIND:ANALYSIS:START/END -->` markers) are never clobbered.
+outside the `<!-- VIGIL:ANALYSIS:START/END -->` markers) are never clobbered.
 
 ## Choosing your AI agent
 
-OrgMind spawns whatever agent CLI you configure. The agent must take a prompt,
+Vigil spawns whatever agent CLI you configure. The agent must take a prompt,
 run non-interactively with your MCP servers/tools, and print its final message
 (containing the fenced ```json block) to stdout.
 
-Set the command in `orgmind.config.json` in the repo root:
+Set the command in `vigil.config.json` in the repo root:
 
     { "agentCmd": ["claude", "-p"] }      # Claude Code
     { "agentCmd": ["codex", "exec"] }     # OpenAI Codex (this is the default)
@@ -42,7 +42,7 @@ Set the command in `orgmind.config.json` in the repo root:
 
 The prompt is appended as the final argument. If any array element is the token
 `{prompt}`, it is substituted in place instead (e.g. `["myagent", "--input", "{prompt}"]`).
-With no config file, OrgMind defaults to `codex exec`. This file is gitignored
+With no config file, Vigil defaults to `codex exec`. This file is gitignored
 (it's machine-specific).
 
 ## Vault layout
@@ -59,7 +59,7 @@ Open the vault in your editor (Obsidian, VS Code). There is no separate UI.
 - Node >= 20
 - An AI agent CLI that runs a prompt non-interactively and prints its final
   message to stdout, with MCP servers configured for slack / github / atlassian /
-  outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `orgmind.config.json`
+  outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `vigil.config.json`
   (see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
 
@@ -87,22 +87,22 @@ Register it. Claude Code (`.mcp.json` or `claude mcp add`):
 
     {
       "mcpServers": {
-        "orgmind": {
+        "vigil": {
           "command": "node",
-          "args": ["/ABS/PATH/orgmind/mcp/server.mjs"],
-          "env": { "ORGMIND_VAULT": "/ABS/PATH/orgmind" }
+          "args": ["/ABS/PATH/vigil/mcp/server.mjs"],
+          "env": { "VIGIL_VAULT": "/ABS/PATH/vigil" }
         }
       }
     }
 
 Codex (`~/.codex/config.toml`):
 
-    [mcp_servers.orgmind]
+    [mcp_servers.vigil]
     command = "node"
-    args = ["/ABS/PATH/orgmind/mcp/server.mjs"]
-    env = { ORGMIND_VAULT = "/ABS/PATH/orgmind" }
+    args = ["/ABS/PATH/vigil/mcp/server.mjs"]
+    env = { VIGIL_VAULT = "/ABS/PATH/vigil" }
 
-`ORGMIND_VAULT` defaults to the repo root if unset.
+`VIGIL_VAULT` defaults to the repo root if unset.
 
 ## Development
 

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { upsertAnalysis, readEntity, listEntities, listFollowups, search } from "./tools.mjs";
 
-const vaultDir = process.env.ORGMIND_VAULT || resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const vaultDir = process.env.VIGIL_VAULT || resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const guard = (fn) => async (args) => {
@@ -33,7 +33,7 @@ const rawEntrySchema = z.object({ source: z.string(), timestamp: z.string().opti
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
-const server = new McpServer({ name: "orgmind", version: "1.0.0" });
+const server = new McpServer({ name: "vigil", version: "1.0.0" });
 
 server.registerTool(
   "list_entities",
