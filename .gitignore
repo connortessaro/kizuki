@@ -2,7 +2,7 @@ node_modules/
 .DS_Store
 
 # Machine-specific agent config (which AI CLI to spawn)
-orgmind.config.json
+kizuki.config.json
 
 # Vault data — contains internal work info. Never commit/push.
 # Keep the folder structure via .gitkeep, ignore the entity files themselves.
@@ -14,6 +14,10 @@ projects/*
 !projects/.gitkeep
 teams/*
 !teams/.gitkeep
+
+# Shift state + day summaries — machine-local work data
+state/
+days/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/

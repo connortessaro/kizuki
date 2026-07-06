@@ -1,4 +1,4 @@
-# OrgMind — Product Vision
+# Kizuki — Product Vision
 
 > Status: vision, not validated. The wedge (cross-team alignment) is gated on one
 > real test at Connor's eng org. This doc is the north star, not a build order.
@@ -51,7 +51,7 @@ not just a summary. The wrong thing gets caught before it's built, not after.
 
 The obvious version — "AI that knows everything about your org" — is a graveyard.
 Glean, Microsoft Copilot, Dust, and the in-suite assistants already own
-horizontal org search, and a solo founder loses that fight. OrgMind wins by being
+horizontal org search, and a solo founder loses that fight. Kizuki wins by being
 narrow where they're broad: they *summarize and retrieve*; they do not do the
 relational, cross-team *alignment* work — detecting that two teams believe
 different things about the same decision and pushing it to a resolution. That gap
