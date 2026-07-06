@@ -1,27 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { entityPath } from "../lib/vault.mjs";
 import { applyPayload } from "../lib/apply.mjs";
-import { TYPES, managedSection, eachEntity, bulletsUnder, followupsByEntity } from "../lib/query.mjs";
+import { TYPES, eachEntity, bulletsUnder, followupsByEntity, assertType, assertName, statusOf } from "../lib/query.mjs";
 
 export { TYPES };
 export const CHARACTER_LIMIT = 25000;
 
-const assertType = (type) => {
-  if (!TYPES.includes(type)) throw new Error(`invalid type: ${JSON.stringify(type)} (expected person|project|team)`);
-};
-const assertName = (name) => {
-  if (!name || typeof name !== "string") throw new Error("name is required");
-  if (/[/\\]|\.\./.test(name)) throw new Error(`invalid entity name: ${JSON.stringify(name)}`);
-};
-
 const truncate = (s) => (s.length > CHARACTER_LIMIT ? s.slice(0, CHARACTER_LIMIT) + "\n…(truncated)" : s);
 
 const readIfExists = (p) => readFile(p, "utf8").then((c) => c, (e) => (e.code === "ENOENT" ? null : Promise.reject(e)));
-
-function statusOf(content) {
-  const m = managedSection(content).match(/^\*\*Status:\*\* (.*)$/m);
-  return m ? m[1].trim() : "";
-}
 
 export async function upsertAnalysis(vaultDir, { type, name, analysis = {}, rawEntries = [] }) {
   assertType(type);
