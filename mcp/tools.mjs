@@ -1,9 +1,9 @@
-import { readFile, readdir } from "node:fs/promises";
-import { join, basename } from "node:path";
-import { entityDir, entityPath, ANALYSIS_START, ANALYSIS_END } from "../lib/vault.mjs";
+import { readFile } from "node:fs/promises";
+import { entityPath } from "../lib/vault.mjs";
 import { applyPayload } from "../lib/apply.mjs";
+import { TYPES, managedSection, eachEntity, bulletsUnder, followupsByEntity } from "../lib/query.mjs";
 
-export const TYPES = ["person", "project", "team"];
+export { TYPES };
 export const CHARACTER_LIMIT = 25000;
 
 const assertType = (type) => {
@@ -17,13 +17,6 @@ const assertName = (name) => {
 const truncate = (s) => (s.length > CHARACTER_LIMIT ? s.slice(0, CHARACTER_LIMIT) + "\n…(truncated)" : s);
 
 const readIfExists = (p) => readFile(p, "utf8").then((c) => c, (e) => (e.code === "ENOENT" ? null : Promise.reject(e)));
-
-function managedSection(content) {
-  const s = content.indexOf(ANALYSIS_START);
-  const e = content.indexOf(ANALYSIS_END);
-  if (s === -1 || e === -1 || e < s) return "";
-  return content.slice(s + ANALYSIS_START.length, e);
-}
 
 function statusOf(content) {
   const m = managedSection(content).match(/^\*\*Status:\*\* (.*)$/m);
@@ -46,25 +39,6 @@ export async function readEntity(vaultDir, type, name) {
   return truncate(content);
 }
 
-async function eachEntity(vaultDir, filterType) {
-  const out = [];
-  for (const type of filterType ? [filterType] : TYPES) {
-    const dir = join(vaultDir, entityDir(type));
-    let files;
-    try {
-      files = await readdir(dir);
-    } catch (e) {
-      if (e.code === "ENOENT") continue;
-      throw e;
-    }
-    for (const f of files.filter((f) => f.endsWith(".md"))) {
-      const content = await readFile(join(dir, f), "utf8");
-      out.push({ type, name: basename(f, ".md"), content });
-    }
-  }
-  return out;
-}
-
 export async function listEntities(vaultDir, type) {
   if (type) assertType(type);
   const entities = await eachEntity(vaultDir, type);
@@ -75,30 +49,15 @@ export async function listEntities(vaultDir, type) {
   return truncate(lines.join("\n"));
 }
 
-function bulletsUnder(section, heading) {
-  const lines = section.split("\n");
-  const out = [];
-  let active = false;
-  for (const line of lines) {
-    if (/^\*\*.+:\*\*/.test(line)) active = line.startsWith(heading);
-    else if (active && line.trimStart().startsWith("- ")) out.push(line.trim().slice(2).trim());
-  }
-  return out;
-}
-
 export async function listFollowups(vaultDir) {
-  const entities = await eachEntity(vaultDir);
-  const blocks = [];
-  for (const e of entities) {
-    const section = managedSection(e.content);
-    const followUps = bulletsUnder(section, "**Follow-ups:");
-    const actions = bulletsUnder(section, "**Recommended actions:");
-    if (!followUps.length && !actions.length) continue;
-    const parts = [`${e.type}/${e.name}`];
-    for (const f of followUps) parts.push(`  - [follow-up] ${f}`);
-    for (const a of actions) parts.push(`  - [action] ${a}`);
-    blocks.push(parts.join("\n"));
-  }
+  const groups = await followupsByEntity(vaultDir);
+  const blocks = groups.map((g) =>
+    [
+      `${g.type}/${g.name}`,
+      ...g.followUps.map((f) => `  - [follow-up] ${f}`),
+      ...g.actions.map((a) => `  - [action] ${a}`),
+    ].join("\n"),
+  );
   if (!blocks.length) return "No open follow-ups or actions.";
   return truncate(blocks.join("\n\n"));
 }
