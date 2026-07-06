@@ -1,4 +1,4 @@
-# Vigil — Future Notes (speculative)
+# Kizuki — Future Notes (speculative)
 
 Status: **not validated. Do not build any of this before Task 8 passes.**
 Task 8 = run `./sync <real-teammate>` on the work machine with real codex + MCP,
@@ -35,7 +35,7 @@ slots into the YC confidential-execution wedge.
   confidential version is achievable fast rather than being a ground-up startup.
 
 ### Hard requirement: confidential inference, not just confidential hosting
-Vigil's processing IS an LLM call. If the enclave calls a normal LLM API
+Kizuki's processing IS an LLM call. If the enclave calls a normal LLM API
 (OpenAI/Anthropic), the org data leaves the enclave to the model provider and
 attestation is theater. The model must run inside the boundary (RedPill / a
 confidential-compute GPU endpoint). This is non-negotiable for the promise to be

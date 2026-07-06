@@ -19,16 +19,16 @@ Milestone ladder: works once (v0, done 2026-07-04) → works daily at work (v1)
 
 ## v3 — localhost dashboard (gate: alerts trusted, not muted)
 
-- Zero-dep node http server (`vigil serve`): alert feed, follow-ups, entity
+- Zero-dep node http server (`kizuki serve`): alert feed, follow-ups, entity
   browser, day summaries.
 - Draft approve/copy queue; "approve" hands off to host-agent chat for sending
-  (Vigil still never sends).
+  (Kizuki still never sends).
 - Shift start/stop button.
 
 ## v4 — public (gate: a month of daily use + real catches to tell stories about)
 
 - Landing page: the one-liner + real (anonymized) catch stories.
-- Package for others: `npx vigil init`, setup wizard for agent backend + MCP.
+- Package for others: `npx kizuki init`, setup wizard for agent backend + MCP.
 - List it: website, GitHub public, maybe Product Hunt / Show HN.
 - Pricing/positioning pass (vision doc: narrow alignment wedge, not horizontal
   org search).
@@ -38,7 +38,7 @@ Milestone ladder: works once (v0, done 2026-07-04) → works daily at work (v1)
 - Vercel eve as hosted runtime for v4 (durable sessions, Slack channels, OAuth
   connections map onto shift-assistant 1:1) — blocked on data-safety story;
   local-first stays for the personal/work version.
-- Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/vigil`)
+- Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/kizuki`)
   — works across Claude Code/Codex/Cursor etc.; cheap once v1 exists.
 
 - LLM-written day summary (deterministic aggregate is v1; prose summary later).

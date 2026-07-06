@@ -1,10 +1,10 @@
-# Vigil Shift Assistant (v0 remainder + v1) Implementation Plan
+# Kizuki Shift Assistant (v0 remainder + v1) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Harden the sync pipeline (agent timeout, evidence-guard prompt rules) and add shift rituals: `vigil start` / `vigil stop` with a launchd background sync loop, morning brief, and day summary.
+**Goal:** Harden the sync pipeline (agent timeout, evidence-guard prompt rules) and add shift rituals: `kizuki start` / `kizuki stop` with a launchd background sync loop, morning brief, and day summary.
 
-**Architecture:** All logic lives in pure, `vaultDir`-parameterized functions under `lib/` (tested with node:test + temp dirs); the `vigil` executable is thin dispatch. Shared vault-reading helpers move from `mcp/tools.mjs` into `lib/query.mjs` so `lib/` never imports from `mcp/`. The LLM-returns-JSON / deterministic-JS-writes boundary is untouched.
+**Architecture:** All logic lives in pure, `vaultDir`-parameterized functions under `lib/` (tested with node:test + temp dirs); the `kizuki` executable is thin dispatch. Shared vault-reading helpers move from `mcp/tools.mjs` into `lib/query.mjs` so `lib/` never imports from `mcp/`. The LLM-returns-JSON / deterministic-JS-writes boundary is untouched.
 
 **Tech Stack:** Node built-ins only in core (ESM `.mjs`), `node:test` + `node:assert/strict`. No new npm packages.
 
@@ -15,7 +15,7 @@
 - No silent failures — throw/reject loudly; the only allowed expected-failure handling is `ENOENT → null/default` reads.
 - Entity/vault safety invariants (managed-section splice, exact-line dedup, path-safe names) must not change.
 - Vault data dirs are gitignored; new dirs `state/` and `days/` hold work data → gitignore them too.
-- Executable is repo-local `./vigil` (renamed from `./sync`), shebang `#!/usr/bin/env node`.
+- Executable is repo-local `./kizuki` (renamed from `./sync`), shebang `#!/usr/bin/env node`.
 
 ---
 
@@ -27,7 +27,7 @@
 
 **Interfaces:**
 - Consumes: existing `buildAgentArgv(cmd, prompt)`, `resolveAgent(vaultDir)`, `makeRunAgent(cmd)`.
-- Produces: `resolveAgent(vaultDir) -> Promise<{cmd: string[], timeoutMs: number}>` (new `timeoutMs`, default `DEFAULT_TIMEOUT_MS = 300000`, from optional `timeoutMs` key in `vigil.config.json`; invalid values throw). `makeRunAgent(cmd, timeoutMs?) -> (prompt) => Promise<string>` which kills the child and rejects with `agent timed out after <ms>ms` on expiry. Task 8's executable calls `makeRunAgent(cmd, timeoutMs)`.
+- Produces: `resolveAgent(vaultDir) -> Promise<{cmd: string[], timeoutMs: number}>` (new `timeoutMs`, default `DEFAULT_TIMEOUT_MS = 300000`, from optional `timeoutMs` key in `kizuki.config.json`; invalid values throw). `makeRunAgent(cmd, timeoutMs?) -> (prompt) => Promise<string>` which kills the child and rejects with `agent timed out after <ms>ms` on expiry. Task 8's executable calls `makeRunAgent(cmd, timeoutMs)`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -35,27 +35,27 @@ Append to `lib/agent.test.mjs` (match the file's existing imports/style; it alre
 
 ```js
 test("resolveAgent returns default timeoutMs when config has none", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-"));
-  await writeFile(join(dir, "vigil.config.json"), JSON.stringify({ agentCmd: ["echo"] }));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-"));
+  await writeFile(join(dir, "kizuki.config.json"), JSON.stringify({ agentCmd: ["echo"] }));
   const { timeoutMs } = await resolveAgent(dir);
   assert.equal(timeoutMs, 300000);
 });
 
 test("resolveAgent reads timeoutMs from config", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-"));
-  await writeFile(join(dir, "vigil.config.json"), JSON.stringify({ agentCmd: ["echo"], timeoutMs: 1234 }));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-"));
+  await writeFile(join(dir, "kizuki.config.json"), JSON.stringify({ agentCmd: ["echo"], timeoutMs: 1234 }));
   const { timeoutMs } = await resolveAgent(dir);
   assert.equal(timeoutMs, 1234);
 });
 
 test("resolveAgent rejects non-positive or non-integer timeoutMs", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-"));
-  await writeFile(join(dir, "vigil.config.json"), JSON.stringify({ agentCmd: ["echo"], timeoutMs: "5s" }));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-"));
+  await writeFile(join(dir, "kizuki.config.json"), JSON.stringify({ agentCmd: ["echo"], timeoutMs: "5s" }));
   await assert.rejects(() => resolveAgent(dir), /timeoutMs must be a positive integer/);
 });
 
 test("resolveAgent with no config file returns defaults", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-"));
   const { cmd, timeoutMs } = await resolveAgent(dir);
   assert.deepEqual(cmd, ["codex", "exec"]);
   assert.equal(timeoutMs, 300000);
@@ -236,7 +236,7 @@ import { join } from "node:path";
 import { eachEntity, followupsByEntity, managedSection, bulletsUnder, TYPES } from "./query.mjs";
 
 async function vaultWith(files) {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-q-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-q-"));
   for (const [rel, content] of Object.entries(files)) {
     await mkdir(join(dir, rel, ".."), { recursive: true });
     await writeFile(join(dir, rel), content, "utf8");
@@ -253,13 +253,13 @@ name: maya
 
 ## Log
 
-<!-- VIGIL:ANALYSIS:START -->
+<!-- KIZUKI:ANALYSIS:START -->
 **Status:** busy
 **Follow-ups:**
 - chase creds
 **Recommended actions:**
 - escalate ticket
-<!-- VIGIL:ANALYSIS:END -->
+<!-- KIZUKI:ANALYSIS:END -->
 `;
 
 test("TYPES lists the three entity types", () => {
@@ -433,7 +433,7 @@ import { join } from "node:path";
 import { readShift, startShift, endShift, readLastStop, recordStop } from "./shift.mjs";
 
 test("shift flag lifecycle", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-s-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-s-"));
   assert.equal(await readShift(dir), null);
   await startShift(dir, new Date("2026-07-06T09:00:00Z"));
   assert.deepEqual(await readShift(dir), { started: "2026-07-06T09:00:00.000Z" });
@@ -443,7 +443,7 @@ test("shift flag lifecycle", async () => {
 });
 
 test("last-stop record lifecycle", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-s-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-s-"));
   assert.equal(await readLastStop(dir), null);
   await recordStop(dir, new Date("2026-07-06T17:00:00Z"));
   assert.deepEqual(await readLastStop(dir), { stopped: "2026-07-06T17:00:00.000Z" });
@@ -510,7 +510,7 @@ git commit -m "feat: shift state flags (shift.json, last-stop.json)"
 
 **Interfaces:**
 - Consumes: `eachEntity`, `followupsByEntity` from `lib/query.mjs` (Task 3); `readLastStop` (Task 4).
-- Produces: `renderBrief(vaultDir, now?: Date) -> Promise<string>` — markdown with `## Changed since last shift` (entity files whose mtime is after `last-stop.json`; all entities listed when no baseline) and `## Open follow-ups`. Used by Task 8's `vigil start`.
+- Produces: `renderBrief(vaultDir, now?: Date) -> Promise<string>` — markdown with `## Changed since last shift` (entity files whose mtime is after `last-stop.json`; all entities listed when no baseline) and `## Open follow-ups`. Used by Task 8's `kizuki start`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -526,11 +526,11 @@ name: maya
 
 ## Log
 
-<!-- VIGIL:ANALYSIS:START -->
+<!-- KIZUKI:ANALYSIS:START -->
 **Status:** busy
 **Follow-ups:**
 - chase creds
-<!-- VIGIL:ANALYSIS:END -->
+<!-- KIZUKI:ANALYSIS:END -->
 `;
 
 async function seedEntity(dir, rel, content, mtime) {
@@ -540,10 +540,10 @@ async function seedEntity(dir, rel, content, mtime) {
 }
 
 test("renderBrief without baseline lists all entities and follow-ups", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-b-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-b-"));
   await seedEntity(dir, "people/maya.md", ENTITY);
   const brief = await renderBrief(dir, new Date("2026-07-06T09:00:00Z"));
-  assert.match(brief, /# Vigil brief — 2026-07-06/);
+  assert.match(brief, /# Kizuki brief — 2026-07-06/);
   assert.match(brief, /## Changed since last shift/);
   assert.match(brief, /- person\/maya/);
   assert.match(brief, /## Open follow-ups/);
@@ -551,7 +551,7 @@ test("renderBrief without baseline lists all entities and follow-ups", async () 
 });
 
 test("renderBrief with baseline only lists entities modified after last stop", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-b-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-b-"));
   await seedEntity(dir, "people/old.md", ENTITY.replaceAll("maya", "old"), new Date("2026-07-01T00:00:00Z"));
   await seedEntity(dir, "people/fresh.md", ENTITY.replaceAll("maya", "fresh"), new Date("2026-07-06T08:00:00Z"));
   await recordStop(dir, new Date("2026-07-05T17:00:00Z"));
@@ -575,7 +575,7 @@ import { stat } from "node:fs/promises";
 import { eachEntity, followupsByEntity } from "./query.mjs";
 
 export async function renderBrief(vaultDir, now = new Date()) {
-  const out = [`# Vigil brief — ${now.toISOString().slice(0, 10)}`, "", "## Changed since last shift"];
+  const out = [`# Kizuki brief — ${now.toISOString().slice(0, 10)}`, "", "## Changed since last shift"];
   const last = await readLastStop(vaultDir);
   const entities = await eachEntity(vaultDir);
   let changed;
@@ -624,7 +624,7 @@ git commit -m "feat: morning brief renderer (changed entities + open follow-ups)
 
 **Interfaces:**
 - Consumes: `eachEntity`, `followupsByEntity` (Task 3).
-- Produces: `renderDaySummary(vaultDir, dateStr: "YYYY-MM-DD") -> Promise<string>`; `writeDaySummary(vaultDir, now?: Date) -> Promise<string>` — writes `days/YYYY-MM-DD.md`, returns the path. Used by Task 8's `vigil stop`.
+- Produces: `renderDaySummary(vaultDir, dateStr: "YYYY-MM-DD") -> Promise<string>`; `writeDaySummary(vaultDir, now?: Date) -> Promise<string>` — writes `days/YYYY-MM-DD.md`, returns the path. Used by Task 8's `kizuki stop`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -643,15 +643,15 @@ name: checkout
 - **transcript** 2026-07-06T09:32:00: scope cut announced
 - **transcript** 2026-07-01T09:00:00: old entry
 
-<!-- VIGIL:ANALYSIS:START -->
+<!-- KIZUKI:ANALYSIS:START -->
 **Status:** at risk
 **Follow-ups:**
 - tell mobile
-<!-- VIGIL:ANALYSIS:END -->
+<!-- KIZUKI:ANALYSIS:END -->
 `;
 
 test("renderDaySummary includes only that day's log lines plus open follow-ups", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-d-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-d-"));
   await seedEntity(dir, "projects/checkout.md", LOGGED);
   const md = await renderDaySummary(dir, "2026-07-06");
   assert.match(md, /# 2026-07-06 — day summary/);
@@ -663,7 +663,7 @@ test("renderDaySummary includes only that day's log lines plus open follow-ups",
 });
 
 test("writeDaySummary writes days/YYYY-MM-DD.md and returns the path", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-d-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-d-"));
   await seedEntity(dir, "projects/checkout.md", LOGGED);
   const path = await writeDaySummary(dir, new Date("2026-07-06T17:00:00Z"));
   assert.equal(path, join(dir, "days", "2026-07-06.md"));
@@ -736,10 +736,10 @@ git commit -m "feat: deterministic day summary written to days/YYYY-MM-DD.md"
 **Interfaces:**
 - Consumes: nothing from other tasks.
 - Produces (used by Task 8):
-  - `LABEL = "com.tessaro.vigil.sync"`
+  - `LABEL = "com.tessaro.kizuki.sync"`
   - `plistPath(label?) -> string` — `~/Library/LaunchAgents/<label>.plist`
-  - `plistContent({vigilPath, vaultDir, label?, intervalSec?}) -> string`
-  - `installJob({vigilPath, vaultDir, label?, intervalSec?, exec?, path?}) -> Promise<string>` — writes plist, `launchctl load <path>`; throws on non-darwin
+  - `plistContent({kizukiPath, vaultDir, label?, intervalSec?}) -> string`
+  - `installJob({kizukiPath, vaultDir, label?, intervalSec?, exec?, path?}) -> Promise<string>` — writes plist, `launchctl load <path>`; throws on non-darwin
   - `removeJob({label?, exec?, path?}) -> Promise<void>` — `launchctl unload <path>`, deletes plist; throws on non-darwin
   - `exec` is injected as `(file, args) => Promise` so tests never touch real launchctl.
 
@@ -755,35 +755,35 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LABEL, plistContent, plistPath, installJob, removeJob } from "./launchd.mjs";
 
-test("plistContent wires vigil sync --loop on a 30-min interval", () => {
-  const xml = plistContent({ vigilPath: "/repo/vigil", vaultDir: "/repo" });
-  assert.match(xml, /<string>com\.tessaro\.vigil\.sync<\/string>/);
-  assert.match(xml, /<string>\/repo\/vigil<\/string>/);
+test("plistContent wires kizuki sync --loop on a 30-min interval", () => {
+  const xml = plistContent({ kizukiPath: "/repo/kizuki", vaultDir: "/repo" });
+  assert.match(xml, /<string>com\.tessaro\.kizuki\.sync<\/string>/);
+  assert.match(xml, /<string>\/repo\/kizuki<\/string>/);
   assert.match(xml, /<string>sync<\/string>\s*<string>--loop<\/string>/);
   assert.match(xml, /<integer>1800<\/integer>/);
   assert.match(xml, /<string>\/repo\/state\/sync\.log<\/string>/);
 });
 
 test("plistPath points into ~/Library/LaunchAgents", () => {
-  assert.match(plistPath(), /Library\/LaunchAgents\/com\.tessaro\.vigil\.sync\.plist$/);
+  assert.match(plistPath(), /Library\/LaunchAgents\/com\.tessaro\.kizuki\.sync\.plist$/);
 });
 
 test("installJob writes the plist and loads it", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-l-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-l-"));
   const calls = [];
   const fakeExec = async (file, args) => calls.push([file, ...args]);
   const path = join(dir, `${LABEL}.plist`);
-  await installJob({ vigilPath: "/repo/vigil", vaultDir: dir, exec: fakeExec, path });
+  await installJob({ kizukiPath: "/repo/kizuki", vaultDir: dir, exec: fakeExec, path });
   assert.match(await readFile(path, "utf8"), /--loop/);
   assert.deepEqual(calls, [["launchctl", "load", path]]);
 });
 
 test("removeJob unloads and deletes the plist", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "vigil-l-"));
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-l-"));
   const calls = [];
   const fakeExec = async (file, args) => calls.push([file, ...args]);
   const path = join(dir, `${LABEL}.plist`);
-  await installJob({ vigilPath: "/repo/vigil", vaultDir: dir, exec: fakeExec, path });
+  await installJob({ kizukiPath: "/repo/kizuki", vaultDir: dir, exec: fakeExec, path });
   await removeJob({ exec: fakeExec, path });
   assert.deepEqual(calls[1], ["launchctl", "unload", path]);
   await assert.rejects(() => access(path));
@@ -814,14 +814,14 @@ import { homedir } from "node:os";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-export const LABEL = "com.tessaro.vigil.sync";
+export const LABEL = "com.tessaro.kizuki.sync";
 const execFileAsync = promisify(execFile);
 
 export function plistPath(label = LABEL) {
   return join(homedir(), "Library", "LaunchAgents", `${label}.plist`);
 }
 
-export function plistContent({ vigilPath, vaultDir, label = LABEL, intervalSec = 1800 }) {
+export function plistContent({ kizukiPath, vaultDir, label = LABEL, intervalSec = 1800 }) {
   const log = join(vaultDir, "state", "sync.log");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -831,7 +831,7 @@ export function plistContent({ vigilPath, vaultDir, label = LABEL, intervalSec =
   <key>ProgramArguments</key>
   <array>
     <string>${process.execPath}</string>
-    <string>${vigilPath}</string>
+    <string>${kizukiPath}</string>
     <string>sync</string>
     <string>--loop</string>
   </array>
@@ -852,22 +852,22 @@ function assertDarwin(what) {
 }
 
 export async function installJob({
-  vigilPath,
+  kizukiPath,
   vaultDir,
   label = LABEL,
   intervalSec = 1800,
   exec = execFileAsync,
   path = plistPath(label),
 }) {
-  assertDarwin("vigil start");
+  assertDarwin("kizuki start");
   await mkdir(join(vaultDir, "state"), { recursive: true });
-  await writeFile(path, plistContent({ vigilPath, vaultDir, label, intervalSec }), "utf8");
+  await writeFile(path, plistContent({ kizukiPath, vaultDir, label, intervalSec }), "utf8");
   await exec("launchctl", ["load", path]);
   return path;
 }
 
 export async function removeJob({ label = LABEL, exec = execFileAsync, path = plistPath(label) }) {
-  assertDarwin("vigil stop");
+  assertDarwin("kizuki stop");
   await exec("launchctl", ["unload", path]);
   await rm(path, { force: true });
 }
@@ -887,28 +887,28 @@ git commit -m "feat: launchd plumbing for 30-min background sync (injected exec)
 
 ---
 
-### Task 8: `vigil` executable — subcommand dispatch
+### Task 8: `kizuki` executable — subcommand dispatch
 
 **Files:**
-- Rename: `sync` → `vigil` (`git mv sync vigil`)
-- Modify: `vigil` (full rewrite below)
+- Rename: `sync` → `kizuki` (`git mv sync kizuki`)
+- Modify: `kizuki` (full rewrite below)
 - Modify: `.gitignore`, `README.md`, `CLAUDE.md`, `AGENTS.md` (command references)
 
 **Interfaces:**
 - Consumes: `runSync` (`lib/run.mjs`), `resolveAgent`/`makeRunAgent` (Task 1), shift state + brief + summary (Tasks 4–6), `installJob`/`removeJob` (Task 7).
-- Produces: `./vigil sync|start|stop` CLI. No new library surface. All logic already unit-tested; the executable stays thin wiring, verified by the manual smoke steps below.
+- Produces: `./kizuki sync|start|stop` CLI. No new library surface. All logic already unit-tested; the executable stays thin wiring, verified by the manual smoke steps below.
 
 - [ ] **Step 1: Rename and rewrite**
 
 ```bash
-git mv sync vigil
+git mv sync kizuki
 ```
 
-Replace the contents of `vigil` with:
+Replace the contents of `kizuki` with:
 
 ```js
 #!/usr/bin/env node
-// vigil
+// kizuki
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { appendFile, mkdir } from "node:fs/promises";
@@ -918,20 +918,20 @@ import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySumma
 import { installJob, removeJob } from "./lib/launchd.mjs";
 
 const vaultDir = dirname(fileURLToPath(import.meta.url));
-const vigilPath = join(vaultDir, "vigil");
+const kizukiPath = join(vaultDir, "kizuki");
 const [command, ...rest] = process.argv.slice(2);
 
-const USAGE = `usage: vigil <command>
-  vigil sync [person] [--source a,b] [--dry-run]  pull activity into the vault
-  vigil sync --loop                               background mode (no-op unless a shift is on)
-  vigil start                                     begin shift: sync + brief + 30-min background sync
-  vigil stop                                      end shift: final sync + day summary + remove background sync`;
+const USAGE = `usage: kizuki <command>
+  kizuki sync [person] [--source a,b] [--dry-run]  pull activity into the vault
+  kizuki sync --loop                               background mode (no-op unless a shift is on)
+  kizuki start                                     begin shift: sync + brief + 30-min background sync
+  kizuki stop                                      end shift: final sync + day summary + remove background sync`;
 
 async function doSync(argv) {
   const { cmd, timeoutMs } = await resolveAgent(vaultDir);
   const r = await runSync({ argv, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
   const who = r.scope.kind === "person" ? r.scope.name : "all";
-  console.log(`Vigil sync — scope: ${who}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
+  console.log(`Kizuki sync — scope: ${who}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
   if (!r.changes.length) console.log("  no changes");
   for (const c of r.changes) console.log(`  updated ${c.path}`);
 }
@@ -949,10 +949,10 @@ try {
   } else if (command === "sync") {
     await doSync(rest);
   } else if (command === "start") {
-    if (await readShift(vaultDir)) throw new Error("shift already started — run `vigil stop` first");
+    if (await readShift(vaultDir)) throw new Error("shift already started — run `kizuki stop` first");
     await startShift(vaultDir);
     await doSync([]);
-    await installJob({ vigilPath, vaultDir });
+    await installJob({ kizukiPath, vaultDir });
     console.log("\n" + (await renderBrief(vaultDir)));
   } else if (command === "stop") {
     if (!(await readShift(vaultDir))) throw new Error("no shift in progress");
@@ -971,7 +971,7 @@ try {
     process.exit(1);
   }
 } catch (e) {
-  console.error(`vigil ${command ?? ""} failed: ${e.message}`);
+  console.error(`kizuki ${command ?? ""} failed: ${e.message}`);
   process.exit(1);
 }
 ```
@@ -988,15 +988,15 @@ days/
 
 - [ ] **Step 3: Update docs**
 
-In `README.md`, `CLAUDE.md` (Commands section), `AGENTS.md` (Commands section): replace `./sync` invocations with `./vigil sync`, and add one line each for `./vigil start` / `./vigil stop`. In CLAUDE.md architecture list, change the `**\`sync\`**` bullet to `**\`vigil\`**` and mention subcommand dispatch.
+In `README.md`, `CLAUDE.md` (Commands section), `AGENTS.md` (Commands section): replace `./sync` invocations with `./kizuki sync`, and add one line each for `./kizuki start` / `./kizuki stop`. In CLAUDE.md architecture list, change the `**\`sync\`**` bullet to `**\`kizuki\`**` and mention subcommand dispatch.
 
 - [ ] **Step 4: Manual smoke test (no agent call)**
 
 ```bash
-./vigil                      # expect usage on stderr, exit 1
+./kizuki                      # expect usage on stderr, exit 1
 echo $?                      # expect 1
-./vigil stop                 # expect "vigil stop failed: no shift in progress", exit 1
-./vigil sync --loop; echo $? # expect silent exit 0 (no shift flag)
+./kizuki stop                 # expect "kizuki stop failed: no shift in progress", exit 1
+./kizuki sync --loop; echo $? # expect silent exit 0 (no shift flag)
 npm test                     # expect all pass
 ```
 
@@ -1004,18 +1004,18 @@ npm test                     # expect all pass
 
 ```bash
 cp transcripts/processed/standup-2026-07-04.txt transcripts/ 2>/dev/null || true
-./vigil start        # sync runs, launchd job installs, brief prints
-launchctl list | grep vigil   # expect com.tessaro.vigil.sync
-./vigil stop         # final sync, day summary path printed, job removed
-launchctl list | grep vigil   # expect no output
+./kizuki start        # sync runs, launchd job installs, brief prints
+launchctl list | grep kizuki   # expect com.tessaro.kizuki.sync
+./kizuki stop         # final sync, day summary path printed, job removed
+launchctl list | grep kizuki   # expect no output
 cat days/$(date +%F).md
 ```
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add vigil .gitignore README.md CLAUDE.md AGENTS.md
-git commit -m "feat: vigil executable with start/stop/sync subcommands"
+git add kizuki .gitignore README.md CLAUDE.md AGENTS.md
+git commit -m "feat: kizuki executable with start/stop/sync subcommands"
 ```
 
 ---
@@ -1023,18 +1023,18 @@ git commit -m "feat: vigil executable with start/stop/sync subcommands"
 ### Task 9: Codex ritual prompts
 
 **Files:**
-- Create: `codex/prompts/vigil-start.md`
-- Create: `codex/prompts/vigil-stop.md`
+- Create: `codex/prompts/kizuki-start.md`
+- Create: `codex/prompts/kizuki-stop.md`
 - Modify: `README.md` (setup section)
 
 **Interfaces:**
-- Consumes: the `./vigil start` / `./vigil stop` CLI from Task 8.
-- Produces: prompt files the user copies to `~/.codex/prompts/` on the work machine (become `/vigil-start`, `/vigil-stop` slash commands in Codex).
+- Consumes: the `./kizuki start` / `./kizuki stop` CLI from Task 8.
+- Produces: prompt files the user copies to `~/.codex/prompts/` on the work machine (become `/kizuki-start`, `/kizuki-stop` slash commands in Codex).
 
-- [ ] **Step 1: Create `codex/prompts/vigil-start.md`**
+- [ ] **Step 1: Create `codex/prompts/kizuki-start.md`**
 
 ```markdown
-Run `./vigil start` in the vigil repo. Read the brief it prints, then:
+Run `./kizuki start` in the kizuki repo. Read the brief it prints, then:
 
 1. Give me the morning rundown in your own words — lead with anything that
    looks like cross-team misalignment or a blocker aging badly.
@@ -1042,15 +1042,15 @@ Run `./vigil start` in the vigil repo. Read the brief it prints, then:
    someone else, or stale.
 3. Suggest the one thing to do first and draft it if it's a message.
 
-Rules: the vault is the source of truth — read entities via the vigil MCP
+Rules: the vault is the source of truth — read entities via the kizuki MCP
 tools if you need detail. You never send anything anywhere; every outward
 action is a draft I approve and send myself.
 ```
 
-- [ ] **Step 2: Create `codex/prompts/vigil-stop.md`**
+- [ ] **Step 2: Create `codex/prompts/kizuki-stop.md`**
 
 ```markdown
-Run `./vigil stop` in the vigil repo. Read the day summary file it prints the
+Run `./kizuki stop` in the kizuki repo. Read the day summary file it prints the
 path to, then:
 
 1. Recap the day in three sentences max.
@@ -1066,10 +1066,10 @@ Rules: observe and advise only. Drafts, not sends.
 Add to `README.md` under setup: copy instructions —
 
 ```bash
-cp codex/prompts/vigil-start.md codex/prompts/vigil-stop.md ~/.codex/prompts/
+cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
 ```
 
-plus one sentence: plain-chat triggers ("start vigil", "vigil ima stop") can be added to the work machine's global AGENTS.md pointing at the same two prompts.
+plus one sentence: plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work machine's global AGENTS.md pointing at the same two prompts.
 
 - [ ] **Step 4: Verify + commit**
 
@@ -1078,13 +1078,13 @@ Expected: all pass (docs-only task; suite still green).
 
 ```bash
 git add codex/prompts/ README.md
-git commit -m "feat: codex shift ritual prompts (/vigil-start, /vigil-stop)"
+git commit -m "feat: codex shift ritual prompts (/kizuki-start, /kizuki-stop)"
 ```
 
 ---
 
 ## Self-review notes
 
-- Spec coverage: timeout → Task 1; evidence/source rules → Task 2; `lib/shift.mjs` brief + summary → Tasks 4–6 (query extraction Task 3 is the dependency the spec's "reuses listFollowups logic" implies); launchd + `--loop` → Tasks 7–8; codex prompts → Task 9; gitignore for `state/`/`days/` → Task 8. `vigil serve` is reserved-only per spec — intentionally no task.
+- Spec coverage: timeout → Task 1; evidence/source rules → Task 2; `lib/shift.mjs` brief + summary → Tasks 4–6 (query extraction Task 3 is the dependency the spec's "reuses listFollowups logic" implies); launchd + `--loop` → Tasks 7–8; codex prompts → Task 9; gitignore for `state/`/`days/` → Task 8. `kizuki serve` is reserved-only per spec — intentionally no task.
 - `--loop` is handled in the executable (filtered before `parseArgs`), so no `lib/args.mjs` change — YAGNI.
 - Type consistency: `eachEntity` gains `path` in Task 3; Task 5 depends on it; `followupsByEntity` shape `{type,name,followUps,actions}` used identically in Tasks 5, 6, and mcp rewiring.
