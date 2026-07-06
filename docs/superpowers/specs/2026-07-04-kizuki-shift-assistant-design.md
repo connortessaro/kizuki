@@ -1,4 +1,4 @@
-# Vigil shift assistant — design (v0 + v1)
+# Kizuki shift assistant — design (v0 + v1)
 
 Date: 2026-07-04
 Status: approved scope — v0 + v1 only. Everything else lives in `docs/BACKLOG.md`
@@ -6,19 +6,19 @@ and is gated on the milestone above it.
 
 ## One-liner (the vision anchor)
 
-**Vigil watches your org while you work, surfaces what you're missing, and
+**Kizuki watches your org while you work, surfaces what you're missing, and
 drafts your next move — you approve everything.**
 
 ## Decisions made in brainstorming
 
-- **Name:** OrgMind → **Vigil** (renamed repo-wide 2026-07-04, commit `df217f5`).
+- **Name:** OrgMind → **Kizuki** (renamed repo-wide 2026-07-04, commit `df217f5`).
 - **Action model:** propose → Connor approves → the *host agent* (Codex at work)
-  executes via its own MCP tools. Vigil's code never sends anything; the
+  executes via its own MCP tools. Kizuki's code never sends anything; the
   observe-only invariant holds at the code layer.
 - **Interaction:** pull first (ask Codex, it reads the vault via MCP); proactive
   alerts and a localhost dashboard are backlog items gated on v0/v1 evidence.
 - **Host:** Codex CLI on the work machine; agent backend stays pluggable
-  (`vigil.config.json` `agentCmd`).
+  (`kizuki.config.json` `agentCmd`).
 
 ## v0 — prove the pipeline on real data (mostly done)
 
@@ -32,7 +32,7 @@ the laptop's codex install is broken — pluggable agent config proved itself):
   copy-paste-ready escalation draft. Transcript archived to
   `transcripts/processed/`.
 - Observed weakness: run-to-run LLM variance (one dry-run invented a
-  `projects/vigil` entity from repo context; entity sets differ slightly
+  `projects/kizuki` entity from repo context; entity sets differ slightly
   between runs).
 - Observed weakness #2 (re-run test): same facts re-emitted with source
   relabeled `slack` instead of `transcript` — invented attribution defeats
@@ -41,7 +41,7 @@ the laptop's codex install is broken — pluggable agent config proved itself):
 Remaining v0 work:
 
 1. **Agent timeout** — `makeRunAgent` gets a configurable timeout
-   (`timeoutMs` in `vigil.config.json`, default 300000); on expiry, kill the
+   (`timeoutMs` in `kizuki.config.json`, default 300000); on expiry, kill the
    child and reject loudly.
 2. **Evidence guard in prompt** — payload rules: only emit entities directly
    evidenced in transcripts or the named sources, never from the vault repo
@@ -53,20 +53,20 @@ Remaining v0 work:
 
 ## v1 — shift rituals
 
-`sync` executable becomes `vigil` with subcommands (`vigil sync` keeps today's
-semantics; `vigil serve` reserved for backlog):
+`sync` executable becomes `kizuki` with subcommands (`kizuki sync` keeps today's
+semantics; `kizuki serve` reserved for backlog):
 
-- **`vigil start`** — writes `state/shift.json` (gitignored); runs first sync;
-  installs launchd job `com.tessaro.vigil.sync` (every 30 min, runs
-  `vigil sync --loop`, which exits silently unless the shift flag is on);
+- **`kizuki start`** — writes `state/shift.json` (gitignored); runs first sync;
+  installs launchd job `com.tessaro.kizuki.sync` (every 30 min, runs
+  `kizuki sync --loop`, which exits silently unless the shift flag is on);
   prints a morning brief rendered deterministically from the vault: open
   follow-ups (reuses `listFollowups` logic), entities changed since last shift.
-- **`vigil stop`** — final sync; writes `days/YYYY-MM-DD.md` (deterministic
+- **`kizuki stop`** — final sync; writes `days/YYYY-MM-DD.md` (deterministic
   aggregate: day's log entries, follow-ups, changed entities); removes the
   launchd job; clears the shift flag.
-- **Codex integration:** `codex/prompts/vigil-start.md` + `vigil-stop.md`
+- **Codex integration:** `codex/prompts/kizuki-start.md` + `kizuki-stop.md`
   (copied to `~/.codex/prompts` on the work machine) plus trigger lines in the
-  work AGENTS.md so "start vigil" / "vigil ima stop" work in plain chat: run
+  work AGENTS.md so "start kizuki" / "kizuki ima stop" work in plain chat: run
   the command, read the brief/summary, discuss.
 
 Note: the 30-minute background sync ships in v1 as plumbing (launchd + `--loop`
@@ -78,7 +78,7 @@ pull-style questions.
 
 - `lib/agent.mjs` — timeout in `makeRunAgent`; `timeoutMs` config key.
 - `lib/prompt.mjs` — evidence-guard rule line.
-- `vigil` executable (renamed from `sync`) — subcommand dispatch; `start`/
+- `kizuki` executable (renamed from `sync`) — subcommand dispatch; `start`/
   `stop`/`sync`; brief + day-summary renderers as pure functions in
   `lib/shift.mjs` (vault-dir-parameterized, unit-testable, same pattern as
   `mcp/tools.mjs`).

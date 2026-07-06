@@ -2,7 +2,7 @@ node_modules/
 .DS_Store
 
 # Machine-specific agent config (which AI CLI to spawn)
-vigil.config.json
+kizuki.config.json
 
 # Vault data — contains internal work info. Never commit/push.
 # Keep the folder structure via .gitkeep, ignore the entity files themselves.
