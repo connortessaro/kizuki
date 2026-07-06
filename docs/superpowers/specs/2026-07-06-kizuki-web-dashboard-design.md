@@ -38,10 +38,14 @@ are deferred to a later cut.
 
 Server components only. No API routes, no client-side fetching.
 
-Pages import read functions from `mcp/tools.mjs` — `listEntities`,
-`readEntity`, `listFollowups`, `search` — which are SDK-free,
-vaultDir-parameterized, path-safe (`assertName`/`assertType`), and already
-unit-tested. One new pure helper reads `days/` (list + read day summaries).
+All vault access goes through one adapter, `web/lib/data.mjs`, which reuses
+`lib/query.mjs` (`eachEntity`, `followupsByEntity`, plus the
+`assertName`/`assertType`/`statusOf` guards, lifted there from `mcp/tools.mjs`
+so both subpackages share one copy) and `lib/vault.mjs` (`entityPath`). The
+MCP tool functions themselves return preformatted, truncated strings built for
+chat — the dashboard needs structured data, so it shares the layer underneath
+them instead. The adapter adds a `days/` reader (list + read day summaries)
+and is plain `.mjs`, tested with `node:test`.
 
 Every route sets `dynamic = "force-dynamic"` so each page load reads the vault
 fresh from disk. No caching layer; refresh = browser reload.
