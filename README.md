@@ -21,6 +21,16 @@ actions for you. You decide.
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 
+### Shift rituals (Codex slash commands)
+
+Copy the ritual prompts to your Codex prompts folder to get `/kizuki-start` and
+`/kizuki-stop` slash commands that wrap `./kizuki start` / `./kizuki stop`:
+
+    cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
+
+Plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work
+machine's global AGENTS.md pointing at the same two prompts.
+
 ## How it works
 
     parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> vault
