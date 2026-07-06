@@ -21,3 +21,7 @@ days/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
+
+# Next.js build output (web/)
+web/.next/
+web/next-env.d.ts
