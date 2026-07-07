@@ -7,6 +7,7 @@ import {
 } from "../../lib/query.mjs";
 
 export { TYPES };
+export { formatDate } from "../../lib/format.mjs";
 
 export const vaultDir = () =>
   process.env.KIZUKI_VAULT || join(dirname(fileURLToPath(import.meta.url)), "..", "..");

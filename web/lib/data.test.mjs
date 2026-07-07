@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
-  parseEntityFile, listByType, getEntity, followups, searchVault, listDays, readDay,
+  parseEntityFile, listByType, getEntity, followups, searchVault, listDays, readDay, formatDate,
 } from "./data.mjs";
 
 async function makeVault() {
@@ -123,4 +123,8 @@ test("readDay returns content, null when missing, throws on bad date", async () 
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("re-exports formatDate for pages", () => {
+  assert.equal(formatDate("2026-07-04"), "July 4, 2026");
 });
