@@ -117,6 +117,8 @@ summary (unranked).
 
 ## v3 — Dashboard complete
 
+**Status:** shipped 2026-07-07 (code). Exit gate (daily use + catch stories) still open.
+
 **Goal:** Finish the interactive dashboard layer on the existing Next.js
 subpackage. Do **not** build a parallel zero-dep `kizuki serve` server — the
 original backlog sketch was superseded by
@@ -128,15 +130,14 @@ original backlog sketch was superseded by
 
 - Entity browser, follow-ups, day summaries, search
 - Auto-refresh, last-vault-update (`web/app/auto-refresh.tsx`, `web/lib/data.mjs`)
+- Alert feed (`/alerts`), shift status + copy queue (`/shift`), brand restyle (`docs/BRAND.md` → `web/app/globals.css`)
 
-### Remaining
+### Remaining (validation only)
 
-| Item | Approach | Observe-and-advise |
-|------|----------|-------------------|
-| Alert feed | `/alerts` page reading `alerts/YYYY-MM-DD.md` via `web/lib/data.mjs` | Read-only |
-| Shift status | Read-only display of `state/shift.json` + CLI instructions; subprocess start/stop from web needs a separate design decision | No autonomous actions |
-| Approve/copy queue | Copy button + hand-off to host-agent chat; never send from Kizuki | Deferred detail in dashboard-polish spec |
-| Brand restyle | Apply `docs/BRAND.md` tokens to `web/app/globals.css` | Cosmetic |
+| Item | Status |
+|------|--------|
+| Approve/copy queue in daily use | Copy buttons shipped; validate hand-off to host agent |
+| Catch stories for landing page | Human-authored content for v4 gate |
 
 **Gate to exit:** v3 → v4 gate above; alert feed in daily use; approve-copy flow
 defined (minimal: copy + link to Codex prompt is enough).
@@ -145,21 +146,25 @@ defined (minimal: copy + link to Codex prompt is enough).
 
 ## v4 — Public
 
+**Status:** code shipped 2026-07-07 (init, landing, skills installer). Exit gate (external user) still open.
+
 **Goal:** Others can discover, install, and run Kizuki locally. No hosted or TEE
 product (`docs/future-notes.md` gates that separately).
 
 **Gate to start:** v3 → v4 gate above.
 
-### Scope
+### Scope (shipped)
 
-1. **Landing page** — extend `site/index.html` or new public site: one-liner from
-   `docs/vision.md` + anonymized catch stories
-2. **`npx kizuki init`** — setup wizard: vault dirs, `kizuki.config.json`
-   template, MCP registration snippet, `doctor` smoke path
-3. **Distribution** — public GitHub (code only; vault data stays gitignored),
-   README polish, optional Show HN / Product Hunt
-4. **Positioning pass** — narrow alignment wedge vs horizontal org search
-5. **Agent Skills pack** (optional) — `codex/prompts/` as installable skills
+1. **Landing page** — `site/index.html`: vision one-liner + positioning copy
+2. **`kizuki init`** — vault dirs, `kizuki.config.json` template, MCP snippet, doctor hint
+3. **Distribution** — `package.json` `bin`, README polish
+4. **Agent Skills pack** — `scripts/install-codex-prompts.mjs` copies `codex/prompts/`
+
+### Remaining (validation / marketing)
+
+1. Public GitHub polish, Show HN / Product Hunt (human)
+2. Positioning pass with real catch stories
+3. External user completes init + first sync without hand-holding (exit gate)
 
 **Out of scope:** TEE hosting, team/multiplayer, RBAC, SSO, pricing implementation.
 
@@ -173,9 +178,9 @@ Park here until promoted into a milestone. See also `docs/BACKLOG.md`.
 
 | Idea | Notes |
 |------|-------|
-| `--project` / `--team` CLI scope | `lib/args.mjs` accepts person positional only today |
-| Transcript watcher | Auto-sync when a file lands in `transcripts/` |
-| Cross-shift trends | e.g. "inbound data blocked 3 days running" |
+| `--project` / `--team` CLI scope | **Shipped** — `lib/args.mjs` + prompt scope lines |
+| Transcript watcher | **Shipped** — `kizuki watch` + `lib/watcher.mjs` |
+| Cross-shift trends | **Shipped** — `lib/trends.mjs`; brief + dashboard home |
 | LLM-written day summary | Deterministic aggregate exists in v1 |
 | Slack DM mirror for alerts | Work IT permitting |
 | Windows/Linux shift support | `lib/launchd.mjs` seam exists; needs schtasks/systemd |

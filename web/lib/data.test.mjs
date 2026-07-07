@@ -5,8 +5,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   parseEntityFile, listByType, getEntity, followups, searchVault, listDays, readDay, formatDate,
-  lastUpdated, formatDateTime,
+  lastUpdated, formatDateTime, alertsForDate, extractDraftsFromBody, listAlertDates,
 } from "./data.mjs";
+import { formatAlertLine } from "../../lib/alerts.mjs";
 
 async function emptyVault() {
   const dir = await mkdtemp(join(tmpdir(), "kizuki-web-"));
@@ -163,4 +164,35 @@ test("lastUpdated returns the newest entity mtime", async () => {
 
 test("re-exports formatDateTime for pages", () => {
   assert.equal(formatDateTime(new Date(2026, 6, 4, 9, 32)), "July 4, 2026, 9:32 AM");
+});
+
+test("alertsForDate parses alert files", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-web-alerts-"));
+  try {
+    await mkdir(join(dir, "alerts"), { recursive: true });
+    const alert = {
+      severity: "warn",
+      kind: "blocker",
+      type: "project",
+      name: "staff",
+      evidence: "UAT mismatch",
+      draft: "Can we align on UAT?",
+    };
+    await writeFile(
+      join(dir, "alerts", "2026-07-07.md"),
+      `${formatAlertLine(alert)}\n  \`\`\`\n  ${alert.draft}\n  \`\`\`\n`,
+      "utf8",
+    );
+    const alerts = await alertsForDate(dir, "2026-07-07");
+    assert.equal(alerts.length, 1);
+    assert.equal(alerts[0].draft, alert.draft);
+    assert.deepEqual(await listAlertDates(dir), ["2026-07-07"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("extractDraftsFromBody finds fenced blocks", () => {
+  const body = "**Recommended actions:**\n\n```\nHi team — draft\n```\n";
+  assert.deepEqual(extractDraftsFromBody(body), ["Hi team — draft"]);
 });
