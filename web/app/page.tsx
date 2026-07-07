@@ -29,7 +29,7 @@ export default async function Home() {
           {preview.map((g) =>
             [...g.followUps.map((f) => ({ kind: "follow-up", text: f })), ...g.actions.map((a) => ({ kind: "action", text: a }))].map((item, i) => (
               <li key={`${g.type}/${g.name}/${i}`}>
-                <Link href={`/entity/${g.type}/${g.name}`}>{g.type}/{g.name}</Link>
+                <Link href={`/entity/${g.type}/${encodeURIComponent(g.name)}`}>{g.type}/{g.name}</Link>
                 {" "}<span className="muted">[{item.kind}]</span> {item.text}
               </li>
             )),

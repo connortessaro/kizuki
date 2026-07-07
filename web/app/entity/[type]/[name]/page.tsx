@@ -6,7 +6,12 @@ export const dynamic = "force-dynamic";
 
 export default async function EntityPage({ params }: { params: Promise<{ type: string; name: string }> }) {
   const { type, name: rawName } = await params;
-  const name = decodeURIComponent(rawName);
+  let name: string;
+  try {
+    name = decodeURIComponent(rawName);
+  } catch {
+    notFound();
+  }
   if (!TYPES.includes(type) || !name || /[/\\]|\.\./.test(name)) notFound();
   const entity = await getEntity(vaultDir(), type, name);
   if (!entity) notFound();
