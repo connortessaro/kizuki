@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { vaultDir, listByType, followups, listDays, formatDate } from "../lib/data.mjs";
+import { vaultDir, listByType, followups, listDays, formatDate, lastUpdated, formatDateTime } from "../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const dir = vaultDir();
-  const [byType, groups, days] = await Promise.all([listByType(dir), followups(dir), listDays(dir)]);
+  const [byType, groups, days, updated] = await Promise.all([listByType(dir), followups(dir), listDays(dir), lastUpdated(dir)]);
   const preview = groups.slice(0, 5);
   return (
     <>
       <h1>Dashboard</h1>
+      {updated ? <p className="muted">Last vault update: {formatDateTime(updated)}</p> : null}
       <div className="cards">
         <Link className="card" href="/people"><span className="count">{byType.person.length}</span>people</Link>
         <Link className="card" href="/projects"><span className="count">{byType.project.length}</span>projects</Link>

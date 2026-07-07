@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { entityPath } from "../../lib/vault.mjs";
@@ -8,6 +8,16 @@ import {
 
 export { TYPES };
 export { formatDate } from "../../lib/format.mjs";
+export { formatDateTime } from "../../lib/format.mjs";
+
+export async function lastUpdated(dir) {
+  let latest = 0;
+  for (const e of await eachEntity(dir)) {
+    const { mtimeMs } = await stat(e.path);
+    if (mtimeMs > latest) latest = mtimeMs;
+  }
+  return latest ? new Date(latest) : null;
+}
 
 export const vaultDir = () =>
   process.env.KIZUKI_VAULT || join(dirname(fileURLToPath(import.meta.url)), "..", "..");
