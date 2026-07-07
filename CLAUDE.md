@@ -15,11 +15,12 @@ decide. Do not add autonomous action-taking without revisiting this.
 
 Design + plan: `docs/2026-06-30-kizuki-design.md`,
 `docs/superpowers/plans/2026-06-30-kizuki-v1.md`.
+Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (134 tests)
+npm test                              # node --test — full suite (167 tests)
 node --test lib/vault.test.mjs        # one test file
 ./kizuki sync                          # run the CLI (calls `codex exec`)
 ./kizuki sync <person> --source slack  # scoped run
@@ -33,7 +34,7 @@ node --test lib/vault.test.mjs        # one test file
 
 ## Architecture
 
-Data flow: `parseArgs → buildPrompt → runAgent → parsePayload → applyPayload → vault helpers`.
+Data flow: `parseArgs → buildPrompt → runAgent → parsePayload → applyPayload → vault helpers` (+ `notifyAlerts` after apply when not dry-run).
 
 The central design decision: **the AI agent returns one fenced JSON payload;
 deterministic JS writes the files.** The LLM never edits files directly. This is
@@ -61,7 +62,13 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   dedup so re-runs don't duplicate), `renderAnalysis(entity, now)` (`now` injected
   for deterministic tests).
 - **`lib/apply.mjs`** — `applyPayload(vaultDir, payload, {dryRun, now})`. Writes
-  entity files, archives consumed transcripts to `transcripts/processed/`.
+  entity files, archives consumed transcripts to `transcripts/processed/`, appends
+  alerts to `alerts/YYYY-MM-DD.md`.
+- **`lib/alerts.mjs`** — `appendAlerts` with exact-line dedup; returns only new alerts.
+- **`lib/notify.mjs`** — macOS osascript notifications for warn/critical alerts and
+  sync-failure batching (darwin-only; no-op elsewhere).
+- **`lib/syncFailures.mjs`** — consecutive `--loop` failure counter in
+  `state/sync-failures.json`.
 - **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent})`. `runAgent` is injected
   so tests never spawn a process or hit the network.
 - **`kizuki`** — executable. Dispatches subcommands (`sync`/`sync --loop`/`start`/`stop`).
@@ -124,7 +131,7 @@ for the vault: entity browser, follow-ups, day summaries, search.
 
 ## Data safety
 
-`people/`, `projects/`, `teams/`, and `transcripts/` are gitignored — they hold
+`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, and `state/` are gitignored — they hold
 internal work data. Only code + empty folder structure is tracked. Never
 force-add files under those folders; never push work data to a remote.
 

@@ -14,6 +14,8 @@ person/project/team, and rewrites a managed analysis section per file.
 It observes and advises only — it never sends messages or takes actions on its
 own. Humans approve every outward action. Do not add autonomous action-taking.
 
+Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
+
 ## Hard rules
 
 - **The AI agent returns one fenced JSON payload; deterministic JS writes the
@@ -60,7 +62,7 @@ node --test lib/vault.test.mjs # one file
 
 - One git worktree per task: `git worktree add ../kizuki-wt-<topic> -b <topic>`.
   No install step needed; run `npm test` in the worktree.
-- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`) is gitignored
+- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`) is gitignored
   and exists only in the main checkout. Never force-add it, never push it.
 - Write lock: `applyPayload` serializes writers via `state/vault.lock` (30s
   wait then loud failure; stale locks stolen by PID liveness). Concurrent

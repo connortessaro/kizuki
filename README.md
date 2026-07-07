@@ -75,6 +75,7 @@ people/<name>.md      # frontmatter: role, team, manager | log + analysis
 projects/<name>.md    # frontmatter: status, stakeholders | log + analysis
 teams/<name>.md       # frontmatter: members | rollup
 transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
+alerts/               # daily alert files (gitignored); written by sync
 ```
 
 Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard below.
@@ -151,10 +152,15 @@ npm run dev              # http://localhost:3000
 Reads the vault fresh on every page load. Vault dir comes from `KIZUKI_VAULT`
 (defaults to the repo root).
 
+## Roadmap
+
+Ranked milestones (v2 alerts → v3 dashboard → v4 public):
+[`docs/ROADMAP.md`](docs/ROADMAP.md). Ideation: [`docs/BACKLOG.md`](docs/BACKLOG.md).
+
 ## Development
 
 ```
-npm test        # node --test, 134 tests (core is zero-dep; mcp/ has its own deps)
+npm test        # node --test, 167 tests (core is zero-dep; mcp/ has its own deps)
 ```
 
 
