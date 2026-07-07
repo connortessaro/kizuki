@@ -13,8 +13,8 @@ const readIfExists = (p) => readFile(p, "utf8").then((c) => c, (e) => (e.code ==
 export async function upsertAnalysis(vaultDir, { type, name, analysis = {}, rawEntries = [] }, applyOpts = {}) {
   assertType(type);
   assertName(name);
-  const payload = { entities: [{ type, name, rawEntries, analysis }], consumedTranscripts: [] };
-  const changes = await applyPayload(vaultDir, payload, { ...applyOpts, tool: "mcp" });
+  const payload = { entities: [{ type, name, rawEntries, analysis }], consumedTranscripts: [], alerts: [] };
+  const { changes } = await applyPayload(vaultDir, payload, { ...applyOpts, tool: "mcp" });
   return `Updated ${type}/${name} at ${changes[0].path}`;
 }
 
