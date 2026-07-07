@@ -1,0 +1,28 @@
+<!-- @dsCard group="Motion" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ringi motion: discrete</title>
+<style>
+  :root{--paper:#FAFAF7;--ink:#1A1A18;--stone:#6B6B66;--rule:#E7E4DB;--seal:#C8402E}
+  body{background:var(--paper);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;margin:0}
+  main{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory}
+  section{height:100vh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;border-bottom:1px solid var(--rule)}
+  .label{font-family:ui-monospace,monospace;font-size:13px;letter-spacing:.08em;color:var(--stone)}
+  .seal{width:64px;height:64px;border:3px solid var(--seal);border-radius:50%;color:var(--seal);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;opacity:0;transform:scale(1.18) rotate(-6deg)}
+  .stamped .seal{animation:land .35s cubic-bezier(.2,1.4,.4,1) forwards}
+  @keyframes land{to{opacity:1;transform:scale(1) rotate(-6deg)}}
+  @media (prefers-reduced-motion:reduce){
+    main{scroll-snap-type:none}
+    .seal{animation:none;opacity:1;transform:scale(1) rotate(-6deg)}
+  }
+</style></head><body><main>
+  <section><div class="label">RINGI — DISCRETE / one beat at a time</div><div class="seal">承</div></section>
+  <section><div class="label">SECOND APPROVAL</div><div class="seal">認</div></section>
+  <section><div class="label">FINAL SEAL</div><div class="seal">決</div></section>
+</main>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("stamped")), {threshold: 0.6});
+  document.querySelectorAll("section").forEach(s => io.observe(s));
+</script>
+</body></html>
