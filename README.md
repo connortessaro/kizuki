@@ -18,6 +18,9 @@ actions for you. You decide.
     ./kizuki sync --dry-run                # show what would change, write nothing
     ./kizuki start                         # begin shift: sync + brief + 30-min background sync
     ./kizuki stop                          # end shift: final sync + day summary + remove background sync
+    ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
+    ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
+    ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 

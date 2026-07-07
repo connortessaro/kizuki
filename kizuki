@@ -7,6 +7,7 @@ import { runSync } from "./lib/run.mjs";
 import { resolveAgent, makeRunAgent } from "./lib/agent.mjs";
 import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySummary } from "./lib/shift.mjs";
 import { installJob, removeJob } from "./lib/launchd.mjs";
+import { runDoctor } from "./lib/doctor.mjs";
 
 const vaultDir = dirname(fileURLToPath(import.meta.url));
 const kizukiPath = join(vaultDir, "kizuki");
@@ -16,7 +17,8 @@ const USAGE = `usage: kizuki <command>
   kizuki sync [person] [--source a,b] [--dry-run]  pull activity into the vault
   kizuki sync --loop                               background mode (no-op unless a shift is on)
   kizuki start                                     begin shift: sync + brief + 30-min background sync
-  kizuki stop                                      end shift: final sync + day summary + remove background sync`;
+  kizuki stop                                      end shift: final sync + day summary + remove background sync
+  kizuki doctor [--no-smoke] [--check-only]        diagnose config, agent, vault structure`;
 
 async function doSync(argv) {
   const { cmd, timeoutMs } = await resolveAgent(vaultDir);
@@ -57,6 +59,17 @@ try {
     await endShift(vaultDir);
     await recordStop(vaultDir);
     console.log(`shift ended — day summary: ${summaryPath}`);
+  } else if (command === "doctor") {
+    const checkOnly = rest.includes("--check-only");
+    const runSmoke = !rest.includes("--no-smoke");
+    const MARKS = { pass: "✅", fail: "❌", skip: "⏭️" };
+    let fails = 0;
+    for await (const r of runDoctor(vaultDir, { makeRunAgent, checkOnly, runSmoke })) {
+      console.log(`${MARKS[r.status]} ${r.name} — ${r.detail}`);
+      if (r.status === "fail") fails++;
+    }
+    console.log(fails ? `\n${fails} check(s) failed` : "\nall checks passed");
+    process.exit(fails ? 1 : 0);
   } else {
     console.error(USAGE);
     process.exit(1);
