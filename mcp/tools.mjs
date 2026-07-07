@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { entityPath } from "../lib/vault.mjs";
 import { applyPayload } from "../lib/apply.mjs";
-import { TYPES, eachEntity, bulletsUnder, followupsByEntity, assertType, assertName, statusOf } from "../lib/query.mjs";
+import { TYPES, eachEntity, followupsByEntity, assertType, assertName, statusOf } from "../lib/query.mjs";
 
 export { TYPES };
 export const CHARACTER_LIMIT = 25000;

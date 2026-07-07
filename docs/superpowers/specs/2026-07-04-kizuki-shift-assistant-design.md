@@ -47,7 +47,7 @@ Remaining v0 work:
    evidenced in transcripts or the named sources, never from the vault repo
    itself; `source` must be the channel an item actually came from (transcript
    files are always `"transcript"` — never relabel).
-3. **Real-data gate at work:** one week of real transcripts through `./sync`.
+3. **Real-data gate at work:** one week of real transcripts through `./kizuki sync`.
    Gate to v2+ (alerts, dashboard): analysis surfaces ≥1 true thing per week
    Connor would have missed.
 
