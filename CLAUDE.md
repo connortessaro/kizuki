@@ -19,7 +19,7 @@ Design + plan: `docs/2026-06-30-kizuki-design.md`,
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (46 tests)
+npm test                              # node --test — full suite (119 tests)
 node --test lib/vault.test.mjs        # one test file
 ./kizuki sync                          # run the CLI (calls `codex exec`)
 ./kizuki sync <person> --source slack  # scoped run
