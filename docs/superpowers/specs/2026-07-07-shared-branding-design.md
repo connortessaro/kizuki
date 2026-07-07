@@ -76,14 +76,89 @@ coherence and B2B credibility both break.
 
 Both mascots are Hokkaido animals — the family story stays coherent.
 
+## Brand behavior (second layer: how the brand acts, not just looks)
+
+Principle from divergent exploration: **decoration is copyable; only
+load-bearing brand survives.** Four behaviors, approved:
+
+### Motion grammar (the siblings differ in physics, not palette)
+
+- **Ringi — discrete, ceremonial.** Stamps land one at a time:
+  IntersectionObserver-triggered snap (`scale 1.18 → 1`, thunk easing,
+  ink-bleed mask), scroll-snap document-chain sections, single column.
+  One document, one decision, one beat at a time.
+- **Kizuki — continuous, ambient.** Free-scrolling field; muted lines
+  breathe (slow ~6s opacity idle); THE noticed line carries a persistent
+  low-frequency amber pulse. No entrance events — ongoing vigilance.
+- No shared easing curves or spacing rhythm between products. Empty states
+  follow the grammar: ringi = unfilled stamp strip (ritual not yet begun);
+  kizuki = calm field with no pulsing line (nothing needs attention).
+- Codify as motion tokens: `discrete` vs `continuous` presets in each
+  BRAND.md. Reduced-motion fallback required.
+- Risk to tune by eye: kizuki's ambient pulse must read "watching," never
+  "broken." Prototype both grammars as throwaway single-file HTML side by
+  side before touching either repo.
+
+### Diegetic mascots (the animal is information)
+
+- **Momonga renders only when a real misalignment/follow-up exists** —
+  gated behind one boolean (`hasSignal()` wrapping the existing followups
+  query). "No momonga today" is a query readout, not decoration.
+- **Crane walks the ringi stamp strip** as the actual progress indicator.
+- Every 404/empty/error state is an in-world event through existing render
+  paths: ringi 404 = memo bounced back unstamped for revision (差し戻し);
+  kizuki empty = field note, "checked N threads, nothing needs your
+  attention" — a rare good outcome, not a placeholder.
+- Trust constraint: the momonga gate is a promise. Log every appearance
+  (entity, date, what it flagged) to a field-notes file as a self-audit of
+  signal quality. Validate `hasSignal()` against real vault data before
+  drawing anything.
+
+### Voice registers (mechanically enforced)
+
+- Ringi copy in ringi-sho memo register: routing, seals, dates, revision
+  marks. Every string carries a routing/date/seal noun.
+- Kizuki copy as understated field notes: no superlatives, no CTAs, never
+  a pitch.
+- Enforced by a small lint pass over copy strings in each repo.
+
+### Authenticity anchors (unclonable, accountable)
+
+- Commission one real carved hanko per product from the same engraver
+  (boxwood, 稟 and 気; ~¥3,000–8,000 each). Stamp on real washi with
+  shuniku ink, scan at 600dpi, keep 3–4 impressions with different bleed
+  and rotate them in the UI — an object with a history, not a texture pack.
+- Etymology page per site (`/about/ringi-sho`, `/notes/kizuki`): sourced,
+  footnoted mapping of concept → product mechanic; credited native-speaker
+  review before publishing; standing correction invite with a public
+  correction changelog. The invite is a live wire — corrections must be
+  visibly acted on.
+- Mascot art: commissioned or hand-authored original ink illustration,
+  credited — same illustrator hand rule as above.
+
+### Kizuki night diary (earned delight)
+
+Dark-mode / late-hours easter egg: the momonga is awake (it is nocturnal)
+and offers one diary page about what it noticed that day. Small build,
+gated by real time/theme state, never announced in marketing.
+
+Rejected as traps: washi weathering from behavioral data, cross-tab
+mascot relationship, stamp cooldown friction.
+
 ## Deliverables
 
-1. `ringi/docs/BRAND.md` — family base + ringi layer. Codifies what
+1. `ringi/docs/BRAND.md` — family base + ringi layer + brand-behavior
+   rules (motion tokens, voice lint, diegetic rules). Codifies what
    `site/index.html` already does; the landing page is the reference
    implementation and adopts the token names.
-2. `kizuki/docs/BRAND.md` — family base + kizuki layer.
-3. Mascot SVGs, hand-authored line art (no image-gen tooling available):
-   `tancho.svg` (ringi), `momonga.svg` (kizuki).
+2. `kizuki/docs/BRAND.md` — family base + kizuki layer + brand-behavior
+   rules.
+3. Mascot SVGs, hand-authored line art (until commissioned originals
+   exist): `tancho.svg` (ringi), `momonga.svg` (kizuki).
+4. Motion-grammar prototypes: two throwaway single-file HTML pages
+   (stamp-snap vs ambient pulse) to validate the contrast by eye.
+5. Physical hanko order + scans; etymology pages — founder tasks tracked
+   in the plan, not code deliverables.
 
 Out of scope for now: restyling the kizuki web dashboard (later task, uses
 `BRAND.md` when it happens), any umbrella/parent brand, kizuki public
