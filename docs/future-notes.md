@@ -1,7 +1,7 @@
 # Kizuki — Future Notes (speculative)
 
 Status: **not validated. Do not build any of this before Task 8 passes.**
-Task 8 = run `./sync <real-teammate>` on the work machine with real codex + MCP,
+Task 8 = run `./kizuki sync <real-teammate>` on the work machine with real codex + MCP,
 and answer: *does the output tell me something I didn't know, or hand me a draft
 worth sending?* Everything below is contingent on that being "yes." These are
 notes to think against, not a roadmap.
