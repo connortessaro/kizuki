@@ -5,6 +5,9 @@ import { entityPath } from "../../lib/vault.mjs";
 import {
   TYPES, eachEntity, followupsByEntity, assertType, assertName, statusOf,
 } from "../../lib/query.mjs";
+import { readAlertsForDate, parseAlertsWithDrafts } from "../../lib/alerts.mjs";
+import { listAlertDates, alertTrends } from "../../lib/trends.mjs";
+import { readShift } from "../../lib/shift.mjs";
 
 export { TYPES };
 export { formatDate } from "../../lib/format.mjs";
@@ -98,4 +101,48 @@ export async function readDay(dir, date) {
     if (e.code === "ENOENT") return null;
     throw e;
   }
+}
+
+export { listAlertDates, alertTrends };
+
+export async function alertsForDate(dir, date) {
+  if (!DATE_RE.test(date)) throw new Error(`invalid date: ${JSON.stringify(date)}`);
+  const content = await readAlertsForDate(dir, date);
+  if (!content) return [];
+  return parseAlertsWithDrafts(content);
+}
+
+export async function todayAlerts(dir, now = new Date()) {
+  return alertsForDate(dir, now.toISOString().slice(0, 10));
+}
+
+export const getShift = (dir) => readShift(dir);
+
+export function extractDraftsFromBody(body) {
+  const drafts = [];
+  const re = /```\n([\s\S]*?)\n```/g;
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    const text = m[1].trim();
+    if (text) drafts.push(text);
+  }
+  return drafts;
+}
+
+export async function copyQueue(dir) {
+  const items = [];
+  for (const alert of await todayAlerts(dir)) {
+    if (alert.draft) {
+      items.push({
+        label: `[${alert.severity}] ${alert.kind} ${alert.type}/${alert.name}`,
+        text: alert.draft,
+      });
+    }
+  }
+  for (const e of await eachEntity(dir)) {
+    for (const text of extractDraftsFromBody(e.content)) {
+      items.push({ label: `${e.type}/${e.name}`, text });
+    }
+  }
+  return items;
 }

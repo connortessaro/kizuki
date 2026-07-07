@@ -47,11 +47,15 @@ for the vault: entity browser, follow-ups, day summaries, search.
 ## Commands
 
 ```bash
-npm test                       # full suite
+npm test                       # full suite (188 tests)
 node --test lib/vault.test.mjs # one file
-./kizuki sync                   # run the sync CLI (spawns configured agent)
-./kizuki sync --dry-run         # compute changes, write nothing
-./kizuki start                  # begin shift: sync + brief + 30-min background sync
+./kizuki init                  # create vault dirs + default config
+./kizuki sync                  # run the sync CLI (spawns configured agent)
+./kizuki sync --project <name> # project scope
+./kizuki sync --team <name>    # team scope
+./kizuki sync --dry-run        # compute changes, write nothing
+./kizuki watch                 # auto-sync on new transcripts
+./kizuki start                 # begin shift: sync + brief + 30-min background sync
 ./kizuki stop                   # end shift: final sync + day summary + remove background sync
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)

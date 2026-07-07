@@ -12,11 +12,15 @@ actions for you. You decide.
 ## Usage
 
 ```
+./kizuki init                          # create vault dirs + default kizuki.config.json
 ./kizuki sync                          # all people/projects/teams, all sources
 ./kizuki sync bob-smith                # only this person, all sources
+./kizuki sync --project staff         # only this project
+./kizuki sync --team checkout         # only this team
 ./kizuki sync --source slack           # all entities, only Slack
 ./kizuki sync bob-smith --source slack,github
 ./kizuki sync --dry-run                # show what would change, write nothing
+./kizuki watch                         # auto-sync when a transcript lands in transcripts/
 ./kizuki start                         # begin shift: sync + brief + 30-min background sync
 ./kizuki stop                          # end shift: final sync + day summary + remove background sync
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
@@ -26,10 +30,23 @@ actions for you. You decide.
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 
+### First-time setup
+
+```
+./kizuki init
+./kizuki doctor
+node scripts/install-codex-prompts.mjs   # optional: Codex /kizuki-start slash command
+```
+
 ### Shift rituals (Codex slash commands)
 
-Copy the ritual prompts to your Codex prompts folder to get `/kizuki-start` and
-`/kizuki-stop` slash commands that wrap `./kizuki start` / `./kizuki stop`:
+Install ritual prompts to your Codex prompts folder:
+
+```
+node scripts/install-codex-prompts.mjs
+```
+
+Or copy manually:
 
 ```
 cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
@@ -140,9 +157,9 @@ env = { KIZUKI_VAULT = "/ABS/PATH/kizuki" }
 
 ## Web dashboard
 
-Read-only localhost dashboard for browsing the vault: entities, follow-ups,
-day summaries, search. It never writes vault files and never sends anything —
-same rules as everywhere else in Kizuki.
+Read-only localhost dashboard for browsing the vault: **alerts**, **shift status
++ copy queue**, entities, follow-ups, day summaries, search. It never writes vault
+files and never sends anything — same rules as everywhere else in Kizuki.
 
 ```
 cd web && npm install    # once
@@ -160,7 +177,7 @@ Ranked milestones (v2 alerts → v3 dashboard → v4 public):
 ## Development
 
 ```
-npm test        # node --test, 171 tests (core is zero-dep; mcp/ has its own deps)
+npm test        # node --test, 188 tests (core is zero-dep; mcp/ has its own deps)
 ```
 
 
