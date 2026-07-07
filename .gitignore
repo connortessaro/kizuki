@@ -16,8 +16,8 @@ teams/*
 !teams/.gitkeep
 
 # Shift state + day summaries — machine-local work data
-state/
-days/
+/state/
+/days/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
