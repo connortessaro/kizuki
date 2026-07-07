@@ -108,8 +108,11 @@ two stealers racing resolve correctly because only one `wx` create wins.
 - `lib/apply.test.mjs` additions: `applyPayload` creates and removes
   `state/vault.lock` around a real write; `dryRun` never creates it; a held
   lock (live PID, tiny `waitMs` injected) makes `applyPayload` throw.
-- MCP `upsert_analysis` path needs no new tests beyond one assertion that it
-  passes `tool: "mcp"` — the lock behavior is `applyPayload`'s.
+- MCP path: `upsertAnalysis` gains an internal pass-through options param so
+  one test can prove the upsert path respects a held lock (injected tiny
+  `waitMs`); `tool: "mcp"` is hardcoded after the spread so callers cannot
+  override it, and is verified in review (runtime capture would need hooks
+  the design doesn't want).
 
 ## Non-goals
 
