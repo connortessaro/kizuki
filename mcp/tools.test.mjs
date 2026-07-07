@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { upsertAnalysis, readEntity, listEntities, listFollowups, search } from "./tools.mjs";
@@ -39,7 +39,6 @@ test("upsertAnalysis preserves hand-notes outside the markers", async () => {
   await upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "one" } });
   const path = join(v, "people", "bob.md");
   let c = await readFile(path, "utf8");
-  const { writeFile } = await import("node:fs/promises");
   await writeFile(path, c.replace("<!-- KIZUKI:ANALYSIS:START -->", "> HANDNOTE keep me\n<!-- KIZUKI:ANALYSIS:START -->"));
   await upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "two" } });
   const after = await readFile(path, "utf8");
@@ -87,6 +86,19 @@ test("listFollowups aggregates follow-ups across entities", async () => {
   assert.match(f, /confirm refunds scope/);
   assert.match(f, /name a schema owner/);
   assert.match(f, /priya/);
+});
+
+test("upsertAnalysis respects a held vault lock", async () => {
+  const v = await makeVault();
+  await mkdir(join(v, "state"), { recursive: true });
+  await writeFile(join(v, "state", "vault.lock"), JSON.stringify({ pid: 1, tool: "sync", startedAt: "x" }));
+  const t0 = Date.now();
+  await assert.rejects(
+    upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "x" } },
+      { lock: { waitMs: 20, pollMs: 5, pidAlive: () => true } }),
+    /vault locked by sync \(pid 1\)/
+  );
+  assert.ok(Date.now() - t0 < 1000, "lock options were not passed through");
 });
 
 test("search finds a term across the vault", async () => {

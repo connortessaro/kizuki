@@ -56,15 +56,23 @@ is a real lost-update hazard.
 1. `mkdir(state, { recursive: true })`, then attempt
    `writeFile(lockPath, meta, { flag: "wx" })`.
 2. Success → lock held.
-3. `EEXIST` → read the lock file:
+3. `EEXIST` → read the lock file (capture its raw bytes):
    - Unreadable or unparsable JSON, or missing/non-numeric `pid` → treat as
-     stale: unlink and retry the atomic create immediately.
-   - `pidAlive(pid)` false → stale: unlink, retry immediately.
+     stale (see the verify-before-unlink step below).
+   - `pidAlive(pid)` false → stale (see the verify-before-unlink step below).
    - Holder alive → wait `pollMs` (default 500ms) and re-run the full
      acquire from step 1 (so a holder that finishes or dies mid-wait is
      picked up); once `waitMs` (default 30000ms) has elapsed, throw:
      `vault locked by <tool> (pid <pid>) since <startedAt>`.
-4. Any error other than `EEXIST` from the create (e.g. `EACCES`) propagates —
+4. **Steal (verify-before-unlink):** before unlinking a lock judged stale,
+   re-read the file and compare its raw bytes to what was judged. Only unlink
+   if they are identical; if the content changed or the file is now gone
+   (`ENOENT`), do not unlink — loop back to the atomic create in step 1. This
+   closes a double-steal race: two live acquirers can both judge the same
+   dead-holder lock stale, and without the recheck A unlinks + recreates its
+   fresh lock, then B unlinks A's lock and both proceed. Re-reading shrinks the
+   window to the read→unlink gap.
+5. Any error other than `EEXIST` from the create (e.g. `EACCES`) propagates —
    no silent failure.
 
 The steal path re-enters the atomic create rather than assuming success —

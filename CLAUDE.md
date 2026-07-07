@@ -19,7 +19,7 @@ Design + plan: `docs/2026-06-30-kizuki-design.md`,
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (119 tests)
+npm test                              # node --test — full suite (134 tests)
 node --test lib/vault.test.mjs        # one test file
 ./kizuki sync                          # run the CLI (calls `codex exec`)
 ./kizuki sync <person> --source slack  # scoped run
@@ -137,7 +137,8 @@ force-add files under those folders; never push work data to a remote.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`) exists only in
   the main checkout — it is gitignored, so worktrees see empty folders. Code
   work in worktrees can never touch real work data.
-- **One vault writer at a time.** There is no write lock yet: do not run `./kizuki sync`
-  and MCP `upsert_analysis` against the main checkout concurrently.
+- **Write lock.** `applyPayload` serializes writers through `state/vault.lock`
+  (waits up to 30s, then fails naming the holder; stale locks stolen by PID
+  liveness). Concurrent `./kizuki sync` and MCP `upsert_analysis` are safe.
 - `AGENTS.md` mirrors this file for non-Claude agents (Codex at work). Keep the
   two in sync when either changes.
