@@ -64,7 +64,7 @@ With no config file, Kizuki defaults to `codex exec`. This file is gitignored
     teams/<name>.md       # frontmatter: members | rollup
     transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
 
-Open the vault in your editor (Obsidian, VS Code). There is no separate UI.
+Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard below.
 
 ## Requirements
 
@@ -116,9 +116,21 @@ Codex (`~/.codex/config.toml`):
 
 `KIZUKI_VAULT` defaults to the repo root if unset.
 
+## Web dashboard
+
+Read-only localhost dashboard for browsing the vault: entities, follow-ups,
+day summaries, search. It never writes vault files and never sends anything —
+same rules as everywhere else in Kizuki.
+
+    cd web && npm install    # once
+    npm run dev              # http://localhost:3000
+
+Reads the vault fresh on every page load. Vault dir comes from `KIZUKI_VAULT`
+(defaults to the repo root).
+
 ## Development
 
-    npm test        # node --test, 64 tests (core is zero-dep; mcp/ has its own deps)
+    npm test        # node --test, 98 tests (core is zero-dep; mcp/ has its own deps)
 
 ## Data safety
 
