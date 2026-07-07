@@ -32,9 +32,14 @@ Focus ring in the product accent.
   `--kizuki-deep: #9A5A14` (WCAG AA on paper). Andon: notice a problem,
   the amber lamp lights, humans decide.
 - Motif: one amber-highlighted line among muted lines.
-- Mascot: ezo momonga — primary mark (header, favicon, future landing
-  page). Sumi-e line art, flat, single amber eye-glint. Never
-  kawaii-vector.
+- Mark: the 気 seal — primary mark (header, favicon, future landing page).
+  Same hierarchy as ringi's hanko: the stamped kanji is the logo, not an
+  animal. Interim asset is an AI photo-textured stamp with a real
+  Shippori Mincho glyph overlay (`brand/seal-ki.svg`); replace with the
+  real carved-hanko scan per founder tasks.
+- Mascot: ezo momonga — secondary only (footer, empty states, night
+  diary; never the primary logo). Sumi-e line art, flat, single amber
+  eye-glint. Never kawaii-vector.
 
 ## Motion grammar: `continuous`
 

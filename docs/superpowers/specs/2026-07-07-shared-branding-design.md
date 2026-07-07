@@ -60,11 +60,14 @@ Voice: terse, declarative. Japanese term as a mono eyebrow label
   contract.
 - **Motif:** one amber-highlighted line among muted lines — the noticed
   thing surfacing.
+- **Mark — primary.** The 気 seal is the logo (dashboard header, favicon,
+  future landing page), same hierarchy as ringi's hanko. Revised from the
+  original design: the animal was tried as the primary mark and read as
+  cute-mascot-first rather than document-first, breaking parity with
+  ringi's seal-led identity.
 - **Mascot:** ezo momonga (Hokkaido flying squirrel). Giant watchful eyes,
-  silent night observer — the noticing animal.
-- **Mascot placement — primary.** Kizuki has no existing mark and its
-  audience is the operator. Momonga is THE logo: dashboard header, favicon,
-  future landing page.
+  silent night observer — the noticing animal. **Secondary only** —
+  footer, empty states, night diary. Never the primary logo.
 
 ## Mascot style rule (hard constraint, both docs)
 
