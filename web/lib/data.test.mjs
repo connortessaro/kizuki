@@ -5,7 +5,17 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   parseEntityFile, listByType, getEntity, followups, searchVault, listDays, readDay, formatDate,
+  lastUpdated, formatDateTime,
 } from "./data.mjs";
+
+async function emptyVault() {
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-web-"));
+  await mkdir(join(dir, "people"), { recursive: true });
+  await mkdir(join(dir, "projects"), { recursive: true });
+  await mkdir(join(dir, "teams"), { recursive: true });
+  await mkdir(join(dir, "days"), { recursive: true });
+  return dir;
+}
 
 async function makeVault() {
   const dir = await mkdtemp(join(tmpdir(), "kizuki-web-"));
@@ -127,4 +137,30 @@ test("readDay returns content, null when missing, throws on bad date", async () 
 
 test("re-exports formatDate for pages", () => {
   assert.equal(formatDate("2026-07-04"), "July 4, 2026");
+});
+
+test("lastUpdated is null on an empty vault", async () => {
+  const dir = await emptyVault();
+  try {
+    assert.equal(await lastUpdated(dir), null);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("lastUpdated returns the newest entity mtime", async () => {
+  const dir = await emptyVault();
+  try {
+    const before = Date.now() - 1000;
+    await writeFile(join(dir, "people", "bob.md"), "# bob\n", "utf8");
+    const updated = await lastUpdated(dir);
+    assert.ok(updated instanceof Date);
+    assert.ok(updated.getTime() >= before);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("re-exports formatDateTime for pages", () => {
+  assert.equal(formatDateTime(new Date(2026, 6, 4, 9, 32)), "July 4, 2026, 9:32 AM");
 });
