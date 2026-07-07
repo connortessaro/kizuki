@@ -31,7 +31,7 @@ kizuki is the field notebook.
 | `--stone` | `#6B6B66`   | secondary text               |
 | `--rule`  | `#E7E4DB`   | hairline borders             |
 
-Type: **Shippori Mincho** (display), **Inter** (body), monospace for
+Type: **Shippori Mincho** (display), **Zen Kaku Gothic New** (body — Japanese-designed sans with native kana/kanji, so 稟議/気づき labels render in the body font), monospace for
 eyebrows/labels/annotations. Layout: thin rules, generous margins, calm
 document composition. Focus ring in the product's accent color.
 
