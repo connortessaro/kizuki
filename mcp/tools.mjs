@@ -10,11 +10,11 @@ const truncate = (s) => (s.length > CHARACTER_LIMIT ? s.slice(0, CHARACTER_LIMIT
 
 const readIfExists = (p) => readFile(p, "utf8").then((c) => c, (e) => (e.code === "ENOENT" ? null : Promise.reject(e)));
 
-export async function upsertAnalysis(vaultDir, { type, name, analysis = {}, rawEntries = [] }) {
+export async function upsertAnalysis(vaultDir, { type, name, analysis = {}, rawEntries = [] }, applyOpts = {}) {
   assertType(type);
   assertName(name);
   const payload = { entities: [{ type, name, rawEntries, analysis }], consumedTranscripts: [] };
-  const changes = await applyPayload(vaultDir, payload, {});
+  const changes = await applyPayload(vaultDir, payload, { ...applyOpts, tool: "mcp" });
   return `Updated ${type}/${name} at ${changes[0].path}`;
 }
 
