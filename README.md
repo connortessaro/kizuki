@@ -133,7 +133,7 @@ Reads the vault fresh on every page load. Vault dir comes from `KIZUKI_VAULT`
 
 ## Development
 
-    npm test        # node --test, 98 tests (core is zero-dep; mcp/ has its own deps)
+    npm test        # node --test, 119 tests (core is zero-dep; mcp/ has its own deps)
 
 ## Data safety
 
