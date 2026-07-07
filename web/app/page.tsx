@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { vaultDir, listByType, followups, listDays } from "../lib/data.mjs";
+import { vaultDir, listByType, followups, listDays, formatDate } from "../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export default async function Home() {
 
       <h2>Latest day summary</h2>
       {days.length ? (
-        <p><Link href={`/days/${days[0]}`}>{days[0]}</Link></p>
+        <p><Link href={`/days/${days[0]}`}>{formatDate(days[0])}</Link></p>
       ) : (
         <p className="empty">No day summaries yet.</p>
       )}
