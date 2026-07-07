@@ -13,7 +13,8 @@ export const vaultDir = () =>
 
 export function parseEntityFile(content) {
   const m = content.match(/^---\n([\s\S]*?)\n---\n/);
-  if (!m) return { frontmatter: [], body: content };
+  if (!m) return { frontmatter: /** @type {[string, string][]} */ ([]), body: content };
+  /** @type {[string, string][]} */
   const frontmatter = m[1]
     .split("\n")
     .filter((l) => l.trim())
@@ -25,6 +26,7 @@ export function parseEntityFile(content) {
 }
 
 export async function listByType(dir) {
+  /** @type {Record<"person" | "project" | "team", { name: string, status: string }[]>} */
   const out = { person: [], project: [], team: [] };
   for (const e of await eachEntity(dir)) out[e.type].push({ name: e.name, status: statusOf(e.content) });
   for (const type of TYPES) out[type].sort((a, b) => a.name.localeCompare(b.name));
