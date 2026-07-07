@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export function middleware(request: Request) {
+export function middleware(request: NextRequest) {
   try {
     decodeURIComponent(new URL(request.url).pathname);
   } catch {
@@ -8,3 +8,5 @@ export function middleware(request: Request) {
   }
   return NextResponse.next();
 }
+
+export const config = { matcher: "/((?!_next/|favicon.ico).*)" };
