@@ -11,16 +11,18 @@ actions for you. You decide.
 
 ## Usage
 
-    ./kizuki sync                          # all people/projects/teams, all sources
-    ./kizuki sync bob-smith                # only this person, all sources
-    ./kizuki sync --source slack           # all entities, only Slack
-    ./kizuki sync bob-smith --source slack,github
-    ./kizuki sync --dry-run                # show what would change, write nothing
-    ./kizuki start                         # begin shift: sync + brief + 30-min background sync
-    ./kizuki stop                          # end shift: final sync + day summary + remove background sync
-    ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
-    ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
-    ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+```
+./kizuki sync                          # all people/projects/teams, all sources
+./kizuki sync bob-smith                # only this person, all sources
+./kizuki sync --source slack           # all entities, only Slack
+./kizuki sync bob-smith --source slack,github
+./kizuki sync --dry-run                # show what would change, write nothing
+./kizuki start                         # begin shift: sync + brief + 30-min background sync
+./kizuki stop                          # end shift: final sync + day summary + remove background sync
+./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
+./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
+./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+```
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 
@@ -29,14 +31,18 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 Copy the ritual prompts to your Codex prompts folder to get `/kizuki-start` and
 `/kizuki-stop` slash commands that wrap `./kizuki start` / `./kizuki stop`:
 
-    cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
+```
+cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
+```
 
 Plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work
 machine's global AGENTS.md pointing at the same two prompts.
 
 ## How it works
 
-    parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> vault
+```
+parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> vault
+```
 
 Your AI agent does the reading, fetching, and analysis, and returns a single
 fenced JSON payload. Deterministic JS then writes the files. The LLM never edits
@@ -51,9 +57,11 @@ run non-interactively with your MCP servers/tools, and print its final message
 
 Set the command in `kizuki.config.json` in the repo root:
 
-    { "agentCmd": ["claude", "-p"] }      # Claude Code
-    { "agentCmd": ["codex", "exec"] }     # OpenAI Codex (this is the default)
-    { "agentCmd": ["gemini", "-p"] }      # Gemini CLI
+```
+{ "agentCmd": ["claude", "-p"] }      # Claude Code
+{ "agentCmd": ["codex", "exec"] }     # OpenAI Codex (this is the default)
+{ "agentCmd": ["gemini", "-p"] }      # Gemini CLI
+```
 
 The prompt is appended as the final argument. If any array element is the token
 `{prompt}`, it is substituted in place instead (e.g. `["myagent", "--input", "{prompt}"]`).
@@ -62,10 +70,12 @@ With no config file, Kizuki defaults to `codex exec`. This file is gitignored
 
 ## Vault layout
 
-    people/<name>.md      # frontmatter: role, team, manager | log + analysis
-    projects/<name>.md    # frontmatter: status, stakeholders | log + analysis
-    teams/<name>.md       # frontmatter: members | rollup
-    transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
+```
+people/<name>.md      # frontmatter: role, team, manager | log + analysis
+projects/<name>.md    # frontmatter: status, stakeholders | log + analysis
+teams/<name>.md       # frontmatter: members | rollup
+transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
+```
 
 Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard below.
 
@@ -73,10 +83,12 @@ Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard
 
 - Node >= 20
 - An AI agent CLI that runs a prompt non-interactively and prints its final
-  message to stdout, with MCP servers configured for slack / github / atlassian /
-  outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `kizuki.config.json`
-  (see "Choosing your AI agent"); defaults to `codex exec`.
+message to stdout, with MCP servers configured for slack / github / atlassian /
+outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `kizuki.config.json`
+(see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
+
+
 
 ## Use as an MCP server
 
@@ -89,33 +101,39 @@ then calls these tools to read and safely persist:
 - `list_followups` — every open follow-up + recommended action across the vault
 - `search` — substring search across the vault
 - `upsert_analysis` — the safe writer: creates the file, dedupes the log, and
-  rewrites ONLY the managed analysis section (hand-notes are never touched)
+rewrites ONLY the managed analysis section (hand-notes are never touched)
 
 `upsert_analysis` reuses the same deterministic write path as the CLI, so the LLM
 still never edits files directly — re-runs stay idempotent and notes stay safe.
 
 Setup:
 
-    cd mcp && npm install
+```
+cd mcp && npm install
+```
 
 Register it. Claude Code (`.mcp.json` or `claude mcp add`):
 
-    {
-      "mcpServers": {
-        "kizuki": {
-          "command": "node",
-          "args": ["/ABS/PATH/kizuki/mcp/server.mjs"],
-          "env": { "KIZUKI_VAULT": "/ABS/PATH/kizuki" }
-        }
-      }
+```
+{
+  "mcpServers": {
+    "kizuki": {
+      "command": "node",
+      "args": ["/ABS/PATH/kizuki/mcp/server.mjs"],
+      "env": { "KIZUKI_VAULT": "/ABS/PATH/kizuki" }
     }
+  }
+}
+```
 
 Codex (`~/.codex/config.toml`):
 
-    [mcp_servers.kizuki]
-    command = "node"
-    args = ["/ABS/PATH/kizuki/mcp/server.mjs"]
-    env = { KIZUKI_VAULT = "/ABS/PATH/kizuki" }
+```
+[mcp_servers.kizuki]
+command = "node"
+args = ["/ABS/PATH/kizuki/mcp/server.mjs"]
+env = { KIZUKI_VAULT = "/ABS/PATH/kizuki" }
+```
 
 `KIZUKI_VAULT` defaults to the repo root if unset.
 
@@ -125,15 +143,21 @@ Read-only localhost dashboard for browsing the vault: entities, follow-ups,
 day summaries, search. It never writes vault files and never sends anything —
 same rules as everywhere else in Kizuki.
 
-    cd web && npm install    # once
-    npm run dev              # http://localhost:3000
+```
+cd web && npm install    # once
+npm run dev              # http://localhost:3000
+```
 
 Reads the vault fresh on every page load. Vault dir comes from `KIZUKI_VAULT`
 (defaults to the repo root).
 
 ## Development
 
-    npm test        # node --test, 134 tests (core is zero-dep; mcp/ has its own deps)
+```
+npm test        # node --test, 134 tests (core is zero-dep; mcp/ has its own deps)
+```
+
+
 
 ## Data safety
 
