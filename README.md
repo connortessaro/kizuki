@@ -160,7 +160,7 @@ Ranked milestones (v2 alerts → v3 dashboard → v4 public):
 ## Development
 
 ```
-npm test        # node --test, 167 tests (core is zero-dep; mcp/ has its own deps)
+npm test        # node --test, 171 tests (core is zero-dep; mcp/ has its own deps)
 ```
 
 

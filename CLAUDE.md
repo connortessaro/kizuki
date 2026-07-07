@@ -20,7 +20,7 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (167 tests)
+npm test                              # node --test — full suite (171 tests)
 node --test lib/vault.test.mjs        # one test file
 ./kizuki sync                          # run the CLI (calls `codex exec`)
 ./kizuki sync <person> --source slack  # scoped run
