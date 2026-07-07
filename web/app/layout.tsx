@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import AutoRefresh from "./auto-refresh";
 
 export const metadata = { title: "Kizuki" };
 
@@ -8,6 +9,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <AutoRefresh seconds={60} />
         <nav>
           <Link href="/" className="brand">Kizuki</Link>
           <Link href="/people">People</Link>
