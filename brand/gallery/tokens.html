@@ -1,0 +1,28 @@
+<!-- @dsCard group="Foundations" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family tokens</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#FAFAF7;--ink:#1A1A18;--stone:#6B6B66;--rule:#E7E4DB;--seal:#C8402E;--kizuki:#C4761F;--kizuki-deep:#9A5A14}
+  body{background:var(--paper);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;margin:0;padding:40px}
+  h1{font-family:"Shippori Mincho",serif;font-size:22px;margin:0 0 6px}
+  .eyebrow{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.08em;color:var(--stone);margin-bottom:20px}
+  .sw{display:flex;gap:12px;flex-wrap:wrap}
+  .sw div{width:120px;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+  .sw .c{height:64px}
+  .sw .t{font-family:ui-monospace,monospace;font-size:11px;padding:6px 8px}
+</style></head><body>
+<h1>Family tokens</h1><div class="eyebrow">WASHI / SUMI / SEAL / ANDON</div>
+<div class="sw">
+  <div><div class="c" style="background:#FAFAF7;border-bottom:1px solid #E7E4DB"></div><div class="t">--paper #FAFAF7</div></div>
+  <div><div class="c" style="background:#1A1A18"></div><div class="t">--ink #1A1A18</div></div>
+  <div><div class="c" style="background:#6B6B66"></div><div class="t">--stone #6B6B66</div></div>
+  <div><div class="c" style="background:#E7E4DB"></div><div class="t">--rule #E7E4DB</div></div>
+  <div><div class="c" style="background:#C8402E"></div><div class="t">--seal #C8402E (ringi)</div></div>
+  <div><div class="c" style="background:#C4761F"></div><div class="t">--kizuki #C4761F</div></div>
+  <div><div class="c" style="background:#9A5A14"></div><div class="t">--kizuki-deep #9A5A14</div></div>
+</div>
+<p style="max-width:52ch;color:var(--stone)">Display: Shippori Mincho. Body: Zen Kaku Gothic New (native 稟議 / 気づき). Accents never carry body text; text ≤ 18px in amber uses --kizuki-deep.</p>
+</body></html>
