@@ -160,11 +160,13 @@ mascot relationship, stamp cooldown friction.
    design-system cards, not throwaways.
 5. Physical hanko order + scans; etymology pages — founder tasks tracked
    in the plan, not code deliverables.
-6. Living design-system gallery on claude.ai/design (via DesignSync):
-   brand pieces as small HTML preview cards — token sheet, stamp strip,
-   amber pulse line, both mascots, discrete-vs-continuous motion demos,
-   voice-register samples. Synced incrementally, one component at a time;
-   this is the browsable face of the versioned design language.
+6. Living design-system gallery as local HTML: preview cards in
+   `kizuki/brand/gallery/` (token sheet, both mascots,
+   discrete-vs-continuous motion demos, voice-register samples) plus an
+   `index.html` that iframes them grouped — the browsable face of the
+   versioned design language. (Originally planned for claude.ai/design
+   via DesignSync; Connor's org has no Claude Design access, so the
+   gallery is local-first.)
 
 Out of scope for now: restyling the kizuki web dashboard (later task, uses
 `BRAND.md` when it happens), any umbrella/parent brand, kizuki public
