@@ -39,7 +39,6 @@ test("upsertAnalysis preserves hand-notes outside the markers", async () => {
   await upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "one" } });
   const path = join(v, "people", "bob.md");
   let c = await readFile(path, "utf8");
-  const { writeFile } = await import("node:fs/promises");
   await writeFile(path, c.replace("<!-- KIZUKI:ANALYSIS:START -->", "> HANDNOTE keep me\n<!-- KIZUKI:ANALYSIS:START -->"));
   await upsertAnalysis(v, { type: "person", name: "bob", analysis: { status: "two" } });
   const after = await readFile(path, "utf8");
