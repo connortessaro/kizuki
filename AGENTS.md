@@ -27,6 +27,21 @@ own. Humans approve every outward action. Do not add autonomous action-taking.
   `KIZUKI:ANALYSIS` markers; `appendLog` dedup is exact full-line match; entity
   names are validated path-safe before touching the filesystem.
 
+## Web dashboard (`web/`)
+
+`web/` is a Next.js subpackage (own `package.json` — Next/React/react-markdown
+stay out of the zero-dep core, same isolation as `mcp/`). Read-only browser UI
+for the vault: entity browser, follow-ups, day summaries, search.
+
+- **`web/lib/data.mjs`** — the only module that touches the vault. Plain `.mjs`
+  reusing `lib/query.mjs`/`lib/vault.mjs` (guards included); `node:test`-tested,
+  picked up by the root suite.
+- Pages are thin server components with `dynamic = "force-dynamic"` (fresh read
+  per load). No API routes, no client fetching, **no writes** — adding any
+  write/action to the dashboard requires revisiting the observe-and-advise rule.
+- Entity/date URL params are validated (`assertName`-equivalent guard + date
+  regex) before touching the filesystem.
+
 ## Commands
 
 ```bash
