@@ -155,10 +155,16 @@ mascot relationship, stamp cooldown friction.
    rules.
 3. Mascot SVGs, hand-authored line art (until commissioned originals
    exist): `tancho.svg` (ringi), `momonga.svg` (kizuki).
-4. Motion-grammar prototypes: two throwaway single-file HTML pages
-   (stamp-snap vs ambient pulse) to validate the contrast by eye.
+4. Motion-grammar prototypes: two single-file HTML pages (stamp-snap vs
+   ambient pulse) to validate the contrast by eye — built as permanent
+   design-system cards, not throwaways.
 5. Physical hanko order + scans; etymology pages — founder tasks tracked
    in the plan, not code deliverables.
+6. Living design-system gallery on claude.ai/design (via DesignSync):
+   brand pieces as small HTML preview cards — token sheet, stamp strip,
+   amber pulse line, both mascots, discrete-vs-continuous motion demos,
+   voice-register samples. Synced incrementally, one component at a time;
+   this is the browsable face of the versioned design language.
 
 Out of scope for now: restyling the kizuki web dashboard (later task, uses
 `BRAND.md` when it happens), any umbrella/parent brand, kizuki public
