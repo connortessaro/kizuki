@@ -62,4 +62,6 @@ node --test lib/vault.test.mjs # one file
   No install step needed; run `npm test` in the worktree.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`) is gitignored
   and exists only in the main checkout. Never force-add it, never push it.
-- One vault writer at a time — no write lock exists yet.
+- Write lock: `applyPayload` serializes writers via `state/vault.lock` (30s
+  wait then loud failure; stale locks stolen by PID liveness). Concurrent
+  sync and MCP upserts are safe.
