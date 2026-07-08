@@ -47,6 +47,51 @@ forty threads in your head and hoping you catch the conflict in time, the pictur
 holds itself, and the conflicts surface to you early — with a concrete next move,
 not just a summary. The wrong thing gets caught before it's built, not after.
 
+## The long arc — a personal alignment Jarvis (the A-path)
+
+> Added 2026-07-07 after a vision ideation pass. This is the north-star *shape*
+> of the product, not a build order. It is contingent on the same wedge
+> validation as everything else — do not scaffold ahead of it.
+
+There are two futures for Kizuki in the AI-agent age. **A:** it stays *your*
+assistant — it reads everything, tells you what's misaligned, hands you drafts,
+and you decide and act. **B:** it becomes infrastructure that agents consult
+autonomously (a belief protocol, attestation an agent attaches before acting,
+killing downstream agent tasks when a decision is retracted) — the human recedes.
+B bends the two hardest principles (observe-and-advise, never-score). **We are
+building A.**
+
+Maxed out, A is a **personal work Jarvis**: an always-on chief-of-staff that
+holds your entire work picture, that you can talk to, that interrupts you at the
+right moment (not a feed you remember to check), drafts the next move on command,
+and — critically for the agent age — **guards you against your own agent swarm**.
+You never stop being the decider; it never acts alone.
+
+Kizuki already has three of the four Jarvis organs:
+
+- **Memory** — the git-tracked vault (people/projects/teams + managed analysis).
+- **Senses** — MCP connectors across Slack/Jira/Confluence/GitHub/Outlook +
+  meeting transcripts.
+- **Judgment** — the analysis/alerts layer that says what's misaligned and what
+  to do about it.
+
+The missing organ is **presence**: today Kizuki is a batch CLI (`sync`/`start`/
+`stop`/`watch`) plus a read-only dashboard — three fragmented surfaces you go to.
+Jarvis is one presence that comes to you: conversational (talk to it), ambient
+(continuous, not per-shift), and proactive (interrupts at the right moment with
+the right thing). Closing the presence gap — without breaking observe-and-advise
+or turning into a surveillance/scoring tool — is the long arc of the A-path.
+
+### The agent-age twist: epistemic armor
+
+The misalignment that will bite *individuals* first is not team-vs-team — it is
+**you vs the agents acting in your name**. As you delegate to a swarm of proxies,
+they will commit you to things, drift from your intent, and contradict each other.
+A personal Jarvis that models your standing positions and flags when your own
+agents drift is the cleanest evolution of today's single-operator product: same
+local vault, same observe-and-advise, no org-wide adoption required to be
+valuable. This is where A goes that the incumbents cannot follow.
+
 ## Why this, not the obvious version
 
 The obvious version — "AI that knows everything about your org" — is a graveyard.
