@@ -81,13 +81,21 @@ export async function getEntity(dir, type, name) {
 
 export const followups = (dir) => followupsByEntity(dir);
 
+function snippetText(line) {
+  return line
+    .replace(/^\s*[-*]\s+/, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .trim();
+}
+
 export async function searchVault(dir, query) {
   const needle = query.toLowerCase();
   const hits = [];
   for (const e of await eachEntity(dir)) {
     e.content.split("\n").forEach((text, i) => {
       if (text.toLowerCase().includes(needle)) {
-        hits.push({ type: e.type, name: e.name, line: i + 1, text: text.trim() });
+        hits.push({ type: e.type, name: e.name, line: i + 1, text: snippetText(text) });
       }
     });
   }

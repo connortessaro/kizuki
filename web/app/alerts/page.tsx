@@ -18,10 +18,10 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
       <h1>Alerts</h1>
       {dates.length ? (
         <p className="muted">
-          {dates.map((d) => (
+          {dates.map((d, i) => (
             <span key={d}>
               {d === date ? <strong>{formatDate(d)}</strong> : <Link href={`/alerts?date=${d}`}>{formatDate(d)}</Link>}
-              {" · "}
+              {i < dates.length - 1 ? " · " : ""}
             </span>
           ))}
         </p>
