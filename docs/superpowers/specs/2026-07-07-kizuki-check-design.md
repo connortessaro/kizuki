@@ -1,7 +1,7 @@
 # Kizuki — `kizuki check` (pre-send draft contradiction check)
 
 **Date:** 2026-07-07
-**Status:** design draft, pending user review (NOT yet approved for implementation)
+**Status:** approved, decisions locked — ready for implementation
 **Origin:** `docs/2026-07-07-jarvis-presence-ideation.md` — the first buildable
 slice of the "pre-send / pre-write intercept," chosen because it doubles as
 validation of the core wedge.
@@ -117,14 +117,14 @@ spawn a process. Returns `{ contradictions }`. **Does not** call `applyPayload`.
   files created in a tmp vault).
 - All tests use a stub `runAgent`; no process, no network.
 
-## Open questions for review
+## Decisions (locked 2026-07-07)
 
-1. **Payload fields** — are `draftClaim` / `conflict` / `evidence` the right three,
-   or is that too rigid? (Alternative: a single `contradiction` string + evidence.)
-2. **Scope default** — whole vault vs require a scope? Whole-vault may be noisy /
-   token-heavy on a large vault.
-3. **Home for the orchestrator** — extend `lib/run.mjs` or a new `lib/check.mjs`?
-   (Leaning new file: `check` is a distinct read-only path from the `sync` writer.)
+1. **Payload fields** — keep the three (`draftClaim` / `conflict` / `evidence`).
+   Structured and testable; revisit only if it proves too rigid in real use.
+2. **Scope default** — whole vault; `--project` / `--team` narrow it. Acceptable at
+   current personal-vault size; revisit if token cost bites.
+3. **Orchestrator home** — new `lib/check.mjs`, a distinct read-only path separate
+   from the `sync` writer in `lib/run.mjs`.
 
 ## Non-goals
 
