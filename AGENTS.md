@@ -47,7 +47,7 @@ for the vault: entity browser, follow-ups, day summaries, search.
 ## Commands
 
 ```bash
-npm test                       # full suite (194 tests)
+npm test                       # full suite (209 tests)
 node --test lib/vault.test.mjs # one file
 ./kizuki init                  # create vault dirs + default config
 ./kizuki sync                  # run the sync CLI (spawns configured agent)
@@ -60,6 +60,7 @@ node --test lib/vault.test.mjs # one file
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
 ```
 
 ## Parallel work

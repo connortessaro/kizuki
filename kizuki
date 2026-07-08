@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { appendFile, mkdir } from "node:fs/promises";
 import { runSync } from "./lib/run.mjs";
+import { runCheck, formatContradictions } from "./lib/check.mjs";
 import { resolveAgent, makeRunAgent } from "./lib/agent.mjs";
 import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySummary } from "./lib/shift.mjs";
 import { installJob, removeJob } from "./lib/launchd.mjs";
@@ -24,7 +25,33 @@ const USAGE = `usage: kizuki <command>
   kizuki watch                                     watch transcripts/ and sync on new files
   kizuki start                                     begin shift: sync + brief + 30-min background sync
   kizuki stop                                      end shift: final sync + day summary + remove background sync
-  kizuki doctor [--no-smoke] [--check-only]        diagnose config, agent, vault structure`;
+  kizuki doctor [--no-smoke] [--check-only]        diagnose config, agent, vault structure
+  kizuki check "<draft>" [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)`;
+
+async function readStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+function parseCheckScope(argv) {
+  let projectName = null;
+  let teamName = null;
+  const positionals = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--project") projectName = argv[++i];
+    else if (a === "--team") teamName = argv[++i];
+    else if (a === "--json") continue;
+    else if (a.startsWith("--")) throw new Error(`unknown flag: ${a}`);
+    else positionals.push(a);
+  }
+  if (projectName && teamName) throw new Error("specify only one of: --project, --team");
+  let scope = { kind: "all" };
+  if (projectName) scope = { kind: "project", name: projectName };
+  else if (teamName) scope = { kind: "team", name: teamName };
+  return { scope, draftArg: positionals.join(" ").trim() };
+}
 
 function scopeLabel(scope) {
   if (scope.kind === "all") return "all";
@@ -98,6 +125,14 @@ try {
       if (r.status === "fail") doctorFails.push(r.name);
     }
     if (doctorFails.length) console.log(`\nNote: doctor still reports: ${doctorFails.join(", ")}`);
+  } else if (command === "check") {
+    const { scope, draftArg } = parseCheckScope(rest);
+    const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
+    if (!draft) throw new Error('no draft provided — pass "<text>" or pipe via stdin');
+    const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+    const result = await runCheck({ draft, scope, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
+    if (rest.includes("--json")) console.log(JSON.stringify(result, null, 2));
+    else console.log(formatContradictions(result));
   } else if (command === "watch") {
     console.log(`Watching ${join(vaultDir, "transcripts")} — Ctrl+C to stop`);
     watchTranscripts(vaultDir, () => {
