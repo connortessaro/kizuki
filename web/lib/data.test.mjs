@@ -88,9 +88,9 @@ async function makeVault() {
   return dir;
 }
 
-test("parseEntityFile splits frontmatter pairs and body", () => {
-  const { frontmatter, body } = parseEntityFile("---\ntype: person\nrole: \"eng\"\n---\n\n# bob\n");
-  assert.deepEqual(frontmatter, [["type", "person"], ["role", '"eng"']]);
+test("parseEntityFile splits frontmatter pairs, strips quotes, keeps body", () => {
+  const { frontmatter, body } = parseEntityFile("---\ntype: person\nrole: \"eng\"\nteam: 'checkout'\nmanager: \"\"\n---\n\n# bob\n");
+  assert.deepEqual(frontmatter, [["type", "person"], ["role", "eng"], ["team", "checkout"], ["manager", ""]]);
   assert.equal(body, "\n# bob\n");
 });
 
@@ -117,8 +117,10 @@ test("getEntity returns parsed entity, null when missing, throws on unsafe name"
   try {
     const e = await getEntity(dir, "person", "bob-smith");
     assert.equal(e.name, "bob-smith");
-    assert.ok(e.frontmatter.some(([k, v]) => k === "role" && v === '"eng"'));
+    assert.ok(e.frontmatter.some(([k, v]) => k === "role" && v === "eng"));
     assert.match(e.body, /## Log/);
+    assert.doesNotMatch(e.body, /KIZUKI:ANALYSIS/, "analysis markers stripped from rendered body");
+    assert.match(e.body, /\*\*Status:\*\* on track/, "analysis content preserved");
     assert.equal(await getEntity(dir, "person", "nobody"), null);
     await assert.rejects(() => getEntity(dir, "person", "../etc"), /invalid entity name/);
     await assert.rejects(() => getEntity(dir, "company", "bob-smith"), /invalid type/);
