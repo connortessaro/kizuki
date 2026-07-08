@@ -25,6 +25,7 @@ One line per idea. Promote into `docs/ROADMAP.md` when ready to sequence.
 - Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/kizuki`)
   — partial: `scripts/install-codex-prompts.mjs` for Codex; broader pack TBD.
 - ~~LLM-written day summary~~ — **shipped** (`lib/shift.mjs`: prose on top of the deterministic aggregate at `stop`).
+- **Presence layer (Jarvis)** — ideation captured in `docs/2026-07-07-jarvis-presence-ideation.md`; A-path north star in `docs/vision.md`. First buildable slice = `kizuki check` (spec: `docs/superpowers/specs/2026-07-07-kizuki-check-design.md`), which doubles as v1→v2 wedge validation. Rest gated on real-use evidence.
 - Slack DM mirror for alerts (work IT permitting).
 - TEE/confidential-compute story from vision doc (enterprise moat).
 - Windows/Linux support (launchd → schtasks/systemd seam exists in lib/launchd.mjs).
