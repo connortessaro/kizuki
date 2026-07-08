@@ -150,6 +150,7 @@ test("searchVault returns structured case-insensitive hits", async () => {
     assert.equal(hits[0].name, "bob-smith");
     assert.ok(hits[0].line > 0);
     assert.match(hits[0].text, /checkout fix/);
+    assert.equal(hits[0].text, "slack 2026-07-04T10:00:00Z: shipped checkout fix");
     assert.deepEqual(await searchVault(dir, "zzz-no-match"), []);
   } finally {
     await rm(dir, { recursive: true, force: true });
