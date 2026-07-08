@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "build": { "env": { "KIZUKI_DEMO": "1" } },
+  "env": { "KIZUKI_DEMO": "1" }
+}

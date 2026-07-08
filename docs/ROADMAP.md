@@ -184,7 +184,7 @@ Park here until promoted into a milestone. See also `docs/BACKLOG.md`.
 | LLM-written day summary | **Shipped** — prose synthesis prepended to `days/` file at `stop` (`lib/shift.mjs`); facts-only fallback |
 | Slack DM mirror for alerts | Work IT permitting |
 | Windows/Linux shift support | `lib/launchd.mjs` seam exists; needs schtasks/systemd |
-| Vercel eve hosted runtime | Blocked on data-safety story; local-first for personal/work |
+| Vercel eve hosted runtime | Full multi-user runtime still blocked on data-safety. **Public demo shipped** — `web/demo-vault/` + `KIZUKI_DEMO` deploys the read-only dashboard on synthetic data (no real data can reach a build) |
 | TEE / confidential enterprise | Post-v4; see `docs/future-notes.md` |
 
 **Shipped (removed from active backlog):** vault write-lock (`lib/lock.mjs`).
