@@ -22,8 +22,12 @@ export async function lastUpdated(dir) {
   return latest ? new Date(latest) : null;
 }
 
-export const vaultDir = () =>
-  process.env.KIZUKI_VAULT || join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+export const vaultDir = () => {
+  if (process.env.KIZUKI_VAULT) return process.env.KIZUKI_VAULT;
+  const here = dirname(fileURLToPath(import.meta.url));
+  if (process.env.KIZUKI_DEMO) return join(here, "..", "demo-vault");
+  return join(here, "..", "..");
+};
 
 export function parseEntityFile(content) {
   const m = content.match(/^---\n([\s\S]*?)\n---\n/);

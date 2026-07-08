@@ -14,6 +14,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <AutoRefresh seconds={60} />
+        {process.env.KIZUKI_DEMO ? (
+          <div className="demo-banner">
+            Demo — synthetic data, read-only. Kizuki runs locally against your real vault.
+          </div>
+        ) : null}
         <nav>
           <Link href="/" className="brand">気づき</Link>
           <Link href="/alerts">Alerts</Link>

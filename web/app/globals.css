@@ -144,3 +144,12 @@ pre code { background: none; padding: 0; }
 .shift-on { color: var(--kizuki-deep); }
 
 :focus-visible { outline: 2px solid var(--kizuki); outline-offset: 2px; }
+
+.demo-banner {
+  background: var(--kizuki);
+  color: var(--paper);
+  text-align: center;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-family: var(--body);
+}
