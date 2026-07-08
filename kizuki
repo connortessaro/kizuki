@@ -63,7 +63,10 @@ try {
   } else if (command === "stop") {
     if (!(await readShift(vaultDir))) throw new Error("no shift in progress");
     await doSync([]);
-    const summaryPath = await writeDaySummary(vaultDir);
+    const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+    const summaryPath = await writeDaySummary(vaultDir, {
+      runAgent: makeRunAgent(cmd, timeoutMs),
+    });
     try {
       await removeJob({});
     } catch (e) {

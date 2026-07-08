@@ -181,7 +181,7 @@ Park here until promoted into a milestone. See also `docs/BACKLOG.md`.
 | `--project` / `--team` CLI scope | **Shipped** — `lib/args.mjs` + prompt scope lines |
 | Transcript watcher | **Shipped** — `kizuki watch` + `lib/watcher.mjs` |
 | Cross-shift trends | **Shipped** — `lib/trends.mjs`; brief + dashboard home |
-| LLM-written day summary | Deterministic aggregate exists in v1 |
+| LLM-written day summary | **Shipped** — prose synthesis prepended to `days/` file at `stop` (`lib/shift.mjs`); facts-only fallback |
 | Slack DM mirror for alerts | Work IT permitting |
 | Windows/Linux shift support | `lib/launchd.mjs` seam exists; needs schtasks/systemd |
 | Vercel eve hosted runtime | Blocked on data-safety story; local-first for personal/work |
