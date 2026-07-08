@@ -13,13 +13,29 @@ export { TYPES };
 export { formatDate } from "../../lib/format.mjs";
 export { formatDateTime } from "../../lib/format.mjs";
 
+const ISO_RE = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g;
+
 export async function lastUpdated(dir) {
+  const entities = await eachEntity(dir);
   let latest = 0;
-  for (const e of await eachEntity(dir)) {
-    const { mtimeMs } = await stat(e.path);
-    if (mtimeMs > latest) latest = mtimeMs;
+  for (const e of entities) {
+    for (const m of e.content.matchAll(ISO_RE)) {
+      const t = Date.parse(m[0]);
+      if (t > latest) latest = t;
+    }
   }
-  return latest ? new Date(latest) : null;
+  for (const d of [...(await listDays(dir)), ...(await listAlertDates(dir))]) {
+    const t = Date.parse(`${d}T00:00:00Z`);
+    if (t > latest) latest = t;
+  }
+  if (latest) return new Date(latest);
+  // No dated content (e.g. hand-created stub); fall back to newest file mtime.
+  let mtime = 0;
+  for (const e of entities) {
+    const { mtimeMs } = await stat(e.path);
+    if (mtimeMs > mtime) mtime = mtimeMs;
+  }
+  return mtime ? new Date(mtime) : null;
 }
 
 export const vaultDir = () => {
