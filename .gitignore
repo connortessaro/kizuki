@@ -27,3 +27,4 @@ teams/*
 web/.next/
 web/next-env.d.ts
 web/tsconfig.tsbuildinfo
+.vercel/
