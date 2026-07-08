@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kizuki — the noticing</title>
-<meta name="description" content="Keep every team acting on the same picture — and catch the misalignment that isn't, before it costs a deadline.">
+<title>Kizuki — personal alignment assistant</title>
+<meta name="description" content="Catch work misalignment before you send the wrong update, merge the wrong assumption, or miss the deadline risk.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
@@ -27,6 +27,8 @@
   .notice{color:var(--ink);border-left:3px solid var(--kizuki);padding-left:12px}
   .tagline{color:var(--ink);font-size:18px;line-height:1.65}
 
+  .example{margin-top:22px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 0;font-family:var(--mono);font-size:13px;line-height:1.65;color:var(--ink)}
+  .example span{color:var(--kizuki-deep)}
   .status{margin-top:32px;font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--stone)}
   .status a{color:var(--kizuki-deep);text-decoration:underline;text-underline-offset:3px}
   .status a:hover{color:var(--kizuki)}
@@ -35,10 +37,11 @@
 <body>
 <main>
   <div class="kanji" aria-hidden="true">気づき</div>
-  <h1>Kizuki<span>the noticing</span></h1>
-  <p class="tagline">Keep every team acting on the same picture — and catch the misalignment that isn't, before it costs a deadline.</p>
-  <p>A personal alignment assistant. It reads your meetings, threads, and tickets, then surfaces <span class="notice">what you missed</span>: the quiet scope cut, two teams building the same thing, the follow-up going stale. It watches. You decide.</p>
-  <p class="status">OPEN SOURCE · <code>./kizuki init</code> · <a href="https://github.com/ctessaro/kizuki">GITHUB</a></p>
+  <h1>Kizuki <span>personal alignment assistant</span></h1>
+  <p class="tagline">Catch the work mismatch before you send the wrong update, merge the wrong assumption, or miss the deadline risk.</p>
+  <p>Kizuki reads your meetings, threads, tickets, and PRs into a local markdown vault. It notices <span class="notice">what changed while you were busy</span>: the quiet scope cut, the stale UAT date, the fixture-backed feature someone is about to treat as production-ready.</p>
+  <p class="example"><span>$ ./kizuki check "We are ready for UAT."</span><br>critical: vault says UAT slipped and the timeline still needs an owner.</p>
+  <p class="status">OPEN SOURCE · <code>./kizuki init</code> · <code>./kizuki check</code> · <a href="https://github.com/ctessaro/kizuki">GITHUB</a></p>
 </main>
 </body>
 </html>
