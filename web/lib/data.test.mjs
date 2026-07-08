@@ -1,13 +1,59 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import {
   parseEntityFile, listByType, getEntity, followups, searchVault, listDays, readDay, formatDate,
-  lastUpdated, formatDateTime, alertsForDate, extractDraftsFromBody, listAlertDates,
+  lastUpdated, formatDateTime, alertsForDate, extractDraftsFromBody, listAlertDates, vaultDir,
 } from "./data.mjs";
 import { formatAlertLine } from "../../lib/alerts.mjs";
+
+test("vaultDir resolves to demo-vault when KIZUKI_DEMO is set", () => {
+  const savedVault = process.env.KIZUKI_VAULT;
+  const savedDemo = process.env.KIZUKI_DEMO;
+  try {
+    delete process.env.KIZUKI_VAULT;
+    process.env.KIZUKI_DEMO = "1";
+    assert.match(vaultDir(), /web[/\\]demo-vault$/);
+  } finally {
+    if (savedVault === undefined) delete process.env.KIZUKI_VAULT;
+    else process.env.KIZUKI_VAULT = savedVault;
+    if (savedDemo === undefined) delete process.env.KIZUKI_DEMO;
+    else process.env.KIZUKI_DEMO = savedDemo;
+  }
+});
+
+test("KIZUKI_VAULT wins over KIZUKI_DEMO", () => {
+  const savedVault = process.env.KIZUKI_VAULT;
+  const savedDemo = process.env.KIZUKI_DEMO;
+  try {
+    process.env.KIZUKI_VAULT = "/tmp/explicit-vault";
+    process.env.KIZUKI_DEMO = "1";
+    assert.equal(vaultDir(), "/tmp/explicit-vault");
+  } finally {
+    if (savedVault === undefined) delete process.env.KIZUKI_VAULT;
+    else process.env.KIZUKI_VAULT = savedVault;
+    if (savedDemo === undefined) delete process.env.KIZUKI_DEMO;
+    else process.env.KIZUKI_DEMO = savedDemo;
+  }
+});
+
+test("committed demo-vault parses through the data helpers", async () => {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "demo-vault");
+  const byType = await listByType(dir);
+  assert.ok(byType.person.length > 0, "has people");
+  assert.ok(byType.project.length > 0, "has projects");
+  const fu = await followups(dir);
+  assert.ok(fu.length > 0, "has follow-ups");
+  const days = await listDays(dir);
+  assert.ok(days.length > 0, "has day summaries");
+  const alertDates = await listAlertDates(dir);
+  assert.ok(alertDates.length > 0, "has alert dates");
+  const alerts = await alertsForDate(dir, alertDates[0]);
+  assert.ok(alerts.length > 0, "alerts parse");
+});
 
 async function emptyVault() {
   const dir = await mkdtemp(join(tmpdir(), "kizuki-web-"));

@@ -5,5 +5,8 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export default {
   outputFileTracingRoot: repoRoot,
+  outputFileTracingIncludes: {
+    "/**": ["./demo-vault/**/*"],
+  },
   turbopack: { root: repoRoot },
 };
