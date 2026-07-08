@@ -211,6 +211,22 @@ test("lastUpdated returns the newest entity mtime", async () => {
   }
 });
 
+test("lastUpdated uses newest dated content, not file mtime", async () => {
+  const dir = await emptyVault();
+  try {
+    await writeFile(
+      join(dir, "people", "bob.md"),
+      "# bob\n\n- **slack** 2026-07-06T09:12:00Z: shipped\n",
+      "utf8",
+    );
+    await writeFile(join(dir, "days", "2026-07-08.md"), "# 2026-07-08 — day summary\n", "utf8");
+    const updated = await lastUpdated(dir);
+    assert.equal(updated.toISOString(), "2026-07-08T00:00:00.000Z");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("re-exports formatDateTime for pages", () => {
   assert.equal(formatDateTime(new Date(2026, 6, 4, 9, 32)), "July 4, 2026, 9:32 AM");
 });
