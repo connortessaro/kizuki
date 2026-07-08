@@ -23,7 +23,7 @@ One line per idea. Promote into `docs/ROADMAP.md` when ready to sequence.
   local-first stays for the personal/work version.
 - Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/kizuki`)
   — partial: `scripts/install-codex-prompts.mjs` for Codex; broader pack TBD.
-- LLM-written day summary (deterministic aggregate is v1; prose summary later).
+- ~~LLM-written day summary~~ — **shipped** (`lib/shift.mjs`: prose on top of the deterministic aggregate at `stop`).
 - Slack DM mirror for alerts (work IT permitting).
 - TEE/confidential-compute story from vision doc (enterprise moat).
 - Windows/Linux support (launchd → schtasks/systemd seam exists in lib/launchd.mjs).

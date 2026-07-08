@@ -20,7 +20,7 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (188 tests)
+npm test                              # node --test — full suite (194 tests)
 node --test lib/vault.test.mjs        # one test file
 ./kizuki init                         # create vault dirs + default config
 ./kizuki sync                         # run the CLI (calls configured agent)

@@ -47,7 +47,7 @@ for the vault: entity browser, follow-ups, day summaries, search.
 ## Commands
 
 ```bash
-npm test                       # full suite (188 tests)
+npm test                       # full suite (194 tests)
 node --test lib/vault.test.mjs # one file
 ./kizuki init                  # create vault dirs + default config
 ./kizuki sync                  # run the sync CLI (spawns configured agent)
