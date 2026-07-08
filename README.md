@@ -1,13 +1,20 @@
 # Kizuki
 
-Personal org-intelligence tool. Pulls your work activity (TalkTrack meeting
-transcripts + Slack / GitHub / Atlassian / Outlook via your AI agent's MCP
-servers) into a git-tracked markdown vault sorted by person, project, and team, then
-rewrites a managed analysis section in each file: status, what each person needs,
-what they don't know, follow-ups, and copy-paste-ready recommended actions.
+Personal org-intelligence tool. Kizuki pulls your work activity (TalkTrack
+meeting transcripts + Slack / GitHub / Atlassian / Outlook via your AI agent's
+MCP servers) into a git-tracked markdown vault sorted by person, project, and
+team, then rewrites a managed analysis section in each file: status, what each
+person needs, what they don't know, follow-ups, and copy-paste-ready recommended
+actions.
 
 Single-operator tool. It observes and advises — it never sends messages or takes
 actions for you. You decide.
+
+Use it in two moments:
+
+- **Start/stop the day:** sync the vault, surface alerts, and write a day summary.
+- **Before you send:** run `kizuki check "<draft>"` to catch contradictions
+  between a draft message and what the vault already knows.
 
 ## Usage
 
@@ -26,6 +33,8 @@ actions for you. You decide.
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only)
+./kizuki check "<draft>" --project p   # check against one project
 ```
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
@@ -35,6 +44,8 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 ```
 ./kizuki init
 ./kizuki doctor
+./kizuki sync --dry-run                  # optional: verify the agent can read sources without writing
+./kizuki check "We are ready for UAT."    # optional: test a draft against the vault
 node scripts/install-codex-prompts.mjs   # optional: Codex /kizuki-start slash command
 ```
 
@@ -65,6 +76,10 @@ Your AI agent does the reading, fetching, and analysis, and returns a single
 fenced JSON payload. Deterministic JS then writes the files. The LLM never edits
 files directly — so re-runs are idempotent and your hand-written notes (anything
 outside the `<!-- KIZUKI:ANALYSIS:START/END -->` markers) are never clobbered.
+
+`kizuki check` uses the same vault as source of truth, but it never writes. It
+passes your draft to the agent, parses the fenced JSON result, and prints only
+the contradictions it can cite.
 
 ## Choosing your AI agent
 
@@ -105,8 +120,6 @@ message to stdout, with MCP servers configured for slack / github / atlassian /
 outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `kizuki.config.json`
 (see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
-
-
 
 ## Use as an MCP server
 
@@ -164,10 +177,13 @@ files and never sends anything — same rules as everywhere else in Kizuki.
 ```
 cd web && npm install    # once
 npm run dev              # http://localhost:3000
+KIZUKI_DEMO=1 npm run dev # synthetic demo vault; no private data
 ```
 
 Reads the vault fresh on every page load. Vault dir comes from `KIZUKI_VAULT`
-(defaults to the repo root).
+(defaults to the repo root). `KIZUKI_DEMO=1` switches the dashboard to
+`web/demo-vault/`, which shows the pre-send UAT-date contradiction story without
+using real work data.
 
 ## Roadmap
 
@@ -177,10 +193,8 @@ Ranked milestones (v2 alerts → v3 dashboard → v4 public):
 ## Development
 
 ```
-npm test        # node --test, 188 tests (core is zero-dep; mcp/ has its own deps)
+npm test        # node --test, 212 tests (core is zero-dep; mcp/ has its own deps)
 ```
-
-
 
 ## Data safety
 

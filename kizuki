@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { appendFile, mkdir } from "node:fs/promises";
 import { runSync } from "./lib/run.mjs";
-import { runCheck, formatContradictions } from "./lib/check.mjs";
+import { runCheck, formatContradictions, makeRunCheckAgent } from "./lib/check.mjs";
 import { resolveAgent, makeRunAgent } from "./lib/agent.mjs";
 import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySummary } from "./lib/shift.mjs";
 import { installJob, removeJob } from "./lib/launchd.mjs";
@@ -130,7 +130,7 @@ try {
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
     if (!draft) throw new Error('no draft provided — pass "<text>" or pipe via stdin');
     const { cmd, timeoutMs } = await resolveAgent(vaultDir);
-    const result = await runCheck({ draft, scope, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
+    const result = await runCheck({ draft, scope, vaultDir, runAgent: makeRunCheckAgent(cmd, timeoutMs) });
     if (rest.includes("--json")) console.log(JSON.stringify(result, null, 2));
     else console.log(formatContradictions(result));
   } else if (command === "watch") {
