@@ -34,7 +34,9 @@ Use it in two moments:
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only)
+./kizuki check "<draft>" --person p    # check against one person
 ./kizuki check "<draft>" --project p   # check against one project
+./kizuki check "<draft>" --team t      # check against one team
 ```
 
 Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
