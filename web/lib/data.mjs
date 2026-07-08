@@ -1,7 +1,7 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { entityPath } from "../../lib/vault.mjs";
+import { entityPath, ANALYSIS_START, ANALYSIS_END } from "../../lib/vault.mjs";
 import {
   TYPES, eachEntity, followupsByEntity, assertType, assertName, statusOf,
 } from "../../lib/query.mjs";
@@ -29,6 +29,13 @@ export const vaultDir = () => {
   return join(here, "..", "..");
 };
 
+function unquote(value) {
+  if (value.length >= 2 && (value[0] === '"' || value[0] === "'") && value[value.length - 1] === value[0]) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
 export function parseEntityFile(content) {
   const m = content.match(/^---\n([\s\S]*?)\n---\n/);
   if (!m) return { frontmatter: /** @type {[string, string][]} */ ([]), body: content };
@@ -38,9 +45,16 @@ export function parseEntityFile(content) {
     .filter((l) => l.trim())
     .map((line) => {
       const i = line.indexOf(":");
-      return i === -1 ? [line.trim(), ""] : [line.slice(0, i).trim(), line.slice(i + 1).trim()];
+      return i === -1 ? [line.trim(), ""] : [line.slice(0, i).trim(), unquote(line.slice(i + 1).trim())];
     });
   return { frontmatter, body: content.slice(m[0].length) };
+}
+
+function stripMarkers(body) {
+  return body
+    .split("\n")
+    .filter((l) => l.trim() !== ANALYSIS_START && l.trim() !== ANALYSIS_END)
+    .join("\n");
 }
 
 export async function listByType(dir) {
@@ -62,7 +76,7 @@ export async function getEntity(dir, type, name) {
     throw e;
   }
   const { frontmatter, body } = parseEntityFile(content);
-  return { type, name, frontmatter, body };
+  return { type, name, frontmatter, body: stripMarkers(body) };
 }
 
 export const followups = (dir) => followupsByEntity(dir);

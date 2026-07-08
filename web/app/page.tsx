@@ -6,6 +6,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const label = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
 export default async function Home() {
   const dir = vaultDir();
   const [byType, groups, days, updated, alerts, shift, trends, alertDates] = await Promise.all([
@@ -29,10 +31,10 @@ export default async function Home() {
       </section>
 
       <div className="cards">
-        <Link className="card" href="/people"><span className="count">{byType.person.length}</span>people</Link>
-        <Link className="card" href="/projects"><span className="count">{byType.project.length}</span>projects</Link>
-        <Link className="card" href="/teams"><span className="count">{byType.team.length}</span>teams</Link>
-        <Link className="card" href="/alerts"><span className="count">{alerts.length}</span>alerts today</Link>
+        <Link className="card" href="/people"><span className="count">{byType.person.length}</span>{label(byType.person.length, "person", "people")}</Link>
+        <Link className="card" href="/projects"><span className="count">{byType.project.length}</span>{label(byType.project.length, "project", "projects")}</Link>
+        <Link className="card" href="/teams"><span className="count">{byType.team.length}</span>{label(byType.team.length, "team", "teams")}</Link>
+        <Link className="card" href="/alerts"><span className="count">{alerts.length}</span>{label(alerts.length, "alert today", "alerts today")}</Link>
       </div>
 
       <h2>Alerts today {alerts.length ? <Link className="muted" href="/alerts">(all)</Link> : null}</h2>
