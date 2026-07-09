@@ -45,6 +45,8 @@ async function doSync(argv) {
   await recordSyncSuccess(vaultDir);
   console.log(`Kizuki sync — scope: ${scopeLabel(r.scope)}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
   if (!r.changes.length && !r.newAlerts.length) console.log("  no changes");
+  if (!r.newAlerts.length) console.log("  no signals");
+  for (const warning of r.warnings) console.warn(`  warning: ${warning}`);
   for (const c of r.changes) console.log(`  updated ${c.path}`);
   for (const a of r.newAlerts) console.log(`  alert [${a.severity}] ${a.kind} ${a.type}/${a.name}`);
 }
