@@ -55,7 +55,7 @@ These are done. New work builds on top of them.
 |------|----------|
 | Core pipeline | `lib/run.mjs`, `lib/payload.mjs`, `lib/apply.mjs`, `lib/vault.mjs` |
 | Shift rituals | `kizuki` `start`/`stop`, `lib/shift.mjs`, `lib/launchd.mjs` |
-| Safety | Write lock (`lib/lock.mjs`), payload versioning, evidence guard (`lib/prompt.mjs`), agent timeout (`lib/agent.mjs`) |
+| Safety | Write lock (`lib/lock.mjs`), append-only signal ledger (`lib/signals.mjs`), payload versioning, evidence guard (`lib/prompt.mjs`), agent timeout (`lib/agent.mjs`) |
 | Tooling | `lib/doctor.mjs`, MCP (`mcp/`) |
 | Dashboard (partial v3) | Next.js read-only UI (`web/`) — built ahead of the v2 gate per `docs/superpowers/specs/2026-07-06-kizuki-web-dashboard-design.md` |
 
@@ -73,6 +73,10 @@ slipped deadlines) outside the per-entity follow-up firehose; notify on macOS fo
 warn/critical.
 
 **Design spec:** `docs/superpowers/specs/2026-07-07-kizuki-alerts-design.md`
+
+The scope below records the original v2 alert implementation. The signal
+lifecycle upgrade shipped on 2026-07-09 and now owns current behavior. See
+`docs/superpowers/specs/2026-07-09-kizuki-signal-lifecycle-design.md`.
 
 **Gate to start:** v1 validation gate passed.
 
@@ -112,6 +116,17 @@ warn/critical.
 
 **Out of scope:** dashboard alert feed (v3), Slack DM mirror (unranked), LLM day
 summary (unranked).
+
+### Signal lifecycle upgrade
+
+Payload version 3 adds stable topics and source receipts. Deterministic code
+maps each candidate to a signal ID and stores observation and status events in
+gitignored `signals/events.jsonl`.
+
+The event ledger is canonical. `alerts/YYYY-MM-DD.md` remains a compatibility
+view for the shipped dashboard and macOS notifications. The CLI lists active or
+terminal states, records manual lifecycle feedback, and imports old daily alert
+files as resolved history. Migration runs only when the operator requests it.
 
 ---
 
