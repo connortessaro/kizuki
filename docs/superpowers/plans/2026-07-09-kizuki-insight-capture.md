@@ -505,6 +505,8 @@ git commit -m "feat: use captured insights as context"
 - Modify: `mcp/tools.mjs`
 - Modify: `mcp/tools.test.mjs`
 - Modify: `mcp/server.mjs`
+- Create: `mcp/server.test.mjs`
+- Modify: `mcp/package.json`
 
 **Interfaces:**
 - Consumes Task 2 service functions and Task 3 search.
@@ -604,6 +606,9 @@ Register four tools:
 - `archive_insight`: terminal mutation; ID + optional note.
 
 Core validation still rejects unknown fields and enforces length/locator rules.
+
+Add `"test": "node --test"` under `mcp/package.json` scripts so the required
+`cd mcp && npm test` verification command works.
 
 - [ ] **Step 5: Run MCP and root tests**
 
