@@ -33,6 +33,13 @@ Use it in two moments:
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki signals                       # list open and acted signals
+./kizuki signals --status all --json   # list every lifecycle state as JSON
+./kizuki signal show <id> --json       # show reduced state plus event history
+./kizuki signal act <id>                # mark an open signal acted on
+./kizuki signal dismiss <id> --reason stale
+./kizuki signal resolve <id>
+./kizuki signals migrate-alerts --dry-run # preview legacy alert import
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only)
 ./kizuki check "<draft>" --person p    # check against one person
 ./kizuki check "<draft>" --project p   # check against one project
@@ -71,13 +78,25 @@ machine's global AGENTS.md pointing at the same two prompts.
 ## How it works
 
 ```
-parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> vault
+parseArgs -> buildPrompt -> runAgent -> parsePayload -> applyPayload -> signal ledger + vault
 ```
 
 Your AI agent does the reading, fetching, and analysis, and returns a single
 fenced JSON payload. Deterministic JS then writes the files. The LLM never edits
 files directly — so re-runs are idempotent and your hand-written notes (anything
 outside the `<!-- KIZUKI:ANALYSIS:START/END -->` markers) are never clobbered.
+
+Payload version 3 asks the agent for signal candidates with a stable semantic
+topic and source receipts. Deterministic JS assigns the signal ID, appends
+events to `signals/events.jsonl`, and decides whether the candidate should
+surface. Payload versions 1 and 2 still parse for compatibility. Version 2
+alerts use exact-evidence identity and print a warning so you can update the
+configured agent.
+
+The signal ledger is the source of truth. Kizuki still writes surfaced
+candidates to `alerts/YYYY-MM-DD.md` so existing dashboard and notification
+flows keep working. A run with no candidates prints `no signals` and does not
+store an all-clear record.
 
 `kizuki check` uses the same vault as source of truth, but it never writes. It
 passes your draft to the agent, parses the fenced JSON result, and prints only
@@ -109,10 +128,37 @@ people/<name>.md      # frontmatter: role, team, manager | log + analysis
 projects/<name>.md    # frontmatter: status, stakeholders | log + analysis
 teams/<name>.md       # frontmatter: members | rollup
 transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
-alerts/               # daily alert files (gitignored); written by sync
+signals/events.jsonl  # canonical append-only signal history (gitignored)
+alerts/               # daily compatibility view for dashboard and notifications
+days/                 # generated day summaries (gitignored)
+state/                # lock, shift, and sync-failure state (gitignored)
 ```
 
 Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard below.
+
+### Signal lifecycle
+
+Signals start `open`. Use `act` after you take the recommended action,
+`dismiss` when the signal is wrong or not useful, and `resolve` when the issue
+no longer needs attention. Acted signals remain active. Dismissed and resolved
+signals stay terminal until a sync finds a new receipt or higher severity.
+
+Dismiss reasons are `false-positive`, `stale`, `duplicate`, `not-actionable`,
+and `low-value`. Notes are optional on every manual transition.
+
+### Import existing alert history
+
+Migration is manual. Preview it first, then import and inspect the resolved
+history:
+
+```bash
+./kizuki signals migrate-alerts --dry-run
+./kizuki signals migrate-alerts
+./kizuki signals --status resolved
+```
+
+Migration reads `alerts/YYYY-MM-DD.md` without changing those files. Re-running
+it adds no duplicate events.
 
 ## Requirements
 
@@ -195,13 +241,13 @@ Ranked milestones (v2 alerts → v3 dashboard → v4 public):
 ## Development
 
 ```
-npm test        # node --test, 212 tests (core is zero-dep; mcp/ has its own deps)
+npm test        # node --test (core is zero-dep; mcp/ has its own deps)
 ```
 
 ## Data safety
 
-The vault entity files (`people/`, `projects/`, `teams/`) and `transcripts/` hold
-internal work information and are **gitignored** — only the code and empty folder
-structure are tracked, so pushing this repo (even to a private remote) never
-uploads work data. Keep it that way: do not force-add anything under those
-folders.
+The vault entity files and local runtime data under `people/`, `projects/`,
+`teams/`, `transcripts/`, `alerts/`, `signals/`, `days/`, and `state/` contain
+internal work information and are **gitignored**. Pushing the repository does
+not include that data unless someone force-adds it. Do not force-add files from
+those folders.

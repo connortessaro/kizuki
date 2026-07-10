@@ -20,7 +20,7 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 ## Commands
 
 ```bash
-npm test                              # node --test — full suite (209 tests)
+npm test                              # node --test full suite
 node --test lib/vault.test.mjs        # one test file
 ./kizuki init                         # create vault dirs + default config
 ./kizuki sync                         # run the CLI (calls configured agent)
@@ -34,6 +34,13 @@ node --test lib/vault.test.mjs        # one test file
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki signals                        # list open and acted signals
+./kizuki signals --status all --json    # list all states as JSON
+./kizuki signal show <id> [--json]      # show current state and history
+./kizuki signal act <id> [--note <text>]
+./kizuki signal dismiss <id> --reason <reason> [--note <text>]
+./kizuki signal resolve <id> [--note <text>]
+./kizuki signals migrate-alerts [--dry-run]
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
 ```
 
@@ -60,23 +67,31 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   (`agentCmd` array; defaults to `["codex","exec"]`), `buildAgentArgv(cmd,prompt)`
   (substitutes a `{prompt}` token or appends the prompt), `makeRunAgent(cmd)`
   returns the real spawner. Invalid config throws — no silent fallback.
-- **`lib/payload.mjs`** — `parsePayload(stdout)` / `extractJsonBlock`. Validates the
-  payload; rejects path-unsafe entity names (no `/`, `\`, `..`).
+- **`lib/payload.mjs`:** `parsePayload(stdout)` / `extractJsonBlock`. Payload
+  version 3 validates signal topics and source receipts. Versions 1 and 2 stay
+  parseable through deterministic compatibility normalization.
 - **`lib/vault.mjs`** — pure string/path helpers. `spliceManagedSection` (only
   touches text between the `KIZUKI:ANALYSIS` markers), `appendLog` (exact-line
   dedup so re-runs don't duplicate), `renderAnalysis(entity, now)` (`now` injected
   for deterministic tests).
-- **`lib/apply.mjs`** — `applyPayload(vaultDir, payload, {dryRun, now})`. Writes
-  entity files, archives consumed transcripts to `transcripts/processed/`, appends
-  alerts to `alerts/YYYY-MM-DD.md`.
-- **`lib/alerts.mjs`** — `appendAlerts` with exact-line dedup; returns only new alerts.
+- **`lib/apply.mjs`:** `applyPayload(vaultDir, payload, {dryRun, now})`. Plans
+  signal ingestion before entity writes, updates the daily compatibility view,
+  commits the ledger, then archives consumed transcripts.
+- **`lib/signals.mjs`:** stable signal identity, event validation and reduction,
+  ingestion and transition planning, plus atomic append-only ledger writes to
+  `signals/events.jsonl`.
+- **`lib/signalCommands.mjs`:** read-only list/show commands, locked lifecycle
+  transitions, and manual legacy alert migration.
+- **`lib/alerts.mjs`:** daily compatibility view with exact-line dedup. The
+  dashboard and notification path still read this format.
 - **`lib/notify.mjs`** — macOS osascript notifications for warn/critical alerts and
   sync-failure batching (darwin-only; no-op elsewhere).
 - **`lib/syncFailures.mjs`** — consecutive `--loop` failure counter in
   `state/sync-failures.json`.
 - **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent})`. `runAgent` is injected
   so tests never spawn a process or hit the network.
-- **`kizuki`** — executable. Dispatches subcommands (`sync`/`sync --loop`/`start`/`stop`).
+- **`kizuki`:** executable. Dispatches sync, shift, signal, check, doctor, and
+  init commands.
   Resolves the agent from config and spawns it (plain mode, NOT `--json`: plain
   mode prints only the final agent message, which holds the ```json block).
   `start`/`stop` wire in shift state, brief/day-summary rendering (`lib/shift.mjs`),
@@ -133,12 +148,20 @@ for the vault: entity browser, follow-ups, day summaries, search.
   that is a prefix of an existing line must still be appended.
 - Entity names are validated path-safe in `parsePayload` before ever hitting the
   filesystem in `entityPath`/`applyPayload`.
+- `signals/events.jsonl` is the canonical signal record. Daily markdown alerts
+  are a compatibility view for the dashboard and notifications.
+- Payload version 3 signal candidates require a stable lowercase kebab-case
+  topic and at least one source receipt. Versions 1 and 2 remain compatibility
+  inputs.
+- Signal lifecycle mutations hold `state/vault.lock`. Kizuki never acts on a
+  signal or sends its draft; the operator records `acted`, `dismissed`, or
+  `resolved` explicitly.
 
 ## Data safety
 
-`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, and `state/` are gitignored — they hold
-internal work data. Only code + empty folder structure is tracked. Never
-force-add files under those folders; never push work data to a remote.
+`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`, `days/`,
+and `state/` are gitignored because they hold internal work data. Never
+force-add files under those folders or push work data to a remote.
 
 ## Parallel work (Connor + agents simultaneously)
 
@@ -146,9 +169,9 @@ force-add files under those folders; never push work data to a remote.
   (or Claude Code's built-in worktree isolation). Zero-dep core means no install
   step per worktree; `npm test` runs anywhere. Merge to main only with the suite
   green.
-- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`) exists only in
-  the main checkout — it is gitignored, so worktrees see empty folders. Code
-  work in worktrees can never touch real work data.
+- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`,
+  `signals/`, `days/`, `state/`) exists only in the main checkout. Gitignored
+  data does not appear in worktrees.
 - **Write lock.** `applyPayload` serializes writers through `state/vault.lock`
   (waits up to 30s, then fails naming the holder; stale locks stolen by PID
   liveness). Concurrent `./kizuki sync` and MCP `upsert_analysis` are safe.

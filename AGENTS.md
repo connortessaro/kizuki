@@ -25,6 +25,14 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
   (`mcp/` has its own package.json for the MCP SDK — keep it isolated there.)
 - TDD: failing test first, then implementation. `npm test` green before done.
 - No silent failures — throw loudly.
+- `signals/events.jsonl` is the canonical signal record. Daily markdown alerts
+  are a compatibility view for the dashboard and notifications.
+- Payload version 3 signal candidates require a stable lowercase kebab-case
+  topic and at least one source receipt. Versions 1 and 2 remain compatibility
+  inputs.
+- Signal lifecycle mutations hold `state/vault.lock`. Kizuki never acts on a
+  signal or sends its draft; the operator records `acted`, `dismissed`, or
+  `resolved` explicitly.
 - `spliceManagedSection` must never touch content outside the
   `KIZUKI:ANALYSIS` markers; `appendLog` dedup is exact full-line match; entity
   names are validated path-safe before touching the filesystem.
@@ -47,7 +55,7 @@ for the vault: entity browser, follow-ups, day summaries, search.
 ## Commands
 
 ```bash
-npm test                       # full suite (209 tests)
+npm test                       # full suite
 node --test lib/vault.test.mjs # one file
 ./kizuki init                  # create vault dirs + default config
 ./kizuki sync                  # run the sync CLI (spawns configured agent)
@@ -60,6 +68,13 @@ node --test lib/vault.test.mjs # one file
 ./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki signals                        # list open and acted signals
+./kizuki signals --status all --json    # list all states as JSON
+./kizuki signal show <id> [--json]      # show current state and history
+./kizuki signal act <id> [--note <text>]
+./kizuki signal dismiss <id> --reason <reason> [--note <text>]
+./kizuki signal resolve <id> [--note <text>]
+./kizuki signals migrate-alerts [--dry-run]
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
 ```
 
@@ -67,8 +82,9 @@ node --test lib/vault.test.mjs # one file
 
 - One git worktree per task: `git worktree add ../kizuki-wt-<topic> -b <topic>`.
   No install step needed; run `npm test` in the worktree.
-- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`) is gitignored
-  and exists only in the main checkout. Never force-add it, never push it.
+- Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`,
+  `signals/`, `days/`, `state/`) is gitignored and exists only in the main
+  checkout. Never force-add it, never push it.
 - Write lock: `applyPayload` serializes writers via `state/vault.lock` (30s
   wait then loud failure; stale locks stolen by PID liveness). Concurrent
   sync and MCP upserts are safe.

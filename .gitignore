@@ -19,6 +19,7 @@ teams/*
 /state/
 /days/
 /alerts/
+/signals/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
