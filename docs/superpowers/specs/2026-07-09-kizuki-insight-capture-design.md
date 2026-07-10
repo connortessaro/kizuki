@@ -5,49 +5,40 @@ Status: approved design, written review pending
 
 ## Goal
 
-Let a person preserve useful context from an active Codex or Cursor conversation
-by saying "Kizuki this." The calling agent distills the relevant thought and
-passes structured data to Kizuki through MCP. Kizuki validates and stores the
-capture without reading or retaining the full conversation.
+Save useful Codex/Cursor chat context via "Kizuki this." Caller distills thought,
+calls MCP. Kizuki validates structured capture. No full-chat read or retention.
 
-Captured insights become searchable context immediately. They do not rewrite
-entity files during capture. Kizuki keeps decisions and learnings distinct from
-unverified hypotheses and open questions so later syncs and checks do not turn
-brainstorming into fact.
+Insights become searchable immediately. Capture never rewrites entity files.
+Kinds preserve epistemic state: decisions/learnings separate from unverified
+hypotheses/questions.
 
-Kizuki remains observe-and-advise only. The agent proposes a structured capture;
-deterministic JavaScript validates identity, takes the vault lock, and writes
-state.
+Kizuki stays observe-and-advise. Agent proposes capture. Deterministic JavaScript
+validates identity, locks vault, writes state.
 
 ## Approaches considered
 
 ### Dedicated insight inbox
 
-Add a gitignored append-only insight ledger, a focused MCP capture tool, read
-tools, and matching local CLI controls. Sync, check, and search can consume
-active insights while preserving their kind.
+Gitignored append-only ledger + focused MCP/CLI tools. Sync, check, search consume
+active insights while preserving kind.
 
-This is the selected approach. It gives captured thoughts provenance and a
-lifecycle without mixing them into entity truth at write time.
+Selected. Adds provenance + lifecycle without writing entity truth during
+capture.
 
 ### Reuse `upsert_analysis`
 
-The calling agent could summarize the conversation and write directly to an
-entity log. This is smaller, but it asks the chat agent to decide what counts as
-durable project truth. It also lacks insight identity, provenance, uncertainty,
-and archival controls.
+Caller summarizes chat, writes entity log. Smaller, but chat agent decides
+durable truth. No insight identity, provenance, uncertainty, archival controls.
 
 ### Read chat sessions automatically
 
-Kizuki could scan Codex or Cursor session logs. This adds passive surveillance,
-partial-session parsing, client-specific formats, tool noise, and a risk that a
-Kizuki sync ingests itself. Automatic session access is outside this design.
+Kizuki scans Codex/Cursor logs. Adds passive surveillance, partial-session
+parsing, client-specific formats, tool noise, self-ingestion risk. Out of scope.
 
 ## Capture contract
 
-The MCP tool is named `capture_insight`. Its description tells compatible
-agents to call it when the user says "Kizuki this" or directly asks to save the
-current thought in Kizuki.
+MCP tool: `capture_insight`. Description directs agents to call it for "Kizuki
+this" or explicit save requests.
 
 Input:
 
@@ -66,34 +57,30 @@ Input:
 }
 ```
 
-`kind` is one of:
+Kinds:
 
-- `decision`: a record of the user's stated intent or choice.
-- `learning`: context the user wants available later.
-- `hypothesis`: an explanation or claim that still needs evidence.
-- `question`: an unresolved point worth revisiting.
+- `decision`: user's stated intent/choice.
+- `learning`: context wanted later.
+- `hypothesis`: explanation/claim needing evidence.
+- `question`: unresolved point.
 
-`summary` is required, trimmed, and limited to 500 characters. It should stand
-on its own. `context` is optional and limited to 4,000 characters. The caller
-must distill the conversation instead of copying a full transcript.
+`summary`: required, trimmed, max 500 chars, standalone. `context`: optional,
+max 4,000 chars. Caller distills chat; never copies full transcript.
 
-`entities` is optional and contains at most five unique references. Entity types
-remain `person`, `project`, and `team`; names use the existing path-safe
-validation. Duplicate references fail validation. An empty list creates an
-unscoped inbox item.
+`entities`: optional, max five unique refs. Types: `person`, `project`,
+`team`. Names use existing path-safe validation. Duplicate refs fail. Empty
+list = unscoped inbox item.
 
-`origin.client` is `codex`, `cursor`, or `other`. `origin.locator` is optional.
-When present, it identifies the originating thread or turn and follows the same
-credential and signed-parameter safety rules as signal receipt locators. Kizuki
-does not infer the client or gain access to the caller's conversation through
+`origin.client`: `codex`, `cursor`, or `other`. `origin.locator`:
+optional stable thread/turn ID. Same credential/signed-parameter safety rules as
+signal receipt locators. Kizuki cannot infer client or access caller chat through
 MCP.
 
-The tool returns the insight ID, kind, and current status. Mutation output does
-not repeat the summary or context.
+Tool returns insight ID, kind, status. Mutation output omits summary/context.
 
 ## Stable identity
 
-Kizuki normalizes trimmed text and sorts entity references before computing:
+Trim text. Sort entity refs. Compute:
 
 ```text
 dedupeKey = JSON.stringify([
@@ -108,15 +95,13 @@ dedupeKey = JSON.stringify([
 insightId = "ins_" + first 12 hex chars of SHA-256(dedupeKey)
 ```
 
-An exact retry returns the existing active or archived insight without adding
-an event. A changed kind, wording, entity set, client, or locator creates a new
-insight. The reducer rejects a hash collision when one ID maps to another
-dedupe key.
+Exact retry returns existing active/archived insight; adds no event. Changed
+kind, wording, entity set, client, or locator = new insight. Reducer rejects hash
+collision mapping one ID to different dedupe key.
 
 ## Event ledger
 
-Kizuki stores sensitive insight events in gitignored
-`insights/events.jsonl`.
+Sensitive events live in gitignored `insights/events.jsonl`.
 
 Capture event:
 
@@ -152,31 +137,29 @@ Archive event:
 }
 ```
 
-Statuses are `active` and `archived`. Archiving is terminal in this slice.
-Repeated archive attempts and transitions from an unknown ID fail. Exact
-recapture of an archived item remains archived; the user must capture changed
-content to create a new insight.
+Statuses: `active`, `archived`. Archive terminal for this slice. Repeated
+archive + unknown-ID transition fail. Exact recapture of archived item stays
+archived; changed content creates new insight.
 
-`lib/insights.mjs` owns these boundaries:
+`lib/insights.mjs` boundaries:
 
-- `readInsightEvents(vaultDir)` reads and validates every JSONL line, reporting
-  malformed data with its file and line number.
-- `reduceInsightEvents(events)` returns current states and rejects unknown IDs,
-  invalid ordering, mismatched transitions, invalid enums, and collisions.
-- `planInsightCapture(events, input, { now })` validates and returns either one
-  capture event or an exact-retry disposition.
-- `planInsightArchive(events, transition, { now })` validates and returns one
-  archive event.
-- `writeInsightEventsAtomic(vaultDir, events)` writes the complete immutable
-  sequence through a sibling temporary file and atomic rename.
+- `readInsightEvents(vaultDir)`: validate every JSONL line; malformed data
+  reports file + line.
+- `reduceInsightEvents(events)`: current states; reject unknown IDs, bad order,
+  transition mismatch, bad enums, collisions.
+- `planInsightCapture(events, input, { now })`: validate; return capture event
+  or exact-retry disposition.
+- `planInsightArchive(events, transition, { now })`: validate; return archive
+  event.
+- `writeInsightEventsAtomic(vaultDir, events)`: write full immutable sequence
+  via sibling temp file + atomic rename.
 
-All insight mutations run under `state/vault.lock`. Read-only commands rely on
-atomic rename for a consistent snapshot. The writer rejects removal or rewrite
-of existing events.
+All mutations use `state/vault.lock`. Reads rely on atomic rename. Writer
+rejects existing-event removal/rewrite.
 
 ## MCP interface
 
-The existing Kizuki MCP server keeps its current tools and adds:
+Keep current tools. Add:
 
 ```text
 capture_insight
@@ -185,15 +168,12 @@ read_insight
 archive_insight
 ```
 
-`capture_insight` accepts the capture contract above. `list_insights` defaults
-to active items and supports `active`, `archived`, or `all`. It returns newest
-first. `read_insight` returns the reduced state plus event history.
-`archive_insight` accepts an ID and optional note.
-Archive notes are limited to 500 characters.
+`capture_insight`: capture contract above. `list_insights`: defaults active;
+supports `active`, `archived`, `all`; newest first. `read_insight`:
+reduced state + history. `archive_insight`: ID + optional note, max 500 chars.
 
-The MCP schemas reject unknown fields. Mutation responses name the ID and
-transition without dumping captured text. Read tools return captured content
-because the caller explicitly requested it.
+Schemas reject unknown fields. Mutation output names ID/transition, omits text.
+Read tools return text only after explicit request.
 
 ## CLI interface
 
@@ -205,108 +185,88 @@ kizuki insight show <id> [--json]
 kizuki insight archive <id> [--note <text>]
 ```
 
-The default list shows active insights newest first. Human output includes ID,
-kind, summary, entity references, origin client, and capture time. JSON output
-returns the reduced states. `show --json` also includes event history.
+Default: active, newest first. Human rows: ID, kind, summary, entity refs, origin
+client, capture time. JSON: reduced states. `show --json`: state + history.
 
-Invalid syntax, unknown IDs, repeated archive attempts, and invalid statuses
-fail loudly.
+Bad syntax/status, unknown IDs, repeated archive fail loudly.
 
 ## Search, sync, and check
 
-Kizuki's local and MCP search includes active insight summaries and context.
-Archived insights stay available through `show` and explicit archived or all
-listing, but ordinary search excludes them.
+Local/MCP search includes active insight summary/context. Ordinary search excludes
+archived; `show` and archived/all listing retain access.
 
-Before spawning the configured agent, sync reads a consistent snapshot of
-active insights:
+Sync reads consistent active-insight snapshot before agent spawn:
 
-- An all-scope sync includes every active insight.
-- A person, project, or team sync includes insights with a matching entity
-  reference.
-- Unscoped insights appear in all-scope syncs and direct insight queries.
+- All scope: every active insight.
+- Entity scope: matching entity refs.
+- Unscoped: all-scope sync + direct insight queries only.
 
-The prompt labels the context as user-captured. Decisions record the user's
-intent. Learnings provide context. Hypotheses and questions remain unverified
-and must not be stated as established facts.
+Prompt labels user-captured context. Decisions = user intent. Learnings = context.
+Hypotheses/questions = unverified; never established facts.
 
-Captured insights can inform entity analysis and raw log entries. They cannot
-support a new signal receipt by themselves, and this design does not add an
-`insight` signal receipt source. A signal still needs evidence from Slack,
-GitHub, Atlassian, Outlook, or a transcript.
+Insights may inform entity analysis/raw log. Cannot support new signal receipt
+alone. No `insight` signal receipt source. Signals still require Slack, GitHub,
+Atlassian, Outlook, or transcript evidence.
 
-Payload version 3 remains unchanged. When sync records an insight in an entity
-log, the raw entry uses source `insight`, the capture timestamp, and text that
-names the insight ID and kind. Hypotheses and questions stay labeled in that
-text. Sync does not mark or archive an insight after using it.
+Payload version 3 unchanged. Insight-derived raw entry uses source `insight`,
+capture timestamp, text naming insight ID + kind. Hypotheses/questions stay
+labeled. Sync never marks/archives used insight.
 
-`kizuki check` includes active insights that match its explicit scope. An
-all-scope check includes all active insights. The check prompt follows the same
-kind rules and identifies conflicts with a hypothesis as an evidence gap rather
-than a factual contradiction.
+`kizuki check`: explicit scope gets matching active insights; all scope gets
+all. Hypothesis conflict = evidence gap, not factual contradiction.
 
-Capture itself does not run sync, rewrite entity files, notify, or create a
-signal.
+Capture never runs sync, rewrites entities, notifies, or creates signal.
 
 ## Setup and documentation
 
 - Add `/insights/` to `.gitignore`.
 - `kizuki init` creates `insights/`.
 - Doctor verifies `insights/`.
-- Document the phrase, capture contract, MCP tools, CLI commands, status
-  meanings, scope behavior, and privacy boundary.
-- Keep `AGENTS.md` and `CLAUDE.md` synchronized where shared invariants change.
-- Do not add fixed total-test counts.
+- Document phrase, contract, MCP/CLI, statuses, scope, privacy.
+- Sync `AGENTS.md` + `CLAUDE.md` shared invariants.
+- No fixed total-test counts.
 
-The repo does not install or modify global Codex or Cursor instructions in this
-slice. Tool descriptions carry the "Kizuki this" behavior for clients that
-already load the Kizuki MCP server.
+No global Codex/Cursor instruction edits. Tool description carries "Kizuki this"
+behavior for clients loading Kizuki MCP.
 
 ## Error handling
 
-- Malformed insight JSONL throws with the file and line number.
-- Invalid capture inputs fail before the lock or filesystem mutation.
-- Lock acquisition uses the existing timeout and stale-lock behavior.
-- Atomic write failure leaves the previous ledger intact.
-- Search, sync, and check fail rather than silently dropping a malformed
-  insight ledger.
-- Missing `insights/events.jsonl` means an empty inbox.
+- Malformed ledger: throw file + line.
+- Invalid input: fail before lock/filesystem mutation.
+- Lock: existing timeout + stale-lock rules.
+- Atomic write failure: previous ledger intact.
+- Search/sync/check: fail on malformed ledger; never drop silently.
+- Missing ledger: empty inbox.
 
 ## Test plan
 
-Tests cover:
-
-- Stable ID and exact retry behavior.
-- Different kinds, wording, entities, clients, and locators produce different
-  IDs.
-- Text limits, path-safe entities, duplicate references, and locator safety.
-- Reducer rejection of malformed JSONL, bad ordering, bad enums, unknown IDs,
-  transition mismatch, and collisions.
-- Atomic writer prefix protection and prior-ledger preservation on failure.
-- Lock use for capture and archive.
-- Active and archived CLI listing, sort order, JSON, show history, invalid
-  syntax, and unknown IDs.
-- MCP validation, capture, listing, reading, archive, exact retry, and safe
-  mutation output.
-- Search includes active insights and excludes archived insights.
-- Sync scope selection and epistemic prompt rules.
-- Check context and evidence-gap handling for hypotheses.
-- Capture performs no entity, signal, alert, transcript, or notification write.
-- Init and doctor include `insights/`.
-- Existing sync, signal, entity, and MCP behavior remains green.
+- Stable ID + exact retry.
+- Identity changes for kind, wording, entities, client, locator.
+- Text limits, safe entity names, duplicate refs, safe locator.
+- Reducer rejects malformed JSONL, bad order/enums, unknown IDs, transition
+  mismatch, collision.
+- Atomic prefix protection + failure preservation.
+- Lock capture/archive.
+- CLI active/archived sort, JSON, history, bad syntax/IDs.
+- MCP validation, capture/list/read/archive, retry, safe mutation output.
+- Search includes active, excludes archived.
+- Sync scope + epistemic prompt rules.
+- Check context + hypothesis evidence-gap handling.
+- Capture writes no entity/signal/alert/transcript/notification.
+- Init/doctor include `insights/`.
+- Existing sync/signal/entity/MCP behavior green.
 
 ## Constraints and non-goals
 
-- Root and `lib/` remain ESM `.mjs`, Node built-ins only, with zero runtime
-  dependencies.
-- The MCP package keeps its existing isolated dependencies.
-- Use failing tests before implementation and keep `npm test` green.
-- Preserve the main checkout's existing `transcripts/.gitkeep` deletion.
-- Do not read Codex or Cursor session files automatically.
-- Do not store full conversations or raw tool output.
-- Do not add passive capture, session-end hooks, notifications, dashboard
-  controls, insight restoration, semantic clustering, or automatic archival.
-- Do not change signal lifecycle or add insight-only signals.
+- Root/`lib/`: ESM `.mjs`, Node built-ins only, zero runtime deps.
+- MCP deps stay isolated.
+- Failing tests first. `npm test` green.
+- Preserve main checkout `transcripts/.gitkeep` deletion.
+- No automatic Codex/Cursor session reads.
+- No full chats/raw tool output.
+- No passive capture, session-end hooks, notifications, dashboard controls,
+  restore, semantic clustering, auto-archive.
+- No signal lifecycle change or insight-only signals.
 
 ## Verification
 
