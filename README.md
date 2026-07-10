@@ -18,6 +18,14 @@ Use it in three moments:
 - **While thinking:** say "Kizuki this" in a connected Codex or Cursor chat to
   save a distilled decision, learning, hypothesis, or question.
 
+Product direction:
+
+- [Product model](docs/PRODUCT.md): the builder north star and operating model.
+- [Manifesto](docs/MANIFESTO.md): why Kizuki should exist.
+- [Long-form vision](docs/vision.md): strategy, validation gates, and the
+  personal Jarvis arc.
+- [Roadmap](docs/ROADMAP.md): build order.
+
 ## Usage
 
 ```
