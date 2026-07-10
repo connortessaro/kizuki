@@ -191,6 +191,7 @@ force-add files under those folders or push work data to a remote.
   data does not appear in worktrees.
 - **Write lock.** `applyPayload` serializes writers through `state/vault.lock`
   (waits up to 30s, then fails naming the holder; stale locks stolen by PID
-  liveness). Concurrent `./kizuki sync` and MCP `upsert_analysis` are safe.
+  liveness). Concurrent `./kizuki sync`, MCP `upsert_analysis`, and insight
+  mutations are safe.
 - `AGENTS.md` mirrors this file for non-Claude agents (Codex at work). Keep the
   two in sync when either changes.
