@@ -3,13 +3,33 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { upsertAnalysis, readEntity, listEntities, listFollowups, search } from "./tools.mjs";
+import {
+  archiveInsightTool,
+  captureInsightTool,
+  listInsightsTool,
+  readInsightTool,
+  upsertAnalysis,
+  readEntity,
+  listEntities,
+  listFollowups,
+  search,
+} from "./tools.mjs";
 
 async function makeVault() {
   const dir = await mkdtemp(join(tmpdir(), "kizuki-mcp-"));
   for (const d of ["people", "projects", "teams", "transcripts"]) await mkdir(join(dir, d), { recursive: true });
   return dir;
 }
+
+const FIXED = new Date("2026-07-09T20:00:00Z");
+const LATER = new Date("2026-07-09T21:00:00Z");
+const INSIGHT = {
+  kind: "learning",
+  summary: "Per-FC manifests drive lookup.",
+  context: "Backend resolves each FC separately.",
+  entities: [{ type: "project", name: "staff" }],
+  origin: { client: "codex" },
+};
 
 test("upsertAnalysis creates a person file and splices the managed section", async () => {
   const v = await makeVault();
@@ -109,4 +129,43 @@ test("search finds a term across the vault", async () => {
   assert.match(r, /refunds/);
   const none = await search(v, "zzzznotthere");
   assert.match(none, /no matches/i);
+});
+
+test("MCP insight tools capture, dedupe, list, read, and archive", async () => {
+  const v = await makeVault();
+  const first = await captureInsightTool(v, INSIGHT, { now: FIXED });
+  const retry = await captureInsightTool(v, INSIGHT, { now: LATER });
+  assert.match(first, /^Captured ins_[0-9a-f]{12} \[learning\] active$/);
+  assert.doesNotMatch(first, /Per-FC|Backend/);
+  assert.match(retry, /^Existing ins_[0-9a-f]{12} \[learning\] active \(exact-repeat\)$/);
+  const insightId = first.match(/ins_[0-9a-f]{12}/)[0];
+
+  assert.match(await listInsightsTool(v, {}), new RegExp(insightId));
+  assert.match(await readInsightTool(v, { insightId }), /Per-FC manifests/);
+  const archived = await archiveInsightTool(v, {
+    insightId,
+    note: "absorbed",
+  }, { now: LATER });
+  assert.equal(archived, insightId + " active -> archived");
+  assert.doesNotMatch(archived, /absorbed|Per-FC/);
+  assert.equal(await listInsightsTool(v, {}), "No insights.");
+  assert.match(await listInsightsTool(v, { status: "archived" }), /archived/);
+});
+
+test("MCP insight tools reject unknown fields through core validation", async () => {
+  const v = await makeVault();
+  await assert.rejects(
+    captureInsightTool(v, { ...INSIGHT, fullChat: "secret" }, { now: FIXED }),
+    /unknown insight field/,
+  );
+});
+
+test("search includes active insight summary and context but excludes archived", async () => {
+  const v = await makeVault();
+  const first = await captureInsightTool(v, INSIGHT, { now: FIXED });
+  const insightId = first.match(/ins_[0-9a-f]{12}/)[0];
+  assert.match(await search(v, "manifests"), new RegExp("insight/" + insightId));
+  assert.match(await search(v, "separately"), new RegExp("insight/" + insightId));
+  await archiveInsightTool(v, { insightId }, { now: LATER });
+  assert.doesNotMatch(await search(v, "manifests"), /insight\/ins_/);
 });

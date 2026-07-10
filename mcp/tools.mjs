@@ -2,6 +2,13 @@ import { readFile } from "node:fs/promises";
 import { entityPath } from "../lib/vault.mjs";
 import { applyPayload } from "../lib/apply.mjs";
 import { TYPES, eachEntity, followupsByEntity, assertType, assertName, statusOf } from "../lib/query.mjs";
+import {
+  archiveInsight,
+  captureInsight,
+  readInsight,
+  runInsightsCommand,
+} from "../lib/insightCommands.mjs";
+import { searchActiveInsights } from "../lib/insightContext.mjs";
 
 export { TYPES };
 export const CHARACTER_LIMIT = 25000;
@@ -59,6 +66,34 @@ export async function search(vaultDir, query) {
       if (line.toLowerCase().includes(needle)) hits.push(`${e.type}/${e.name}:${i + 1}: ${line.trim()}`);
     });
   }
+  for (const insight of await searchActiveInsights(vaultDir, query)) {
+    hits.push(`insight/${insight.insightId}: [${insight.kind}] ${insight.summary}`);
+  }
   if (!hits.length) return `No matches for ${JSON.stringify(query)}.`;
   return truncate(hits.join("\n"));
+}
+
+export async function captureInsightTool(vaultDir, input, options = {}) {
+  const result = await captureInsight(vaultDir, input, options);
+  if (result.disposition === "exact-repeat") {
+    return `Existing ${result.insightId} [${result.state.kind}] ${result.state.status} (exact-repeat)`;
+  }
+  return `Captured ${result.insightId} [${result.state.kind}] ${result.state.status}`;
+}
+
+export async function listInsightsTool(vaultDir, { status = "active" } = {}) {
+  return truncate(await runInsightsCommand(vaultDir, ["--status", status]));
+}
+
+export async function readInsightTool(vaultDir, { insightId }) {
+  return truncate(JSON.stringify(await readInsight(vaultDir, insightId), null, 2));
+}
+
+export async function archiveInsightTool(
+  vaultDir,
+  { insightId, note = null },
+  options = {},
+) {
+  const event = await archiveInsight(vaultDir, { insightId, note }, options);
+  return insightId + " " + event.from + " -> " + event.to;
 }
