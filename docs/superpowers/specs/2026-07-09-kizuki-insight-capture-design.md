@@ -1,7 +1,7 @@
 # Kizuki insight capture
 
 Date: 2026-07-09
-Status: approved design, written review pending
+Status: approved design
 
 ## Goal
 

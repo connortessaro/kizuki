@@ -96,4 +96,4 @@ node --test lib/vault.test.mjs # one file
   checkout. Never force-add it, never push it.
 - Write lock: `applyPayload` serializes writers via `state/vault.lock` (30s
   wait then loud failure; stale locks stolen by PID liveness). Concurrent
-  sync and MCP upserts are safe.
+  sync, MCP upserts, and insight mutations are safe.

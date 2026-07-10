@@ -1,11 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { createKizukiServer } from "./server.mjs";
+import { createKizukiServer, isDirectExecution } from "./server.mjs";
 
 async function connected(vaultDir) {
   const server = createKizukiServer(vaultDir);
@@ -68,4 +69,13 @@ test("server exposes insight tools and capture_insight validates strictly", asyn
     await client.close();
     await server.close();
   }
+});
+
+test("direct execution recognizes an installed bin symlink", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kizuki-mcp-bin-"));
+  const serverPath = join(dirname(fileURLToPath(import.meta.url)), "server.mjs");
+  const binPath = join(dir, "kizuki-mcp");
+  await symlink(serverPath, binPath);
+  assert.equal(isDirectExecution(binPath), true);
+  assert.equal(isDirectExecution(fileURLToPath(import.meta.url)), false);
 });

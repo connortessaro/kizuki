@@ -2,7 +2,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import {
   archiveInsightTool,
@@ -220,11 +221,16 @@ export function createKizukiServer(vaultDir) {
   return server;
 }
 
-const isMain =
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+export function isDirectExecution(argvPath) {
+  if (!argvPath) return false;
+  try {
+    return realpathSync(resolve(argvPath)) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
 
-if (isMain) {
+if (isDirectExecution(process.argv[1])) {
   const vaultDir =
     process.env.KIZUKI_VAULT ||
     resolve(dirname(fileURLToPath(import.meta.url)), "..");
