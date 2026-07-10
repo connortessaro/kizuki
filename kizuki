@@ -13,6 +13,7 @@ import { recordSyncFailure, recordSyncSuccess } from "./lib/syncFailures.mjs";
 import { notifySyncFailing } from "./lib/notify.mjs";
 import { runInit, formatInitReport } from "./lib/init.mjs";
 import { watchTranscripts } from "./lib/watcher.mjs";
+import { runSignalCommand, runSignalsCommand } from "./lib/signalCommands.mjs";
 
 const vaultDir = dirname(fileURLToPath(import.meta.url));
 const kizukiPath = join(vaultDir, "kizuki");
@@ -26,6 +27,12 @@ const USAGE = `usage: kizuki <command>
   kizuki start                                     begin shift: sync + brief + 30-min background sync
   kizuki stop                                      end shift: final sync + day summary + remove background sync
   kizuki doctor [--no-smoke] [--check-only]        diagnose config, agent, vault structure
+  kizuki signals [--status active|open|acted|dismissed|resolved|all] [--json]
+  kizuki signals migrate-alerts [--dry-run]
+  kizuki signal show <id> [--json]
+  kizuki signal act <id> [--note <text>]
+  kizuki signal dismiss <id> --reason <reason> [--note <text>]
+  kizuki signal resolve <id> [--note <text>]
   kizuki check "<draft>" [--person p] [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)`;
 
 async function readStdin() {
@@ -108,6 +115,10 @@ try {
       if (r.status === "fail") doctorFails.push(r.name);
     }
     if (doctorFails.length) console.log(`\nNote: doctor still reports: ${doctorFails.join(", ")}`);
+  } else if (command === "signals") {
+    console.log(await runSignalsCommand(vaultDir, rest));
+  } else if (command === "signal") {
+    console.log(await runSignalCommand(vaultDir, rest));
   } else if (command === "check") {
     const { scope, draftArg } = parseCheckArgs(rest);
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
