@@ -5,7 +5,7 @@
   "type": "module",
   "description": "MCP server exposing the Kizuki vault as tools (read + safe managed-section writes).",
   "bin": { "kizuki-mcp": "./server.mjs" },
-  "scripts": { "test": "node --test" },
+  "scripts": { "test": "node --test tools.test.mjs server.integration.mjs" },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.25.0"

@@ -505,7 +505,7 @@ git commit -m "feat: use captured insights as context"
 - Modify: `mcp/tools.mjs`
 - Modify: `mcp/tools.test.mjs`
 - Modify: `mcp/server.mjs`
-- Create: `mcp/server.test.mjs`
+- Create: `mcp/server.integration.mjs`
 - Modify: `mcp/package.json`
 
 **Interfaces:**
@@ -607,7 +607,7 @@ Register four tools:
 
 Core validation still rejects unknown fields and enforces length/locator rules.
 
-Add `"test": "node --test"` under `mcp/package.json` scripts so the required
+Add `"test": "node --test tools.test.mjs server.integration.mjs"` under `mcp/package.json` scripts so the required
 `cd mcp && npm test` verification command works.
 
 - [ ] **Step 5: Run MCP and root tests**
