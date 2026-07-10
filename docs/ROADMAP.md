@@ -55,7 +55,7 @@ These are done. New work builds on top of them.
 |------|----------|
 | Core pipeline | `lib/run.mjs`, `lib/payload.mjs`, `lib/apply.mjs`, `lib/vault.mjs` |
 | Shift rituals | `kizuki` `start`/`stop`, `lib/shift.mjs`, `lib/launchd.mjs` |
-| Safety | Write lock (`lib/lock.mjs`), append-only signal ledger (`lib/signals.mjs`), payload versioning, evidence guard (`lib/prompt.mjs`), agent timeout (`lib/agent.mjs`) |
+| Safety | Write lock (`lib/lock.mjs`), append-only signal and insight ledgers (`lib/signals.mjs`, `lib/insights.mjs`), payload versioning, evidence guard (`lib/prompt.mjs`), agent timeout (`lib/agent.mjs`) |
 | Tooling | `lib/doctor.mjs`, MCP (`mcp/`) |
 | Dashboard (partial v3) | Next.js read-only UI (`web/`) — built ahead of the v2 gate per `docs/superpowers/specs/2026-07-06-kizuki-web-dashboard-design.md` |
 
@@ -127,6 +127,19 @@ The event ledger is canonical. `alerts/YYYY-MM-DD.md` remains a compatibility
 view for the shipped dashboard and macOS notifications. The CLI lists active or
 terminal states, records manual lifecycle feedback, and imports old daily alert
 files as resolved history. Migration runs only when the operator requests it.
+
+### Explicit insight capture
+
+Shipped 2026-07-09. A connected Codex or Cursor chat can respond to "Kizuki
+this" by distilling one decision, learning, hypothesis, or question through the
+`capture_insight` MCP tool. Kizuki never scans chat sessions or stores full
+conversations.
+
+Deterministic code validates the capture and appends it to the gitignored
+`insights/events.jsonl` ledger. Active insights are immediately searchable and
+can inform scoped sync/check prompts without becoming signal evidence. CLI and
+MCP controls list, read, and archive captures. See
+`docs/superpowers/specs/2026-07-09-kizuki-insight-capture-design.md`.
 
 ---
 

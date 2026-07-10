@@ -33,6 +33,12 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 - Signal lifecycle mutations hold `state/vault.lock`. Kizuki never acts on a
   signal or sends its draft; the operator records `acted`, `dismissed`, or
   `resolved` explicitly.
+- `insights/events.jsonl` is the canonical captured-insight record. Capture is
+  explicit: a caller distills one thought and deterministic JS validates and
+  writes it. Never scan sessions or store full chats/tool output.
+- Insight capture/archive mutations hold `state/vault.lock`. Preserve insight
+  kind: hypotheses/questions are unverified and cannot support a signal without
+  an external receipt.
 - `spliceManagedSection` must never touch content outside the
   `KIZUKI:ANALYSIS` markers; `appendLog` dedup is exact full-line match; entity
   names are validated path-safe before touching the filesystem.
@@ -75,6 +81,9 @@ node --test lib/vault.test.mjs # one file
 ./kizuki signal dismiss <id> --reason <reason> [--note <text>]
 ./kizuki signal resolve <id> [--note <text>]
 ./kizuki signals migrate-alerts [--dry-run]
+./kizuki insights [--status active|archived|all] [--json]
+./kizuki insight show <id> [--json]
+./kizuki insight archive <id> [--note <text>]
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
 ```
 
@@ -83,7 +92,7 @@ node --test lib/vault.test.mjs # one file
 - One git worktree per task: `git worktree add ../kizuki-wt-<topic> -b <topic>`.
   No install step needed; run `npm test` in the worktree.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`,
-  `signals/`, `days/`, `state/`) is gitignored and exists only in the main
+  `signals/`, `insights/`, `days/`, `state/`) is gitignored and exists only in the main
   checkout. Never force-add it, never push it.
 - Write lock: `applyPayload` serializes writers via `state/vault.lock` (30s
   wait then loud failure; stale locks stolen by PID liveness). Concurrent
