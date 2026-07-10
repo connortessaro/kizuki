@@ -20,6 +20,7 @@ teams/*
 /days/
 /alerts/
 /signals/
+/insights/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/

@@ -10,11 +10,13 @@ actions.
 Single-operator tool. It observes and advises — it never sends messages or takes
 actions for you. You decide.
 
-Use it in two moments:
+Use it in three moments:
 
 - **Start/stop the day:** sync the vault, surface alerts, and write a day summary.
 - **Before you send:** run `kizuki check "<draft>"` to catch contradictions
   between a draft message and what the vault already knows.
+- **While thinking:** say "Kizuki this" in a connected Codex or Cursor chat to
+  save a distilled decision, learning, hypothesis, or question.
 
 ## Usage
 
@@ -40,6 +42,10 @@ Use it in two moments:
 ./kizuki signal dismiss <id> --reason stale
 ./kizuki signal resolve <id>
 ./kizuki signals migrate-alerts --dry-run # preview legacy alert import
+./kizuki insights                      # list active captured insights
+./kizuki insights --status all --json  # list active and archived insights as JSON
+./kizuki insight show <id> --json       # show an insight plus event history
+./kizuki insight archive <id>           # archive an insight
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only)
 ./kizuki check "<draft>" --person p    # check against one person
 ./kizuki check "<draft>" --project p   # check against one project
@@ -74,6 +80,36 @@ cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
 
 Plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work
 machine's global AGENTS.md pointing at the same two prompts.
+
+### Capture ideas from a chat
+
+Connect the Kizuki MCP server, then say "Kizuki this" or explicitly ask the
+chat to save an insight. The chat agent distills the useful thought and calls
+`capture_insight`; Kizuki does not read the session itself.
+
+```json
+{
+  "kind": "hypothesis",
+  "summary": "STAFF may need per-FC manifests instead of one global pointer.",
+  "context": "This came from reasoning about the backend bundle contract.",
+  "entities": [{ "type": "project", "name": "staff" }],
+  "origin": { "client": "codex", "locator": "optional-stable-turn-id" }
+}
+```
+
+Kinds preserve certainty: `decision` is a choice you made, `learning` is context
+you want later, `hypothesis` still needs evidence, and `question` is unresolved.
+Kizuki stores only the distilled capture, never the full chat or tool output.
+
+Captured insights are searchable immediately. Active insights also inform
+`sync` and `check`: all-scope runs see every active insight, while entity-scoped
+runs see matching entity references. Unscoped captures stay in the inbox until
+an all-scope run or direct search. Hypotheses and questions remain explicitly
+unverified and cannot create a signal without an external source receipt.
+
+An exact retry returns the same insight without another event. Changed wording,
+kind, scope, or origin creates a new insight. Archive is terminal; recapturing
+the exact archived item does not reactivate it.
 
 ## How it works
 
@@ -129,6 +165,7 @@ projects/<name>.md    # frontmatter: status, stakeholders | log + analysis
 teams/<name>.md       # frontmatter: members | rollup
 transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
 signals/events.jsonl  # canonical append-only signal history (gitignored)
+insights/events.jsonl # explicit, append-only chat insight inbox (gitignored)
 alerts/               # daily compatibility view for dashboard and notifications
 days/                 # generated day summaries (gitignored)
 state/                # lock, shift, and sync-failure state (gitignored)
@@ -178,9 +215,13 @@ then calls these tools to read and safely persist:
 - `list_entities` — people/projects/teams with one-line status
 - `read_entity` — full file for one entity
 - `list_followups` — every open follow-up + recommended action across the vault
-- `search` — substring search across the vault
+- `search` — substring search across the vault and active insights
 - `upsert_analysis` — the safe writer: creates the file, dedupes the log, and
 rewrites ONLY the managed analysis section (hand-notes are never touched)
+- `capture_insight` — validate and save one distilled thought
+- `list_insights` — list active, archived, or all captured insights
+- `read_insight` — read one insight and its event history
+- `archive_insight` — archive one active insight
 
 `upsert_analysis` reuses the same deterministic write path as the CLI, so the LLM
 still never edits files directly — re-runs stay idempotent and notes stay safe.
@@ -247,7 +288,7 @@ npm test        # node --test (core is zero-dep; mcp/ has its own deps)
 ## Data safety
 
 The vault entity files and local runtime data under `people/`, `projects/`,
-`teams/`, `transcripts/`, `alerts/`, `signals/`, `days/`, and `state/` contain
-internal work information and are **gitignored**. Pushing the repository does
-not include that data unless someone force-adds it. Do not force-add files from
-those folders.
+`teams/`, `transcripts/`, `alerts/`, `signals/`, `insights/`, `days/`, and
+`state/` contain internal work information and are **gitignored**. Pushing the
+repository does not include that data unless someone force-adds it. Do not
+force-add files from those folders.

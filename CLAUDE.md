@@ -41,6 +41,9 @@ node --test lib/vault.test.mjs        # one test file
 ./kizuki signal dismiss <id> --reason <reason> [--note <text>]
 ./kizuki signal resolve <id> [--note <text>]
 ./kizuki signals migrate-alerts [--dry-run]
+./kizuki insights [--status active|archived|all] [--json]
+./kizuki insight show <id> [--json]
+./kizuki insight archive <id> [--note <text>]
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
 ```
 
@@ -82,6 +85,13 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   `signals/events.jsonl`.
 - **`lib/signalCommands.mjs`:** read-only list/show commands, locked lifecycle
   transitions, and manual legacy alert migration.
+- **`lib/insights.mjs`:** stable insight identity, event validation/reduction,
+  capture/archive planning, and atomic append-only writes to
+  `insights/events.jsonl`.
+- **`lib/insightCommands.mjs`:** CLI services and formatting for capture state,
+  list/show, and locked archive transitions.
+- **`lib/insightContext.mjs`:** active-insight scope selection, prompt context,
+  and local search.
 - **`lib/alerts.mjs`:** daily compatibility view with exact-line dedup. The
   dashboard and notification path still read this format.
 - **`lib/notify.mjs`** — macOS osascript notifications for warn/critical alerts and
@@ -100,7 +110,8 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
 ## MCP server (`mcp/`)
 
 `mcp/` is a separate subpackage that exposes the vault to any agent as MCP tools
-(`list_entities`, `read_entity`, `list_followups`, `search`, `upsert_analysis`).
+(`list_entities`, `read_entity`, `list_followups`, `search`, `upsert_analysis`,
+`capture_insight`, `list_insights`, `read_insight`, `archive_insight`).
 It is the conversational/interactive alternative to the `kizuki` CLI.
 
 - **`mcp/tools.mjs`** — handler logic (pure-ish, `vaultDir`-parameterized, unit
@@ -156,11 +167,17 @@ for the vault: entity browser, follow-ups, day summaries, search.
 - Signal lifecycle mutations hold `state/vault.lock`. Kizuki never acts on a
   signal or sends its draft; the operator records `acted`, `dismissed`, or
   `resolved` explicitly.
+- `insights/events.jsonl` is the canonical captured-insight record. Capture is
+  explicit: a caller distills one thought and deterministic JS validates and
+  writes it. Never scan sessions or store full chats/tool output.
+- Insight capture/archive mutations hold `state/vault.lock`. Preserve insight
+  kind: hypotheses/questions are unverified and cannot support a signal without
+  an external receipt.
 
 ## Data safety
 
-`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`, `days/`,
-and `state/` are gitignored because they hold internal work data. Never
+`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`,
+`insights/`, `days/`, and `state/` are gitignored because they hold internal work data. Never
 force-add files under those folders or push work data to a remote.
 
 ## Parallel work (Connor + agents simultaneously)
@@ -170,7 +187,7 @@ force-add files under those folders or push work data to a remote.
   step per worktree; `npm test` runs anywhere. Merge to main only with the suite
   green.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`,
-  `signals/`, `days/`, `state/`) exists only in the main checkout. Gitignored
+  `signals/`, `insights/`, `days/`, `state/`) exists only in the main checkout. Gitignored
   data does not appear in worktrees.
 - **Write lock.** `applyPayload` serializes writers through `state/vault.lock`
   (waits up to 30s, then fails naming the holder; stale locks stolen by PID
