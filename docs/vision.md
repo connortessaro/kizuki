@@ -3,6 +3,12 @@
 > Status: vision, not validated. The wedge (cross-team alignment) is gated on one
 > real test at Connor's eng org. This doc is the north star, not a build order.
 
+Related docs:
+
+- [Product model](PRODUCT.md) for the concise builder operating model.
+- [Manifesto](MANIFESTO.md) for the product belief.
+- [Roadmap](ROADMAP.md) for build order.
+
 ## One line
 
 **Keep every team acting on the same picture — and catch the misalignment that
