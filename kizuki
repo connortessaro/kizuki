@@ -14,6 +14,7 @@ import { notifySyncFailing } from "./lib/notify.mjs";
 import { runInit, formatInitReport } from "./lib/init.mjs";
 import { watchTranscripts } from "./lib/watcher.mjs";
 import { runSignalCommand, runSignalsCommand } from "./lib/signalCommands.mjs";
+import { runInsightCommand, runInsightsCommand } from "./lib/insightCommands.mjs";
 
 const vaultDir = dirname(fileURLToPath(import.meta.url));
 const kizukiPath = join(vaultDir, "kizuki");
@@ -33,6 +34,9 @@ const USAGE = `usage: kizuki <command>
   kizuki signal act <id> [--note <text>]
   kizuki signal dismiss <id> --reason <reason> [--note <text>]
   kizuki signal resolve <id> [--note <text>]
+  kizuki insights [--status active|archived|all] [--json]
+  kizuki insight show <id> [--json]
+  kizuki insight archive <id> [--note <text>]
   kizuki check "<draft>" [--person p] [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)`;
 
 async function readStdin() {
@@ -119,6 +123,10 @@ try {
     console.log(await runSignalsCommand(vaultDir, rest));
   } else if (command === "signal") {
     console.log(await runSignalCommand(vaultDir, rest));
+  } else if (command === "insights") {
+    console.log(await runInsightsCommand(vaultDir, rest));
+  } else if (command === "insight") {
+    console.log(await runInsightCommand(vaultDir, rest));
   } else if (command === "check") {
     const { scope, draftArg } = parseCheckArgs(rest);
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
