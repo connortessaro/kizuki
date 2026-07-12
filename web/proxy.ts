@@ -6,6 +6,10 @@ export function proxy(request: NextRequest) {
   } catch {
     return new NextResponse("Not Found", { status: 404 });
   }
+  const host = request.headers.get("host") ?? "";
+  if (host === "kizuki.dev" || host === "www.kizuki.dev") {
+    return NextResponse.rewrite(new URL("/landing.html", request.url));
+  }
   return NextResponse.next();
 }
 
