@@ -17,6 +17,7 @@ import { runSignalCommand, runSignalsCommand } from "./lib/signalCommands.mjs";
 import { runInsightCommand, runInsightsCommand } from "./lib/insightCommands.mjs";
 import { runCatchCommand, runCatchesCommand } from "./lib/catchCommands.mjs";
 import { runGateCommand } from "./lib/gateCommands.mjs";
+import { runSkillsCommand } from "./lib/skills.mjs";
 
 const vaultDir = dirname(fileURLToPath(import.meta.url));
 const kizukiPath = join(vaultDir, "kizuki");
@@ -42,6 +43,7 @@ const USAGE = `usage: kizuki <command>
   kizuki catch "<note>" [--signal <id>] [--insight <id>]   record a true catch (gate evidence)
   kizuki catches [--json]                          list recorded catches
   kizuki gate [--weeks n] [--json]                 weekly gate-evidence report
+  kizuki skills export [--agent claude|codex|all] [--check] [--dist]   install ritual skills
   kizuki check "<draft>" [--person p] [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)`;
 
 async function readStdin() {
@@ -138,6 +140,8 @@ try {
     console.log(await runCatchesCommand(vaultDir, rest));
   } else if (command === "gate") {
     console.log(await runGateCommand(vaultDir, rest));
+  } else if (command === "skills") {
+    console.log(await runSkillsCommand(vaultDir, rest));
   } else if (command === "check") {
     const { scope, draftArg } = parseCheckArgs(rest);
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());

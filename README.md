@@ -69,25 +69,21 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 ./kizuki doctor
 ./kizuki sync --dry-run                  # optional: verify the agent can read sources without writing
 ./kizuki check "We are ready for UAT."    # optional: test a draft against the vault
-node scripts/install-codex-prompts.mjs   # optional: Codex /kizuki-start slash command
+kizuki skills export                      # optional: install shift-ritual skills for Claude Code/Codex
 ```
 
-### Shift rituals (Codex slash commands)
+## Install the rituals as agent skills
 
-Install ritual prompts to your Codex prompts folder:
+    kizuki skills export            # installs for Claude Code and Codex
+    kizuki skills export --agent codex
 
-```
-node scripts/install-codex-prompts.mjs
-```
-
-Or copy manually:
-
-```
-cp codex/prompts/kizuki-start.md codex/prompts/kizuki-stop.md ~/.codex/prompts/
-```
+Claude Code skills land in `~/.claude/skills/<name>/SKILL.md`; Codex prompts in
+`~/.codex/prompts/<name>.md`. Pure-markdown users can copy the committed files
+under `dist/skills/` directly. The rituals invoke the `kizuki` binary, so it
+must be on your PATH.
 
 Plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work
-machine's global AGENTS.md pointing at the same two prompts.
+machine's global AGENTS.md pointing at the same rituals.
 
 ### Capture ideas from a chat
 
