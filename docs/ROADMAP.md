@@ -186,7 +186,7 @@ product (`docs/future-notes.md` gates that separately).
 
 ### Scope (shipped)
 
-1. **Landing page** — `site/index.html`: vision one-liner + positioning copy
+1. **Landing page** — `web/app/(landing)/landing/page.tsx`, host-routed via `web/proxy.ts`: vision one-liner + positioning copy
 2. **`kizuki init`** — vault dirs, `kizuki.config.json` template, MCP snippet, doctor hint
 3. **Distribution** — `package.json` `bin`, README polish
 4. **Agent Skills pack** — `scripts/install-codex-prompts.mjs` copies `codex/prompts/`
