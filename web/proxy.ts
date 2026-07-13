@@ -8,6 +8,8 @@ export function proxy(request: NextRequest) {
   }
   const host = request.headers.get("host") ?? "";
   if (host === "kizuki.dev" || host === "www.kizuki.dev") {
+    const { pathname } = new URL(request.url);
+    if (/\.[a-z0-9]+$/i.test(pathname)) return NextResponse.next();
     return NextResponse.rewrite(new URL("/landing", request.url));
   }
   return NextResponse.next();
