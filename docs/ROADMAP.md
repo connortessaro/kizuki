@@ -36,7 +36,9 @@ flowchart TD
 ```
 
 Each gate is an **evidence checkpoint**, not a feature. Record pass/fail in a
-local journal (e.g. a note under `days/` or a private doc) — not in git.
+local journal (e.g. a note under `days/` or a private doc) — not in git. Track
+gate evidence with `kizuki catch` / `kizuki gate` (spec:
+`docs/superpowers/specs/2026-07-13-kizuki-gate-instrumentation-design.md`).
 
 | Gate | Pass criteria |
 |------|---------------|
@@ -60,7 +62,8 @@ These are done. New work builds on top of them.
 | Dashboard (partial v3) | Next.js read-only UI (`web/`) — built ahead of the v2 gate per `docs/superpowers/specs/2026-07-06-kizuki-web-dashboard-design.md` |
 
 **Open v1 validation (not code):** run the v1 → v2 gate above before starting v2
-implementation.
+implementation. Track gate evidence with `kizuki catch` / `kizuki gate` (spec:
+`docs/superpowers/specs/2026-07-13-kizuki-gate-instrumentation-design.md`).
 
 ---
 

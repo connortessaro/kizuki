@@ -45,6 +45,10 @@ node --test lib/vault.test.mjs        # one test file
 ./kizuki insight show <id> [--json]
 ./kizuki insight archive <id> [--note <text>]
 ./kizuki check "<draft>"               # flag where a draft contradicts the vault (read-only, sends nothing)
+./kizuki catch "<note>" [--signal <id>] [--insight <id>]   record a true catch (gate evidence)
+./kizuki catches [--json]               list recorded catches
+./kizuki gate [--weeks n] [--json]      weekly gate-evidence report
+./kizuki skills export [--agent claude|codex|all] [--check] [--dist]   install ritual skills
 ```
 
 ## Architecture
@@ -92,6 +96,16 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   list/show, and locked archive transitions.
 - **`lib/insightContext.mjs`:** active-insight scope selection, prompt context,
   and local search.
+- **`lib/catches.mjs`** — stable catch identity, event validation/reduction,
+  capture planning, atomic append-only writes to `catches/events.jsonl`.
+- **`lib/catchCommands.mjs`** — catch capture (cross-ledger link validation,
+  locked) and read-only listing.
+- **`lib/gate.mjs`** — pure weekly gate-report compute + render (Monday-start
+  local weeks, injected `now`).
+- **`lib/gateCommands.mjs`** — reads the three ledgers for `kizuki gate` and
+  the brief/day-summary gate line.
+- **`lib/skills.mjs`** — ritual parsing (`skills/*/ritual.md`) and per-agent
+  rendering/export (`dist/skills/`, home installs).
 - **`lib/alerts.mjs`:** daily compatibility view with exact-line dedup. The
   dashboard and notification path still read this format.
 - **`lib/notify.mjs`** — macOS osascript notifications for warn/critical alerts and
@@ -173,11 +187,14 @@ for the vault: entity browser, follow-ups, day summaries, search.
 - Insight capture/archive mutations hold `state/vault.lock`. Preserve insight
   kind: hypotheses/questions are unverified and cannot support a signal without
   an external receipt.
+- `catches/events.jsonl` is the canonical catch record — append-only,
+  mutations hold `state/vault.lock`; a catch is operator-recorded evidence
+  about Kizuki's usefulness and never upgrades a signal or insight.
 
 ## Data safety
 
 `people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`,
-`insights/`, `days/`, and `state/` are gitignored because they hold internal work data. Never
+`insights/`, `catches/`, `days/`, and `state/` are gitignored because they hold internal work data. Never
 force-add files under those folders or push work data to a remote.
 
 ## Parallel work (Connor + agents simultaneously)
@@ -187,7 +204,7 @@ force-add files under those folders or push work data to a remote.
   step per worktree; `npm test` runs anywhere. Merge to main only with the suite
   green.
 - Vault data (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`,
-  `signals/`, `insights/`, `days/`, `state/`) exists only in the main checkout. Gitignored
+  `signals/`, `insights/`, `catches/`, `days/`, `state/`) exists only in the main checkout. Gitignored
   data does not appear in worktrees.
 - **Write lock.** `applyPayload` serializes writers through `state/vault.lock`
   (waits up to 30s, then fails naming the holder; stale locks stolen by PID
