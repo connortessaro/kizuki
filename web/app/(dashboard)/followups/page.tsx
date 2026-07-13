@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { vaultDir, followups } from "../../lib/data.mjs";
+import { vaultDir, followups } from "../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 

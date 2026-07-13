@@ -1,6 +1,6 @@
 import Markdown from "react-markdown";
 import { notFound } from "next/navigation";
-import { vaultDir, readDay } from "../../../lib/data.mjs";
+import { vaultDir, readDay } from "../../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 

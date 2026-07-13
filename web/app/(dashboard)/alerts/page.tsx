@@ -2,7 +2,7 @@ import Link from "next/link";
 import CopyButton from "../copy-button";
 import {
   vaultDir, listAlertDates, alertsForDate, formatDate,
-} from "../../lib/data.mjs";
+} from "../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 

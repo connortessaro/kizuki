@@ -1,4 +1,4 @@
-import { vaultDir, getShift, copyQueue, formatDateTime } from "../../lib/data.mjs";
+import { vaultDir, getShift, copyQueue, formatDateTime } from "../../../lib/data.mjs";
 import CopyButton from "../copy-button";
 
 export const dynamic = "force-dynamic";

@@ -1,6 +1,6 @@
 import Markdown from "react-markdown";
 import { notFound } from "next/navigation";
-import { vaultDir, getEntity, TYPES } from "../../../../lib/data.mjs";
+import { vaultDir, getEntity, TYPES } from "../../../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 
