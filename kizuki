@@ -58,7 +58,9 @@ function scopeLabel(scope) {
 }
 
 async function doSync(argv) {
-  const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+  const resolved = await resolveAgent(vaultDir);
+  if (resolved.kind === "http") throw new Error("http agent not wired yet");
+  const { cmd, timeoutMs } = resolved;
   const r = await runSync({ argv, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
   await recordSyncSuccess(vaultDir);
   console.log(`Kizuki sync — scope: ${scopeLabel(r.scope)}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
@@ -91,7 +93,9 @@ try {
   } else if (command === "stop") {
     if (!(await readShift(vaultDir))) throw new Error("no shift in progress");
     await doSync([]);
-    const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+    const resolved = await resolveAgent(vaultDir);
+    if (resolved.kind === "http") throw new Error("http agent not wired yet");
+    const { cmd, timeoutMs } = resolved;
     const summaryPath = await writeDaySummary(vaultDir, {
       runAgent: makeRunAgent(cmd, timeoutMs),
     });
@@ -146,7 +150,9 @@ try {
     const { scope, draftArg } = parseCheckArgs(rest);
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
     if (!draft) throw new Error('no draft provided — pass "<text>" or pipe via stdin');
-    const { cmd, timeoutMs } = await resolveAgent(vaultDir);
+    const resolved = await resolveAgent(vaultDir);
+    if (resolved.kind === "http") throw new Error("http agent not wired yet");
+    const { cmd, timeoutMs } = resolved;
     const result = await runCheck({ draft, scope, vaultDir, runAgent: makeRunCheckAgent(cmd, timeoutMs) });
     if (rest.includes("--json")) console.log(JSON.stringify(result, null, 2));
     else console.log(formatContradictions(result));
