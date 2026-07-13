@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { vaultDir, listDays, formatDate } from "../../lib/data.mjs";
+import { vaultDir, listDays, formatDate } from "../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 

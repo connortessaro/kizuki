@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   vaultDir, listByType, followups, listDays, formatDate, lastUpdated, formatDateTime,
   todayAlerts, getShift, alertTrends, listAlertDates,
-} from "../lib/data.mjs";
+} from "../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 

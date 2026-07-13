@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { vaultDir, listByType } from "../../lib/data.mjs";
+import { vaultDir, listByType } from "../../../lib/data.mjs";
 
 export const dynamic = "force-dynamic";
 
