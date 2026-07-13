@@ -197,6 +197,13 @@ for the vault: entity browser, follow-ups, day summaries, search.
 `insights/`, `catches/`, `days/`, and `state/` are gitignored because they hold internal work data. Never
 force-add files under those folders or push work data to a remote.
 
+## Skills
+
+- `grill-me` / `grilling` — global skill (not project-specific), installed in
+  `~/.claude/skills/`. Interviews the operator one question at a time to
+  stress-test a plan/design before acting on it. Invoke on any "grill me"
+  trigger phrase.
+
 ## Parallel work (Connor + agents simultaneously)
 
 - One git worktree per task: `git worktree add ../kizuki-wt-<topic> -b <topic>`
