@@ -186,6 +186,15 @@ pre code { background: none; padding: 0; }
 .landing .refusals { list-style: none; margin: 0; padding: 0; }
 .landing .refusals li { padding: 0.45rem 0; border-top: 1px solid var(--rule); }
 .landing .refusals li:first-child { border-top: none; }
+.landing .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .landing .tiers { grid-template-columns: 1fr; } }
+.landing .tier { border: 1px solid var(--rule); padding: 1.2rem 1.4rem; }
+.landing .tier.pro { border-top: 3px solid var(--kizuki); }
+.landing .tier h2 { font-family: var(--display); font-size: 20px; font-weight: 600; margin: 0 0 0.6rem; }
+.landing .tier h2 span { color: var(--stone); font-family: var(--body); font-weight: 400; font-size: 14px; margin-left: 8px; }
+.landing .tier p { color: var(--stone); margin: 0 0 1rem; }
+.landing .tier a { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kizuki-deep); text-decoration: underline; text-underline-offset: 3px; }
+.landing .tier a:hover { color: var(--kizuki); }
 .landing pre { background: #f5f3ec; border: 1px solid var(--rule); padding: 1rem 1.2rem; overflow-x: auto; }
 .landing footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.6rem; color: var(--stone); font-size: 14px; }
 .landing footer a { color: var(--kizuki-deep); }
