@@ -1,4 +1,9 @@
-Run `./kizuki start` in the kizuki repo. Read the brief it prints, then:
+---
+name: kizuki-start
+description: Begin a Kizuki shift — sync, read the brief, plan the first move
+---
+
+Run `kizuki start`. Read the brief it prints, then:
 
 1. Give me the morning rundown in your own words — lead with anything that
    looks like cross-team misalignment or a blocker aging badly.

@@ -1,5 +1,4 @@
-Run `./kizuki stop` in the kizuki repo. Read the day summary file it prints the
-path to, then:
+Run `kizuki stop`. Read the day summary file it prints the path to, then:
 
 1. Recap the day in three sentences max.
 2. List what's still open, who each item is waiting on, and what will bite
