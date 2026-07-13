@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 
-export const metadata = { title: "Kizuki" };
+export const metadata = { title: "Kizuki", icons: { icon: "/seal-ki.svg" } };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
