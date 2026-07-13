@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+const WAITLIST_URL = "mailto:tessaro.c@northeastern.edu?subject=Kizuki%20Pro%20waitlist";
+
 export const metadata: Metadata = {
   title: "Kizuki — shared memory for your AI agents",
   description:
@@ -97,6 +99,30 @@ export default function LandingPage() {
         </ul>
       </section>
 
+      <section id="pricing">
+        <p className="eyebrow">PRICING</p>
+        <div className="tiers">
+          <div className="tier">
+            <h2>Free</h2>
+            <p>
+              Everything you saw above. The CLI, the vault, the dashboard, the
+              MCP server. Runs on your machine. Open source, no account.
+            </p>
+            <a href="https://github.com/ctessaro/kizuki">GitHub</a>
+          </div>
+          <div className="tier pro">
+            <h2>
+              Pro <span>hosted</span>
+            </h2>
+            <p>
+              Kizuki that runs without your laptop: hosted sync, ambient watch,
+              same rules. It still sends nothing without you. In development.
+            </p>
+            <a href={WAITLIST_URL}>Join the waitlist</a>
+          </div>
+        </div>
+      </section>
+
       <section>
         <p className="eyebrow">RUN IT</p>
         <pre>
@@ -107,8 +133,8 @@ cd kizuki
 ./kizuki start`}</code>
         </pre>
         <p>
-          Open source. MCP server included. Works with Codex, Claude Code, and
-          Cursor.
+          Open source. MCP server included. Works with Codex, Claude Code,
+          Gemini CLI, Cursor, and any OpenAI-compatible API.
         </p>
       </section>
 
