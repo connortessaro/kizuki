@@ -42,12 +42,13 @@ and insight ledger pattern exactly:
 One event kind:
 
 ```json
-{"event": "caught", "catchId": "c-<12-hex>", "at": "<ISO>", "note": "<text>",
- "signalId": null, "insightId": null}
+{"version": 1, "event": "caught", "catchId": "cat_<12-hex>", "at": "<ISO>",
+ "note": "<text>", "signalId": null, "insightId": null}
 ```
 
-- `catchId` = `"c-" + sha256(`${at}|${note}`).slice(0, 12)` — deterministic,
-  collision-checked on append (duplicate id → throw).
+- `catchId` = `"cat_" + sha256(`${at}|${note}`).slice(0, 12)` — deterministic
+  (matches the `sig_`/`ins_` id convention), collision-checked on append
+  (duplicate id → exact-repeat no-op, mismatched content → throw).
 - `note` — required non-empty string; the operator's one-line description of
   what was caught and why it would have been missed.
 - `signalId` / `insightId` — optional receipt links. When present, the id must
