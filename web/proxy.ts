@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
   }
   const host = request.headers.get("host") ?? "";
   if (host === "kizuki.dev" || host === "www.kizuki.dev") {
-    return NextResponse.rewrite(new URL("/landing.html", request.url));
+    return NextResponse.rewrite(new URL("/landing", request.url));
   }
   return NextResponse.next();
 }
