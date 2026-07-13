@@ -21,6 +21,7 @@ teams/*
 /alerts/
 /signals/
 /insights/
+/catches/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
