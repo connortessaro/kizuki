@@ -22,8 +22,8 @@ One line per idea. Promote into `docs/ROADMAP.md` when ready to sequence.
   connections map onto shift-assistant 1:1) — full multi-user runtime blocked on
   data-safety story; local-first stays for the personal/work version.
   **Public synthetic-data demo shipped** (`web/demo-vault/` + `KIZUKI_DEMO`).
-- Distribute rituals as an open Agent Skills pack (`npx skills add tessaro/kizuki`)
-  — partial: `scripts/install-codex-prompts.mjs` for Codex; broader pack TBD.
+- Distribute rituals as an open Agent Skills pack — **shipped**
+  (`kizuki skills export`, committed `dist/skills/`).
 - ~~LLM-written day summary~~ — **shipped** (`lib/shift.mjs`: prose on top of the deterministic aggregate at `stop`).
 - **Presence layer (Jarvis)** — ideation captured in `docs/2026-07-07-jarvis-presence-ideation.md`; A-path north star in `docs/vision.md`. First buildable slice = `kizuki check` (spec: `docs/superpowers/specs/2026-07-07-kizuki-check-design.md`), which doubles as v1→v2 wedge validation. Rest gated on real-use evidence.
 - Slack DM mirror for alerts (work IT permitting).
