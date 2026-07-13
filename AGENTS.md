@@ -94,6 +94,13 @@ node --test lib/vault.test.mjs # one file
 ./kizuki skills export [--agent claude|codex|all] [--check] [--dist]   install ritual skills
 ```
 
+## Skills
+
+- `grill-me` / `grilling` — global skill (not project-specific), installed in
+  `~/.claude/skills/`. Interviews the operator one question at a time to
+  stress-test a plan/design before acting on it. Invoke on any "grill me"
+  trigger phrase.
+
 ## Parallel work
 
 - One git worktree per task: `git worktree add ../kizuki-wt-<topic> -b <topic>`.
