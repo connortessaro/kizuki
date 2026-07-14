@@ -45,8 +45,8 @@ export default function LandingPage() {
           goes out without you.
         </p>
         <p className="ctas">
-          <a href="https://github.com/connortessaro/kizuki">GitHub</a>
           <a href="https://demo.kizuki.dev">Live demo</a>
+          <a href={WAITLIST_URL}>Join the waitlist</a>
         </p>
       </header>
 
@@ -106,9 +106,10 @@ export default function LandingPage() {
             <h2>Free</h2>
             <p>
               Everything you saw above. The CLI, the vault, the dashboard, the
-              MCP server. Runs on your machine. Open source, no account.
+              MCP server. Runs on your machine. No account. Source opens at
+              launch.
             </p>
-            <a href="https://github.com/connortessaro/kizuki">GitHub</a>
+            <a href="https://demo.kizuki.dev">Live demo</a>
           </div>
           <div className="tier pro">
             <h2>
@@ -133,7 +134,7 @@ cd kizuki
 ./kizuki start`}</code>
         </pre>
         <p>
-          Open source. MCP server included. Works with Codex, Claude Code,
+          Source opens at launch. MCP server included. Works with Codex, Claude Code,
           Gemini CLI, Cursor, and any OpenAI-compatible API.
         </p>
       </section>
@@ -142,7 +143,6 @@ cd kizuki
         <img src="/momonga.svg" alt="" width="48" height="48" />
         <p>
           Kizuki 気づき — the noticing ·{" "}
-          <a href="https://github.com/connortessaro/kizuki">GitHub</a> ·{" "}
           <a href="https://demo.kizuki.dev">Live demo</a>
         </p>
       </footer>
