@@ -21,6 +21,14 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 - **The AI agent returns one fenced JSON payload; deterministic JS writes the
   files.** Never move file-writing into the prompt or let an LLM edit vault
   files directly.
+- Agent config is discriminated: `resolveAgent()` (`lib/agent.mjs`) returns
+  `{kind: "cmd", cmd, timeoutMs}` for a spawned CLI (`AGENT_PRESETS`:
+  codex/claude/gemini/opencode) or `{kind: "http", http: {baseUrl, model,
+  apiKeyEnv}, timeoutMs}` for any OpenAI-compatible endpoint (`lib/agentHttp.mjs`)
+  — exactly one of `agentCmd`/`agentHttp`, never both. An http agent's `sync`
+  is gated to `--source transcript` only (pending transcripts inlined into the
+  prompt, capped at 200,000 chars); `check` and the day summary work fully
+  either way since both build a self-contained prompt.
 - ESM `.mjs`, Node built-ins only, zero runtime dependencies in root/`lib/`.
   (`mcp/` has its own package.json for the MCP SDK — keep it isolated there.)
 - TDD: failing test first, then implementation. `npm test` green before done.
@@ -67,6 +75,7 @@ for the vault: entity browser, follow-ups, day summaries, search.
 npm test                       # full suite
 node --test lib/vault.test.mjs # one file
 ./kizuki init                  # create vault dirs + default config
+./kizuki init --agent <preset> # same, preset: codex|claude|gemini|opencode|http
 ./kizuki sync                  # run the sync CLI (spawns configured agent)
 ./kizuki sync --project <name> # project scope
 ./kizuki sync --team <name>    # team scope
@@ -91,7 +100,7 @@ node --test lib/vault.test.mjs # one file
 ./kizuki catch "<note>" [--signal <id>] [--insight <id>]   record a true catch (gate evidence)
 ./kizuki catches [--json]               list recorded catches
 ./kizuki gate [--weeks n] [--json]      weekly gate-evidence report
-./kizuki skills export [--agent claude|codex|all] [--check] [--dist]   install ritual skills
+./kizuki skills export [--agent claude|codex|cursor|gemini|generic|all] [--check] [--dist]   install ritual skills
 ```
 
 ## Skills
