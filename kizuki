@@ -24,7 +24,7 @@ const kizukiPath = join(vaultDir, "kizuki");
 const [command, ...rest] = process.argv.slice(2);
 
 const USAGE = `usage: kizuki <command>
-  kizuki init [--force-config]                   create vault dirs + default config
+  kizuki init [--force-config] [--agent codex|claude|gemini|opencode|http]   create vault dirs + default config
   kizuki sync [person] [--project p] [--team t] [--source a,b] [--dry-run]
   kizuki sync --loop                               background mode (no-op unless a shift is on)
   kizuki watch                                     watch transcripts/ and sync on new files
@@ -116,7 +116,13 @@ try {
     process.exit(fails ? 1 : 0);
   } else if (command === "init") {
     const forceConfig = rest.includes("--force-config");
-    const result = await runInit(vaultDir, { forceConfig });
+    const agentIdx = rest.indexOf("--agent");
+    let agent;
+    if (agentIdx !== -1) {
+      agent = rest[agentIdx + 1];
+      if (agent === undefined || agent.startsWith("--")) throw new Error("--agent requires a value");
+    }
+    const result = await runInit(vaultDir, { forceConfig, agent });
     console.log(formatInitReport({
       ...result,
       mcpServerPath: join(vaultDir, "mcp", "server.mjs"),
