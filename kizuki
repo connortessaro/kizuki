@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { appendFile, mkdir } from "node:fs/promises";
 import { runSync } from "./lib/run.mjs";
 import { runCheck, formatContradictions, makeRunCheckAgent, parseCheckArgs } from "./lib/check.mjs";
-import { resolveAgent, makeRunAgent } from "./lib/agent.mjs";
+import { resolveAgent, makeConfiguredRunAgent } from "./lib/agent.mjs";
 import { readShift, startShift, endShift, recordStop, renderBrief, writeDaySummary } from "./lib/shift.mjs";
 import { installJob, removeJob } from "./lib/launchd.mjs";
 import { runDoctor } from "./lib/doctor.mjs";
@@ -59,9 +59,7 @@ function scopeLabel(scope) {
 
 async function doSync(argv) {
   const resolved = await resolveAgent(vaultDir);
-  if (resolved.kind === "http") throw new Error("http agent not wired yet");
-  const { cmd, timeoutMs } = resolved;
-  const r = await runSync({ argv, vaultDir, runAgent: makeRunAgent(cmd, timeoutMs) });
+  const r = await runSync({ argv, vaultDir, runAgent: makeConfiguredRunAgent(resolved), agentKind: resolved.kind });
   await recordSyncSuccess(vaultDir);
   console.log(`Kizuki sync — scope: ${scopeLabel(r.scope)}, sources: ${r.sources.join(",")}${r.dryRun ? " (dry-run)" : ""}`);
   if (!r.changes.length && !r.newAlerts.length) console.log("  no changes");
@@ -94,10 +92,8 @@ try {
     if (!(await readShift(vaultDir))) throw new Error("no shift in progress");
     await doSync([]);
     const resolved = await resolveAgent(vaultDir);
-    if (resolved.kind === "http") throw new Error("http agent not wired yet");
-    const { cmd, timeoutMs } = resolved;
     const summaryPath = await writeDaySummary(vaultDir, {
-      runAgent: makeRunAgent(cmd, timeoutMs),
+      runAgent: makeConfiguredRunAgent(resolved),
     });
     try {
       await removeJob({});
@@ -112,7 +108,7 @@ try {
     const runSmoke = !rest.includes("--no-smoke");
     const MARKS = { pass: "✅", fail: "❌", skip: "⏭️" };
     let fails = 0;
-    for await (const r of runDoctor(vaultDir, { makeRunAgent, checkOnly, runSmoke })) {
+    for await (const r of runDoctor(vaultDir, { makeConfiguredRunAgent, checkOnly, runSmoke })) {
       console.log(`${MARKS[r.status]} ${r.name} — ${r.detail}`);
       if (r.status === "fail") fails++;
     }
@@ -126,7 +122,7 @@ try {
       mcpServerPath: join(vaultDir, "mcp", "server.mjs"),
     }));
     const doctorFails = [];
-    for await (const r of runDoctor(vaultDir, { makeRunAgent, checkOnly: false, runSmoke: false })) {
+    for await (const r of runDoctor(vaultDir, { makeConfiguredRunAgent, checkOnly: false, runSmoke: false })) {
       if (r.status === "fail") doctorFails.push(r.name);
     }
     if (doctorFails.length) console.log(`\nNote: doctor still reports: ${doctorFails.join(", ")}`);
@@ -151,9 +147,10 @@ try {
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
     if (!draft) throw new Error('no draft provided — pass "<text>" or pipe via stdin');
     const resolved = await resolveAgent(vaultDir);
-    if (resolved.kind === "http") throw new Error("http agent not wired yet");
-    const { cmd, timeoutMs } = resolved;
-    const result = await runCheck({ draft, scope, vaultDir, runAgent: makeRunCheckAgent(cmd, timeoutMs) });
+    const runAgent = resolved.kind === "http"
+      ? makeConfiguredRunAgent(resolved)
+      : makeRunCheckAgent(resolved.cmd, resolved.timeoutMs);
+    const result = await runCheck({ draft, scope, vaultDir, runAgent });
     if (rest.includes("--json")) console.log(JSON.stringify(result, null, 2));
     else console.log(formatContradictions(result));
   } else if (command === "watch") {
