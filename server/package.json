@@ -1,0 +1,10 @@
+{
+  "name": "kizuki-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Authenticated loopback HTTP API for the Kizuki platform foundation. Node built-ins only, zero runtime dependencies.",
+  "scripts": {
+    "test": "node --test api.test.mjs"
+  }
+}
