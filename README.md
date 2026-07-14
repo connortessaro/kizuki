@@ -10,6 +10,20 @@ actions.
 Single-operator tool. It observes and advises — it never sends messages or takes
 actions for you. You decide.
 
+## Works with
+
+| Agent | Setup | Sync sources | Notes |
+|---|---|---|---|
+| Codex | `kizuki init --agent codex` (default) | slack, github, atlassian, outlook | full sync, check, day-summary |
+| Claude Code | `kizuki init --agent claude` | slack, github, atlassian, outlook | full sync, check, day-summary |
+| Gemini CLI | `kizuki init --agent gemini` | slack, github, atlassian, outlook | full sync, check, day-summary |
+| opencode | `kizuki init --agent opencode` | slack, github, atlassian, outlook | full sync, check, day-summary |
+| Any OpenAI-compatible API | `kizuki init --agent http` (writes an `agentHttp` config) | transcript only (`--source transcript`) | `check` and the `stop` day summary work fully — both build a self-contained prompt and never need MCP; full multi-source sync needs one of the CLI agents above |
+| Any MCP client | connect to `mcp/server.mjs` (see below) | whatever the client's own MCP servers provide | the client does the pulling/analysis and calls Kizuki's tools to read/write the vault |
+
+See "Choosing your AI agent" for CLI presets and the `agentHttp` config shape,
+and "Connect any MCP client" for the MCP-server setup.
+
 Use it in three moments:
 
 - **Start/stop the day:** sync the vault, surface alerts, and write a day summary.
@@ -30,6 +44,7 @@ Product direction:
 
 ```
 ./kizuki init                          # create vault dirs + default kizuki.config.json
+./kizuki init --agent claude           # same, pre-configured for a CLI/HTTP agent preset
 ./kizuki sync                          # all people/projects/teams, all sources
 ./kizuki sync bob-smith                # only this person, all sources
 ./kizuki sync --project staff         # only this project
@@ -69,18 +84,24 @@ Valid sources: `slack`, `github`, `atlassian` (Jira/Confluence/Rovo), `outlook`.
 ./kizuki doctor
 ./kizuki sync --dry-run                  # optional: verify the agent can read sources without writing
 ./kizuki check "We are ready for UAT."    # optional: test a draft against the vault
-kizuki skills export                      # optional: install shift-ritual skills for Claude Code/Codex
+kizuki skills export                      # optional: install shift-ritual skills for your agent(s)
 ```
 
 ## Install the rituals as agent skills
 
-    kizuki skills export            # installs for Claude Code and Codex
-    kizuki skills export --agent codex
+    kizuki skills export                    # installs home copies for every agent that has one
+    kizuki skills export --agent codex      # just one agent (claude|codex|cursor|gemini|generic|all)
+    kizuki skills export --dist             # regenerate dist/skills/* for every target, dist-only ones included
+    kizuki skills export --check            # verify dist/skills/* matches the committed rituals
 
 Claude Code skills land in `~/.claude/skills/<name>/SKILL.md`; Codex prompts in
-`~/.codex/prompts/<name>.md`. Pure-markdown users can copy the committed files
-under `dist/skills/` directly. The rituals invoke the `kizuki` binary, so it
-must be on your PATH.
+`~/.codex/prompts/<name>.md`; Gemini CLI custom commands in
+`~/.gemini/commands/<name>.toml`. Cursor has no global rules directory — only
+project-scoped `.cursor/rules/*.mdc` — so the `cursor` target is **dist-only**:
+copy `dist/skills/cursor/<name>.mdc` into a project's `.cursor/rules/`
+directory yourself. The plain-markdown `generic` target is dist-only too;
+copy `dist/skills/generic/<name>.md` for any agent that just reads markdown.
+The rituals invoke the `kizuki` binary, so it must be on your PATH.
 
 Plain-chat triggers ("start kizuki", "kizuki ima stop") can be added to the work
 machine's global AGENTS.md pointing at the same rituals.
@@ -144,22 +165,67 @@ the contradictions it can cite.
 
 ## Choosing your AI agent
 
-Kizuki spawns whatever agent CLI you configure. The agent must take a prompt,
-run non-interactively with your MCP servers/tools, and print its final message
-(containing the fenced ```json block) to stdout.
+Kizuki spawns whatever agent CLI you configure, or talks to any
+OpenAI-compatible chat-completions API directly with no CLI and no MCP at all.
+A CLI agent must take a prompt, run non-interactively with your MCP
+servers/tools, and print its final message (containing the fenced ```json
+block) to stdout.
 
-Set the command in `kizuki.config.json` in the repo root:
+The easiest setup is `kizuki init --agent <preset>`, which writes
+`kizuki.config.json` for you:
+
+```
+./kizuki init --agent codex      # OpenAI Codex (default)
+./kizuki init --agent claude     # Claude Code
+./kizuki init --agent gemini     # Gemini CLI
+./kizuki init --agent opencode   # opencode
+./kizuki init --agent http       # any OpenAI-compatible HTTP API — see below
+```
+
+Or set the command by hand in `kizuki.config.json` in the repo root:
 
 ```
 { "agentCmd": ["claude", "-p"] }      # Claude Code
 { "agentCmd": ["codex", "exec"] }     # OpenAI Codex (this is the default)
 { "agentCmd": ["gemini", "-p"] }      # Gemini CLI
+{ "agentCmd": ["opencode", "run"] }   # opencode
 ```
 
 The prompt is appended as the final argument. If any array element is the token
 `{prompt}`, it is substituted in place instead (e.g. `["myagent", "--input", "{prompt}"]`).
 With no config file, Kizuki defaults to `codex exec`. This file is gitignored
 (it's machine-specific).
+
+### Any OpenAI-compatible API (no CLI, no MCP)
+
+Point Kizuki straight at any OpenAI-compatible `/chat/completions` endpoint
+instead of spawning a CLI:
+
+```
+{
+  "agentHttp": {
+    "baseUrl": "https://api.openai.com/v1",
+    "model": "gpt-5.4",
+    "apiKeyEnv": "OPENAI_API_KEY"
+  }
+}
+```
+
+`apiKeyEnv` names an environment variable Kizuki reads the key from at call
+time — the key itself never goes in the config file or in logs. Set exactly
+one of `agentCmd` or `agentHttp`, never both.
+
+An HTTP agent has no MCP servers, so it can't pull Slack/GitHub/Atlassian/Outlook
+itself:
+
+- `kizuki sync --source transcript` is the only sync source it supports.
+  Kizuki inlines pending `transcripts/*` files directly into the prompt
+  (capped at 200,000 characters combined — archive old transcripts or switch
+  to a CLI agent if you hit the cap). Requesting any other source fails loudly
+  before the agent is called.
+- `kizuki check` and the `kizuki stop` day summary work fully regardless of
+  agent kind — both build a self-contained prompt from the vault and never
+  need MCP.
 
 ## Vault layout
 
@@ -210,11 +276,13 @@ outlook (e.g. Codex, Claude Code, Gemini CLI). Set it in `kizuki.config.json`
 (see "Choosing your AI agent"); defaults to `codex exec`.
 - TalkTrack writing transcript files into `transcripts/`
 
-## Use as an MCP server
+## Connect any MCP client
 
-Instead of (or alongside) the `kizuki` CLI, you can expose the vault to any AI agent
-as MCP tools. The agent does the pulling and analysis with its own MCP servers,
-then calls these tools to read and safely persist:
+Instead of (or alongside) the `kizuki` CLI, you can expose the vault to any
+MCP client — any agent or IDE that speaks MCP, not just the CLI presets above —
+as MCP tools served by `mcp/server.mjs`. The client does the pulling and
+analysis with its own MCP servers, then calls these tools to read and safely
+persist:
 
 - `list_entities` — people/projects/teams with one-line status
 - `read_entity` — full file for one entity
@@ -258,6 +326,10 @@ command = "node"
 args = ["/ABS/PATH/kizuki/mcp/server.mjs"]
 env = { KIZUKI_VAULT = "/ABS/PATH/kizuki" }
 ```
+
+Any other MCP client (Cursor, Windsurf, LM Studio, or anything else that reads
+a standard `mcpServers` map) takes the exact same JSON shape as the Claude Code
+block above — add that same object to that client's own MCP config file.
 
 `KIZUKI_VAULT` defaults to the repo root if unset.
 

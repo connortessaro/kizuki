@@ -23,6 +23,7 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 npm test                              # node --test full suite
 node --test lib/vault.test.mjs        # one test file
 ./kizuki init                         # create vault dirs + default config
+./kizuki init --agent <preset>        # same, preset: codex|claude|gemini|opencode|http
 ./kizuki sync                         # run the CLI (calls configured agent)
 ./kizuki sync <person> --source slack # scoped run
 ./kizuki sync --project <name>        # project scope
@@ -48,7 +49,7 @@ node --test lib/vault.test.mjs        # one test file
 ./kizuki catch "<note>" [--signal <id>] [--insight <id>]   record a true catch (gate evidence)
 ./kizuki catches [--json]               list recorded catches
 ./kizuki gate [--weeks n] [--json]      weekly gate-evidence report
-./kizuki skills export [--agent claude|codex|all] [--check] [--dist]   install ritual skills
+./kizuki skills export [--agent claude|codex|cursor|gemini|generic|all] [--check] [--dist]   install ritual skills
 ```
 
 ## Architecture
@@ -70,10 +71,20 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   (the JSON contract embedded in the prompt). This contract is the source of truth
   the parser and renderer must agree with. Kept agent-agnostic (no codex-specific
   config path).
-- **`lib/agent.mjs`** — `resolveAgent(vaultDir)` reads `kizuki.config.json`
-  (`agentCmd` array; defaults to `["codex","exec"]`), `buildAgentArgv(cmd,prompt)`
-  (substitutes a `{prompt}` token or appends the prompt), `makeRunAgent(cmd)`
-  returns the real spawner. Invalid config throws — no silent fallback.
+- **`lib/agent.mjs`** — `AGENT_PRESETS` (codex/claude/gemini/opencode CLI
+  commands). `resolveAgent(vaultDir)` reads `kizuki.config.json` and returns a
+  discriminated result: `{kind: "cmd", cmd, timeoutMs}` (`agentCmd` array;
+  defaults to `["codex","exec"]`) or `{kind: "http", http: {baseUrl, model,
+  apiKeyEnv}, timeoutMs}` (`agentHttp`) — exactly one of `agentCmd`/`agentHttp`
+  may be set, never both. `buildAgentArgv(cmd,prompt)` substitutes a `{prompt}`
+  token or appends the prompt; `makeRunAgent(cmd)` returns the real spawner;
+  `makeConfiguredRunAgent(resolved)` picks the right runner for either kind.
+  Invalid config throws — no silent fallback.
+- **`lib/agentHttp.mjs`** — `makeRunAgentHttp({baseUrl, model, apiKeyEnv},
+  timeoutMs)` posts one `chat/completions` request to any OpenAI-compatible
+  endpoint and returns the message content. Loud errors on missing key
+  (`apiKeyEnv`, read at call time, never logged or stored), non-2xx, non-JSON,
+  or empty completion content; aborts and throws on timeout.
 - **`lib/payload.mjs`:** `parsePayload(stdout)` / `extractJsonBlock`. Payload
   version 3 validates signal topics and source receipts. Versions 1 and 2 stay
   parseable through deterministic compatibility normalization.
@@ -112,8 +123,11 @@ agent-agnostic — it names the sources but not any one agent's MCP config path.
   sync-failure batching (darwin-only; no-op elsewhere).
 - **`lib/syncFailures.mjs`** — consecutive `--loop` failure counter in
   `state/sync-failures.json`.
-- **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent})`. `runAgent` is injected
-  so tests never spawn a process or hit the network.
+- **`lib/run.mjs`** — `runSync({argv, vaultDir, runAgent, agentKind = "cmd"})`.
+  `runAgent` is injected so tests never spawn a process or hit the network.
+  When `agentKind` is `"http"`, sync is gated to `--source transcript` only —
+  pending `transcripts/*` files are inlined into the prompt (capped at 200,000
+  chars) and any other requested source throws before `runAgent` is called.
 - **`kizuki`:** executable. Dispatches sync, shift, signal, check, doctor, and
   init commands.
   Resolves the agent from config and spawns it (plain mode, NOT `--json`: plain
