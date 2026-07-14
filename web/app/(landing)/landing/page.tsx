@@ -45,7 +45,7 @@ export default function LandingPage() {
           goes out without you.
         </p>
         <p className="ctas">
-          <a href="https://github.com/ctessaro/kizuki">GitHub</a>
+          <a href="https://github.com/connortessaro/kizuki">GitHub</a>
           <a href="https://demo.kizuki.dev">Live demo</a>
         </p>
       </header>
@@ -108,7 +108,7 @@ export default function LandingPage() {
               Everything you saw above. The CLI, the vault, the dashboard, the
               MCP server. Runs on your machine. Open source, no account.
             </p>
-            <a href="https://github.com/ctessaro/kizuki">GitHub</a>
+            <a href="https://github.com/connortessaro/kizuki">GitHub</a>
           </div>
           <div className="tier pro">
             <h2>
@@ -126,7 +126,7 @@ export default function LandingPage() {
       <section>
         <p className="eyebrow">RUN IT</p>
         <pre>
-          <code>{`git clone https://github.com/ctessaro/kizuki
+          <code>{`git clone https://github.com/connortessaro/kizuki
 cd kizuki
 ./kizuki init
 ./kizuki doctor
@@ -142,7 +142,7 @@ cd kizuki
         <img src="/momonga.svg" alt="" width="48" height="48" />
         <p>
           Kizuki 気づき — the noticing ·{" "}
-          <a href="https://github.com/ctessaro/kizuki">GitHub</a> ·{" "}
+          <a href="https://github.com/connortessaro/kizuki">GitHub</a> ·{" "}
           <a href="https://demo.kizuki.dev">Live demo</a>
         </p>
       </footer>
