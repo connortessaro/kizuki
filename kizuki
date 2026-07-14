@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // kizuki
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { appendFile, mkdir } from "node:fs/promises";
 import { runSync } from "./lib/run.mjs";
 import { runCheck, formatContradictions, makeRunCheckAgent, parseCheckArgs } from "./lib/check.mjs";
@@ -18,9 +18,12 @@ import { runInsightCommand, runInsightsCommand } from "./lib/insightCommands.mjs
 import { runCatchCommand, runCatchesCommand } from "./lib/catchCommands.mjs";
 import { runGateCommand } from "./lib/gateCommands.mjs";
 import { runSkillsCommand } from "./lib/skills.mjs";
+import { runCaptureCommand } from "./lib/captureCommands.mjs";
+import { runDaemonCommand } from "./lib/daemonCommands.mjs";
 
-const vaultDir = dirname(fileURLToPath(import.meta.url));
-const kizukiPath = join(vaultDir, "kizuki");
+const repoDir = dirname(fileURLToPath(import.meta.url));
+const vaultDir = process.env.KIZUKI_VAULT ? resolve(process.env.KIZUKI_VAULT) : repoDir;
+const kizukiPath = join(repoDir, "kizuki");
 const [command, ...rest] = process.argv.slice(2);
 
 const USAGE = `usage: kizuki <command>
@@ -44,7 +47,10 @@ const USAGE = `usage: kizuki <command>
   kizuki catches [--json]                          list recorded catches
   kizuki gate [--weeks n] [--json]                 weekly gate-evidence report
   kizuki skills export [--agent claude|codex|cursor|gemini|generic|all] [--check] [--dist]   install ritual skills
-  kizuki check "<draft>" [--person p] [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)`;
+  kizuki check "<draft>" [--person p] [--project p] [--team t] [--json]   flag where a draft contradicts the vault (read-only)
+  kizuki daemon install|uninstall|restart|status|run       manage the local authenticated API daemon
+  kizuki capture "<text>" [--kind note|correction|decision|hypothesis|question]
+    [--person <name> | --project <name> | --team <name>]  record a private local capture`;
 
 async function readStdin() {
   const chunks = [];
@@ -148,6 +154,10 @@ try {
     console.log(await runGateCommand(vaultDir, rest));
   } else if (command === "skills") {
     console.log(await runSkillsCommand(vaultDir, rest));
+  } else if (command === "daemon") {
+    console.log(await runDaemonCommand(vaultDir, repoDir, rest));
+  } else if (command === "capture") {
+    console.log(await runCaptureCommand(vaultDir, rest));
   } else if (command === "check") {
     const { scope, draftArg } = parseCheckArgs(rest);
     const draft = draftArg || (process.stdin.isTTY ? "" : (await readStdin()).trim());
