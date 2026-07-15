@@ -1,8 +1,8 @@
 # Kizuki: founding cohort
 
-Kizuki is an intelligence layer over your work. It reads your mailbox, calendar,
-GitHub, and meeting transcripts, and tells you what needs your attention before
-it bites.
+Kizuki is an intelligence layer over your work. It reads your Outlook mail and
+calendar, GitHub, Jira/Confluence, and meeting transcripts, and tells you what
+needs your attention before it bites.
 
 ## The problem it solves
 
@@ -31,9 +31,11 @@ where things stand instead of reconstructing it from your inbox.
 ## What you get in the founding cohort
 
 - A dedicated instance, set up for you.
-- Onboarding: we connect three to five of your sources (mailbox, calendar,
-  GitHub, and meeting transcripts; Slack comes later) and configure a Founder or
-  Consultant Pack for how you actually work.
+- Onboarding: we connect three to five of your sources: Outlook (mail +
+  calendar), GitHub, Jira/Confluence, meeting transcripts, plus Slack where your
+  workspace allows it. We configure a Founder or Consultant Pack for how you
+  actually work. Google mail/calendar support is on the roadmap; founding
+  members influence the order.
 - A weekly review call where we look at what it caught and tune it.
 - Direct support from me, the person who builds it.
 

@@ -13,8 +13,9 @@ each: a 20-minute call. Fill the bracketed context before sending.
 
 I built a tool for a problem I kept hitting: too many threads, and the thing
 that actually needs a decision is always buried under the merely recent. It's
-called Kizuki. It reads my mailbox, calendar, GitHub, and meeting notes, and
-tells me what needs a decision and what's about to slip before it bites.
+called Kizuki. It reads my Outlook mail and calendar, GitHub, Jira/Confluence,
+and meeting transcripts, and tells me what needs a decision and what's about to
+slip before it bites.
 
 I'm opening it to a small founding cohort: three to five founders and
 consultants I onboard personally, connect to your own sources, and meet with
@@ -35,8 +36,9 @@ The important thing is always buried under the merely recent. I built Kizuki
 because I kept finding out a client had gone quiet, or a decision was sitting on
 me, weeks too late.
 
-It reads your mailbox, calendar, GitHub, and meeting transcripts and tells you
-what changed and what needs a decision, with a receipt to the source. It
+It reads your Outlook mail and calendar, GitHub, Jira/Confluence, and meeting
+transcripts and tells you what changed and what needs a decision, with a receipt
+to the source. It
 observes and advises only. It never sends a message or takes an action, it runs
 on your own instance, and you can delete everything on exit.
 

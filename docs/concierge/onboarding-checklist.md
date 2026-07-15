@@ -7,19 +7,21 @@ onboarding call, then settle into a weekly rhythm.
 
 - Jot down the three moments you most often find out about too late (a client
   going quiet, a decision waiting on you, a commitment you forgot).
-- Note which sources hold your real work: which mailbox, which calendar, whether
-  your work lives in GitHub, whether you have meeting transcripts.
+- Note which sources hold your real work: Outlook mail and calendar, GitHub,
+  Jira/Confluence, Slack, meeting transcripts.
 
 ## The onboarding call (about 45 minutes)
 
 1. **What you're drowning in.** Your top few "found out too late" moments. This
    is what we tune Kizuki to catch.
 2. **Source selection.** Pick three to five:
-   - Mailbox (Gmail or Outlook)
-   - Calendar (Google or Microsoft)
+   - Outlook (mail + calendar)
    - GitHub
+   - Jira/Confluence
    - Meeting transcripts
-   (Slack comes later, once the connector is stable.)
+   - Slack, where your workspace allows it
+   Google mail/calendar support is on the roadmap; founding members influence
+   the order.
 3. **Pack.** Founder or Consultant — whichever matches how you work. We
    configure it to your entities and the questions you care about.
 4. **Install and hosting.** Choose one:
