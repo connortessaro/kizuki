@@ -203,6 +203,43 @@ product (`docs/future-notes.md` gates that separately).
 
 ---
 
+## Platform foundation (local slice)
+
+**Status:** local slice shipped 2026-07-14. Full suite green plus a fresh
+temp-vault end-to-end proof: daemon start → authenticated capture → one canonical
+event → list round-trip (`server/local.integration.test.mjs`, completion gate of
+`docs/superpowers/plans/2026-07-14-kizuki-platform-foundation.md`).
+
+**Goal:** A private, single-operator substrate later hosted/multiplayer work can
+build on without breaking the observe-and-advise rule. Every capture stays local,
+private-scoped, and append-only; the daemon binds loopback only and never sends
+messages or acts. Design: `docs/superpowers/specs/2026-07-14-kizuki-platform-design.md`.
+
+### Shipped
+
+| Piece | Location |
+|-------|----------|
+| Authenticated loopback daemon | bearer-token API on `127.0.0.1` (`server/api.mjs`), foreground runner `server/cli.mjs`, launchd/systemd install (`lib/daemonService.mjs`); config + token in gitignored `state/daemon.json` (`lib/daemonConfig.mjs`) |
+| Canonical capture events | append-only `events/events.jsonl` (`lib/platformEvents.mjs`, `lib/platformEventStore.mjs`) — version-checked, private-scoped, idempotent, under the vault write lock |
+| API / CLI / MCP clients | `lib/platformApiClient.mjs`; `kizuki daemon` + `kizuki capture` (`lib/daemonCommands.mjs`, `lib/captureCommands.mjs`); MCP `capture_context` (`mcp/`) |
+| Writable capture page | `web/app/(dashboard)/capture` — the single dashboard write, gated to local private capture (revisiting the observe-and-advise rule) |
+| init / doctor wiring | `lib/init.mjs` provisions `events/` + daemon config; `doctor` includes a daemon-health check |
+| End-to-end proof | `server/local.integration.test.mjs` round-trips one private capture through the daemon |
+
+### Subsequent plans (not built)
+
+Sequenced after the local slice; each is its own future plan and stays gated by
+data-safety (`docs/future-notes.md`):
+
+- Hosted PostgreSQL event store (multi-tenant persistence)
+- OAuth connectors (Slack / GitHub / Atlassian / Outlook via managed auth)
+- Pack manifests (shareable capability bundles)
+- Teams / multiplayer workspaces
+- Billing
+- Enterprise deployment (TEE / confidential compute)
+
+---
+
 ## Unranked appendix
 
 Park here until promoted into a milestone. See also `docs/BACKLOG.md`.
