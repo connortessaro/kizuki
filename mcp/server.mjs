@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import {
   archiveInsightTool,
+  captureContextTool,
   captureInsightTool,
   listEntities,
   listFollowups,
@@ -16,6 +17,7 @@ import {
   search,
   upsertAnalysis,
 } from "./tools.mjs";
+import { CAPTURE_KINDS } from "../lib/platformEvents.mjs";
 
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const guard = (fn) => async (args) => {
@@ -80,6 +82,12 @@ const readInsightSchema = z.object({
 const archiveInsightSchema = z.object({
   insightId: z.string().regex(/^ins_[0-9a-f]{12}$/),
   note: z.string().nullable().optional(),
+}).strict();
+const captureKindEnum = z.enum([...CAPTURE_KINDS]);
+const captureContextSchema = z.object({
+  kind: captureKindEnum,
+  text: z.string(),
+  entity: z.object({ type: typeEnum, name: z.string() }).strict().optional(),
 }).strict();
 
 const readOnly = {
@@ -178,6 +186,23 @@ export function createKizukiServer(vaultDir) {
       },
     },
     guard((input) => captureInsightTool(vaultDir, input)),
+  );
+
+  server.registerTool(
+    "capture_context",
+    {
+      title: "Capture context",
+      description:
+        "Capture one durable note, correction, decision, hypothesis, or question into the platform through the authenticated local daemon. Kizuki only records it — it never sends messages or acts. Distill a single thought; never paste the full conversation or raw tool output.",
+      inputSchema: captureContextSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    guard((input) => captureContextTool(vaultDir, input)),
   );
 
   server.registerTool(

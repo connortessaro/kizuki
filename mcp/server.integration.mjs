@@ -71,6 +71,43 @@ test("server exposes insight tools and capture_insight validates strictly", asyn
   }
 });
 
+test("server exposes capture_context with write annotations and a strict schema", async () => {
+  const vault = await mkdtemp(join(tmpdir(), "kizuki-mcp-capture-"));
+  const { client, server } = await connected(vault);
+  try {
+    const listed = await client.listTools();
+    const tool = listed.tools.find((entry) => entry.name === "capture_context");
+    assert.ok(tool, "capture_context missing");
+    assert.equal(tool.annotations.readOnlyHint, false);
+    assert.equal(tool.annotations.destructiveHint, false);
+    assert.equal(tool.annotations.idempotentHint, true);
+    assert.equal(tool.annotations.openWorldHint, false);
+
+    const invalid = await client.callTool({
+      name: "capture_context",
+      arguments: { kind: "question", text: "Who owns it?", fullChat: "must fail" },
+    });
+    assert.equal(invalid.isError, true);
+    assert.match(invalid.content[0].text, /unrecognized|unknown|invalid/i);
+
+    const badKind = await client.callTool({
+      name: "capture_context",
+      arguments: { kind: "bogus", text: "A thought" },
+    });
+    assert.equal(badKind.isError, true);
+
+    const missing = await client.callTool({
+      name: "capture_context",
+      arguments: { kind: "note", text: "A thought" },
+    });
+    assert.equal(missing.isError, true);
+    assert.match(missing.content[0].text, /daemon config/i);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
 test("direct execution recognizes an installed bin symlink", async () => {
   const dir = await mkdtemp(join(tmpdir(), "kizuki-mcp-bin-"));
   const serverPath = join(dirname(fileURLToPath(import.meta.url)), "server.mjs");

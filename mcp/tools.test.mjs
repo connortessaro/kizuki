@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   archiveInsightTool,
+  captureContextTool,
   captureInsightTool,
   listInsightsTool,
   readInsightTool,
@@ -30,6 +31,65 @@ const INSIGHT = {
   entities: [{ type: "project", name: "staff" }],
   origin: { client: "codex" },
 };
+const EVENT = {
+  version: 1,
+  eventId: "evt_11111111-1111-4111-8111-111111111111",
+  type: "capture.recorded",
+  at: "2026-07-14T12:00:00.000Z",
+  workspaceId: "personal",
+  principalId: "local-operator",
+  sourceOwnerId: "local-operator",
+  visibility: { scope: "private", principalIds: ["local-operator"] },
+  packIds: [],
+  receipts: [],
+  idempotencyKey: "mcp-1",
+  aggregate: { type: "capture", id: "cap_22222222-2222-4222-8222-222222222222", version: 1 },
+  payload: { kind: "question", text: "Who owns the rollout?", entity: { type: "project", name: "kizuki" } },
+};
+
+test("capture_context delegates to authenticated platform API", async () => {
+  const calls = [];
+  const text = await captureContextTool("/vault", {
+    kind: "question",
+    text: "Who owns the rollout?",
+    entity: { type: "project", name: "kizuki" },
+  }, {
+    idempotencyKey: "mcp-1",
+    makeClient: async () => ({
+      capture: async (input, options) => {
+        calls.push([input, options]);
+        return { disposition: "created", event: EVENT };
+      },
+    }),
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(text, `Captured ${EVENT.aggregate.id} [question]`);
+});
+
+test("capture_context defaults to an mcp-<uuid> idempotency key and passes vaultDir", async () => {
+  const seen = [];
+  const calls = [];
+  const text = await captureContextTool("/vault", { kind: "note", text: "A thought" }, {
+    randomUUID: () => "11111111-1111-4111-8111-111111111111",
+    makeClient: async (vaultDir) => {
+      seen.push(vaultDir);
+      return {
+        capture: async (input, options) => {
+          calls.push([input, options]);
+          return {
+            disposition: "created",
+            event: { ...EVENT, payload: { ...EVENT.payload, kind: "note" } },
+          };
+        },
+      };
+    },
+  });
+  assert.deepEqual(seen, ["/vault"]);
+  assert.equal(calls[0][1].idempotencyKey, "mcp-11111111-1111-4111-8111-111111111111");
+  assert.equal(calls[0][0].kind, "note");
+  assert.equal(calls[0][0].entity, null);
+  assert.equal(text, `Captured ${EVENT.aggregate.id} [note]`);
+});
 
 test("upsertAnalysis creates a person file and splices the managed section", async () => {
   const v = await makeVault();
