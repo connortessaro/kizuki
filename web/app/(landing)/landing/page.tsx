@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 
-const WAITLIST_URL = "mailto:tessaro.c@northeastern.edu?subject=Kizuki%20Pro%20waitlist";
+const GITHUB_URL = "https://github.com/connortessaro/kizuki";
+const CONCIERGE_URL =
+  "mailto:hello@kizuki.dev?subject=Kizuki%20concierge%20founding%20cohort";
+const PRO_WAITLIST_URL =
+  "mailto:hello@kizuki.dev?subject=Kizuki%20Pro%20waitlist";
+const TEAM_WAITLIST_URL =
+  "mailto:hello@kizuki.dev?subject=Kizuki%20Team%20waitlist";
+const ENTERPRISE_URL = "mailto:hello@kizuki.dev?subject=Kizuki%20Enterprise";
+
+const HEADLINE =
+  "Kizuki understands what your business, your teams, and your people need.";
+const SUBHEAD =
+  "It reads your meetings, threads, and tickets to surface what changed, what matters now, and what's missing, then prepares you and your agents to respond. Nothing goes out without you.";
+const SECURITY_STRIP = "Local-first. Your infra. We don't want your data.";
 
 export const metadata: Metadata = {
-  title: "Kizuki — shared memory for your AI agents",
+  title: "Kizuki — an intelligence layer over your work",
   description:
-    "Kizuki holds the facts, decisions, and open questions your AI agents need, so the next session starts where the last one stopped. Nothing goes out without you.",
+    "Kizuki is an agent-neutral intelligence layer over your work. It understands what a business, a team, and a person need — what changed, what matters now, what's missing — and prepares you and your AI agents to respond. Nothing goes out without you.",
   openGraph: {
-    title: "Kizuki — shared memory for your AI agents",
+    title: "Kizuki — an intelligence layer over your work",
     description:
-      "Your agents share one memory. You keep authority over every outward action.",
+      "One portable understanding your AI agents share: what changed, what matters now, what's missing. You keep authority over every outward action.",
     url: "https://kizuki.dev",
     siteName: "Kizuki",
   },
@@ -18,8 +31,8 @@ export const metadata: Metadata = {
 const LOOP = [
   ["Capture", "Say 'Kizuki this' in any connected chat. The agent distills one decision, learning, hypothesis, or question."],
   ["Validate", "Deterministic code checks identity, provenance, and lifecycle before anything touches disk. The model never writes files."],
-  ["Remember", "A git-tracked vault of people, projects, and teams. Append-only ledgers for signals and insights."],
-  ["Retrieve", "Any connected agent searches and reads the same state over MCP instead of asking you to repeat it."],
+  ["Record", "A git-tracked vault of people, projects, and teams, with append-only ledgers for signals and insights."],
+  ["Retrieve", "Any connected agent reads and searches the same understanding over MCP instead of asking you to repeat it."],
   ["Advise", "Kizuki surfaces contradictions, stale follow-ups, and evidence gaps, each with a draft ready. It sends nothing."],
 ];
 
@@ -30,6 +43,66 @@ const REFUSALS = [
   "Deterministic code owns every durable write.",
 ];
 
+const SECURITY = [
+  "Kizuki runs on your machine and the vault is a git repo you own.",
+  "It reads through your agent's own connectors and never widens a source permission.",
+  "Local credentials stay local; hosted editions use narrow, encrypted grants. Export or delete your data whenever you want.",
+];
+
+type Tier = {
+  name: string;
+  tag: string;
+  price: string;
+  body: string;
+  cta: string;
+  href: string;
+  featured?: boolean;
+};
+
+const TIERS: Tier[] = [
+  {
+    name: "Free",
+    tag: "OSS",
+    price: "$0",
+    body: "The complete local product for one operator. Bring your own agent and model, use manual or community connectors and Packs, and export everything. Runs on your machine. Apache-2.0.",
+    cta: "Install",
+    href: GITHUB_URL,
+  },
+  {
+    name: "Concierge",
+    tag: "beta",
+    price: "$49–99/mo",
+    body: "A dedicated instance, hands-on onboarding, three to five sources, and a configured Founder or Consultant Pack. Weekly review and direct support.",
+    cta: "Join the founding cohort — $49–99/mo",
+    href: CONCIERGE_URL,
+    featured: true,
+  },
+  {
+    name: "Pro",
+    tag: "hosted",
+    price: "$29/mo or $290/yr",
+    body: "Managed sync, reasoning, connectors, and backups, with remote web and MCP, a model allowance, and premium Packs. Same rules — it still sends nothing without you. In development.",
+    cta: "Join the waitlist",
+    href: PRO_WAITLIST_URL,
+  },
+  {
+    name: "Team",
+    tag: "workspace",
+    price: "$25–40 per active user / mo",
+    body: "A shared workspace with private and shared evidence, roles, team briefs, and agent and Pack grants. Central billing, with a monthly minimum. In development.",
+    cta: "Join the waitlist",
+    href: TEAM_WAITLIST_URL,
+  },
+  {
+    name: "Enterprise",
+    tag: "custom",
+    price: "Custom annual",
+    body: "A dedicated or customer-controlled deployment with governance, security, custom connectors, and direct support.",
+    cta: "Talk to us",
+    href: ENTERPRISE_URL,
+  },
+];
+
 export default function LandingPage() {
   return (
     <div className="landing">
@@ -38,15 +111,14 @@ export default function LandingPage() {
         <h1>
           Kizuki<span>the noticing</span>
         </h1>
-        <p className="one-liner">Your agents share one memory.</p>
-        <p className="sub">
-          Kizuki holds the facts, decisions, and open questions your AI agents
-          need, so the next session starts where the last one stopped. Nothing
-          goes out without you.
-        </p>
+        <p className="one-liner">{HEADLINE}</p>
+        <p className="sub">{SUBHEAD}</p>
         <p className="ctas">
           <a href="https://demo.kizuki.dev">Live demo</a>
-          <a href={WAITLIST_URL}>Join the waitlist</a>
+          <a href={GITHUB_URL}>Install</a>
+        </p>
+        <p className="security-strip">
+          {SECURITY_STRIP} <a href="#security">How we handle your data</a>
         </p>
       </header>
 
@@ -99,43 +171,43 @@ export default function LandingPage() {
         </ul>
       </section>
 
+      <section id="security">
+        <p className="eyebrow">SECURITY</p>
+        <ul className="refusals">
+          {SECURITY.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </section>
+
       <section id="pricing">
-        <p className="eyebrow">PRICING</p>
+        <p className="eyebrow">EDITIONS</p>
         <div className="tiers">
-          <div className="tier">
-            <h2>Free</h2>
-            <p>
-              Everything you saw above. The CLI, the vault, the dashboard, the
-              MCP server. Runs on your machine. No account. Source opens at
-              launch.
-            </p>
-            <a href="https://demo.kizuki.dev">Live demo</a>
-          </div>
-          <div className="tier pro">
-            <h2>
-              Pro <span>hosted</span>
-            </h2>
-            <p>
-              Kizuki that runs without your laptop: hosted sync, ambient watch,
-              same rules. It still sends nothing without you. In development.
-            </p>
-            <a href={WAITLIST_URL}>Join the waitlist</a>
-          </div>
+          {TIERS.map((tier) => (
+            <div className={tier.featured ? "tier featured" : "tier"} key={tier.name}>
+              <h2>
+                {tier.name} <span>{tier.tag}</span>
+              </h2>
+              <p className="price">{tier.price}</p>
+              <p>{tier.body}</p>
+              <a href={tier.href}>{tier.cta}</a>
+            </div>
+          ))}
         </div>
       </section>
 
       <section>
         <p className="eyebrow">RUN IT</p>
         <pre>
-          <code>{`git clone https://github.com/connortessaro/kizuki
-cd kizuki
-./kizuki init
-./kizuki doctor
-./kizuki start`}</code>
+          <code>{`claude mcp add kizuki -- npx -y kizuki mcp   # connect your agent
+
+npx kizuki init --agent claude              # or run the CLI
+kizuki doctor
+kizuki start`}</code>
         </pre>
         <p>
-          Source opens at launch. MCP server included. Works with Codex, Claude Code,
-          Gemini CLI, Cursor, and any OpenAI-compatible API.
+          Apache-2.0. MCP server included. Works with Codex, Claude Code, Gemini
+          CLI, Cursor, and any OpenAI-compatible API.
         </p>
       </section>
 

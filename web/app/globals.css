@@ -242,6 +242,9 @@ pre code { background: none; padding: 0; }
 .landing .ctas { margin-top: 1.6rem; display: flex; gap: 1.2rem; }
 .landing .ctas a { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kizuki-deep); text-decoration: underline; text-underline-offset: 3px; }
 .landing .ctas a:hover { color: var(--kizuki); }
+.landing .security-strip { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--stone); margin-top: 1.6rem; }
+.landing .security-strip a { color: var(--kizuki-deep); text-decoration: underline; text-underline-offset: 3px; }
+.landing .security-strip a:hover { color: var(--kizuki); }
 .landing p { color: var(--ink); }
 .landing section > p { color: var(--stone); }
 .landing .loop { list-style: none; margin: 0; padding: 0; }
@@ -258,9 +261,10 @@ pre code { background: none; padding: 0; }
 .landing .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 640px) { .landing .tiers { grid-template-columns: 1fr; } }
 .landing .tier { border: 1px solid var(--rule); padding: 1.2rem 1.4rem; }
-.landing .tier.pro { border-top: 3px solid var(--kizuki); }
+.landing .tier.featured { border-top: 3px solid var(--kizuki); }
 .landing .tier h2 { font-family: var(--display); font-size: 20px; font-weight: 600; margin: 0 0 0.6rem; }
 .landing .tier h2 span { color: var(--stone); font-family: var(--body); font-weight: 400; font-size: 14px; margin-left: 8px; }
+.landing .tier .price { font-family: var(--display); font-size: 18px; color: var(--ink); margin: 0 0 0.8rem; }
 .landing .tier p { color: var(--stone); margin: 0 0 1rem; }
 .landing .tier a { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kizuki-deep); text-decoration: underline; text-underline-offset: 3px; }
 .landing .tier a:hover { color: var(--kizuki); }
