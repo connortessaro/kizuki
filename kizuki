@@ -31,6 +31,7 @@ const USAGE = `usage: kizuki <command>
   kizuki sync [person] [--project p] [--team t] [--source a,b] [--dry-run]
   kizuki sync --loop                               background mode (no-op unless a shift is on)
   kizuki watch                                     watch transcripts/ and sync on new files
+  kizuki mcp                                       start the MCP server (stdio)
   kizuki start                                     begin shift: sync + brief + 30-min background sync
   kizuki stop                                      end shift: final sync + day summary + remove background sync
   kizuki doctor [--no-smoke] [--check-only]        diagnose config, agent, vault structure
@@ -169,6 +170,12 @@ try {
     const result = await runCheck({ draft, scope, vaultDir, runAgent });
     if (rest.includes("--json")) console.log(JSON.stringify(result, null, 2));
     else console.log(formatContradictions(result));
+  } else if (command === "mcp") {
+    const { createKizukiServer } = await import("./mcp/server.mjs");
+    const { StdioServerTransport } = await import(
+      "@modelcontextprotocol/sdk/server/stdio.js"
+    );
+    await createKizukiServer(vaultDir).connect(new StdioServerTransport());
   } else if (command === "watch") {
     console.log(`Watching ${join(vaultDir, "transcripts")} — Ctrl+C to stop`);
     watchTranscripts(vaultDir, () => {
