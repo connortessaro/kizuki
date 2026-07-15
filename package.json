@@ -2,7 +2,7 @@
   "name": "kizuki",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
+  "private": false,
   "description": "Agent-neutral intelligence layer over your work: understands what a business, a team, and a person need — what changed, what matters, what's missing.",
   "license": "Apache-2.0",
   "repository": { "type": "git", "url": "git+https://github.com/connortessaro/kizuki.git" },
@@ -10,6 +10,18 @@
   "bin": {
     "kizuki": "./kizuki"
   },
+  "files": [
+    "kizuki",
+    "lib/",
+    "mcp/",
+    "server/",
+    "skills/",
+    "dist/skills/",
+    "README.md",
+    "LICENSE",
+    "!**/*.test.mjs",
+    "!**/*.integration.mjs"
+  ],
   "scripts": {
     "test": "node --test"
   },
