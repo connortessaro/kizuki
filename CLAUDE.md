@@ -151,8 +151,10 @@ It is the conversational/interactive alternative to the `kizuki` CLI.
   StdioServerTransport + zod schemas). Vault dir from `KIZUKI_VAULT`, defaults to
   repo root. Read tools are annotated read-only; `upsert_analysis` is idempotent,
   non-destructive.
-- **Dependency isolation:** `mcp/` has its own `package.json` (SDK + zod). The
-  root/core `lib/` stays zero-dep. Do not pull the SDK into `lib/`.
+- **Dependency isolation:** the MCP SDK + zod are declared in the root
+  `package.json` (single publishable package; `kizuki mcp` boots the server),
+  but they are imported ONLY from `mcp/` code. `lib/` and `server/` stay
+  import-clean — never pull the SDK into them.
 - Path safety + type validation live in `mcp/tools.mjs` (`assertName`/`assertType`)
   before anything hits the filesystem — same guard as `parsePayload`.
 
@@ -175,8 +177,9 @@ vault: entity browser, follow-ups, day summaries, search, and a `/capture` form.
 
 ## Conventions (match these)
 
-- **ESM `.mjs`, Node built-ins only. Zero runtime dependencies.** Do not add npm
-  packages. Tests use `node:test` + `node:assert`.
+- **ESM `.mjs`. `lib/` and `server/` import Node built-ins only** — the only
+  runtime npm deps are `@modelcontextprotocol/sdk` + `zod`, imported solely from
+  `mcp/`. Do not add other npm packages. Tests use `node:test` + `node:assert`.
 - **TDD.** Every change: failing test first, then implementation. Keep the suite
   green (`npm test`) before claiming done.
 - No comments unless non-obvious. Pure functions where possible.
