@@ -2,7 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import {
@@ -97,8 +97,12 @@ const readOnly = {
   openWorldHint: false,
 };
 
+const packageVersion = JSON.parse(
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8"),
+).version;
+
 export function createKizukiServer(vaultDir) {
-  const server = new McpServer({ name: "kizuki", version: "1.0.0" });
+  const server = new McpServer({ name: "kizuki", version: packageVersion });
 
   server.registerTool(
     "list_entities",

@@ -57,15 +57,17 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
 ## Web dashboard (`web/`)
 
 `web/` is a Next.js subpackage (own `package.json` — Next/React/react-markdown
-stay out of the zero-dep core, same isolation as `mcp/`). Read-only browser UI
-for the vault: entity browser, follow-ups, day summaries, search.
+stay out of the zero-dep core, same isolation as `mcp/`). Browser UI for the
+vault: entity browser, follow-ups, day summaries, search, and a `/capture` form.
 
 - **`web/lib/data.mjs`** — the only module that touches the vault. Plain `.mjs`
   reusing `lib/query.mjs`/`lib/vault.mjs` (guards included); `node:test`-tested,
   picked up by the root suite.
 - Pages are thin server components with `dynamic = "force-dynamic"` (fresh read
-  per load). No API routes, no client fetching, **no writes** — adding any
-  write/action to the dashboard requires revisiting the observe-and-advise rule.
+  per load). Read-only except the `/capture` page, whose server action submits
+  through the authenticated local daemon API (no direct vault-file writes from
+  web) — observe-and-advise holds. No client fetching; any further write/action
+  requires revisiting the observe-and-advise rule.
 - Entity/date URL params are validated (`assertName`-equivalent guard + date
   regex) before touching the filesystem.
 

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, symlink } from "node:fs/promises";
+import { mkdtemp, symlink, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -102,6 +102,23 @@ test("server exposes capture_context with write annotations and a strict schema"
     });
     assert.equal(missing.isError, true);
     assert.match(missing.content[0].text, /daemon config/i);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test("server reports the root package.json version in the handshake", async () => {
+  const vault = await mkdtemp(join(tmpdir(), "kizuki-mcp-version-"));
+  const pkgPath = resolve(dirname(fileURLToPath(import.meta.url)), "..", "package.json");
+  const { version } = JSON.parse(await readFile(pkgPath, "utf8"));
+  const server = createKizukiServer(vault);
+  const client = new Client({ name: "kizuki-test", version }, { capabilities: {} });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+  try {
+    assert.equal(client.getServerVersion().version, version);
+    assert.notEqual(version, "1.0.0");
   } finally {
     await client.close();
     await server.close();
