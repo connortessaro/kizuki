@@ -55,9 +55,15 @@ Product direction:
 ./kizuki watch                         # auto-sync when a transcript lands in transcripts/
 ./kizuki start                         # begin shift: sync + brief + 30-min background sync
 ./kizuki stop                          # end shift: final sync + day summary + remove background sync
-./kizuki doctor                        # diagnose setup: config, agent binary, smoke test, vault dirs
+./kizuki doctor                        # diagnose setup: config, agent, vault dirs, daemon
 ./kizuki doctor --no-smoke             # skip the agent smoke test (it boots the real agent + MCP, costs tokens)
 ./kizuki doctor --check-only           # read-only: report missing vault dirs instead of creating them
+./kizuki daemon install                # install + start the private loopback capture daemon
+./kizuki daemon status                 # report whether the daemon is listening
+./kizuki daemon uninstall              # stop and remove the daemon service
+./kizuki daemon restart                # restart the daemon service
+./kizuki capture "<note>"              # record a private local capture through the daemon
+./kizuki capture "<note>" --kind decision --project checkout-v2
 ./kizuki signals                       # list open and acted signals
 ./kizuki signals --status all --json   # list every lifecycle state as JSON
 ./kizuki signal show <id> --json       # show reduced state plus event history
@@ -135,6 +141,70 @@ unverified and cannot create a signal without an external source receipt.
 An exact retry returns the same insight without another event. Changed wording,
 kind, scope, or origin creates a new insight. Archive is terminal; recapturing
 the exact archived item does not reactivate it.
+
+## Local daemon and capture
+
+Everything Kizuki does runs on your machine. Alongside the CLI, Kizuki can run a
+small background service — the **daemon** — that exposes an authenticated,
+loopback-only HTTP API so the CLI, the MCP server, and the web dashboard can all
+record captures through one shared, private endpoint. It never listens on a
+public interface and never sends anything off the machine — same observe-and-advise
+rule as the rest of Kizuki.
+
+### Architecture
+
+```
+kizuki capture ─┐
+MCP capture_context ─┼─► daemon (127.0.0.1, bearer-token auth) ─► events/events.jsonl
+web /capture ─┘
+```
+
+`kizuki init` creates the `events/` store and writes a daemon config to
+`state/daemon.json` (a random 32-byte token, host, and port), but it does not
+start or install the service. Install the background service explicitly:
+
+```
+./kizuki daemon install     # launchd (macOS) or systemd --user (Linux); starts on login
+./kizuki daemon status      # "running at ..." or "not running (...)"
+./kizuki daemon restart     # reload after config changes
+./kizuki daemon uninstall   # stop and remove the service
+```
+
+`daemon install` requires macOS or Linux. `kizuki doctor` adds a `daemon-config`
+check (config present and valid) and a `daemon-health` check (the service is
+actually listening); run `kizuki daemon install` if `daemon-health` reports the
+daemon is not running.
+
+### API address
+
+The daemon binds to `127.0.0.1` (loopback only) on port `4247` by default. Both
+values come from `state/daemon.json`; edit that file and `kizuki daemon restart`
+to change them. The host is pinned to `127.0.0.1` — the API is never exposed to
+the network. Every request needs an `Authorization: Bearer <token>` header, so
+only processes that can read your local config can talk to it.
+
+### Token secrecy
+
+The bearer token lives only in `state/daemon.json`, which is written with `0600`
+permissions and is gitignored. Kizuki never prints the token — not in
+`kizuki doctor` output, not in logs, and not in the init report. If the token
+leaks, delete `state/daemon.json` and re-run `kizuki init` (or
+`kizuki daemon install`) to mint a new one, then `kizuki daemon restart`.
+
+### Recording a capture
+
+A capture is one distilled note, correction, decision, hypothesis, or question.
+There are three ways in, all going through the same daemon:
+
+- **CLI:** `kizuki capture "<text>" [--kind note|correction|decision|hypothesis|question]
+  [--person <name> | --project <name> | --team <name>]`
+- **MCP:** call the `capture_context` tool from any connected MCP client (say
+  "Kizuki this" in a chat). Kizuki records only the distilled thought — never the
+  full conversation or raw tool output.
+- **Web:** open `/capture` on the dashboard and submit the form.
+
+Captures are private to you on this machine. Kizuki stores the distilled capture
+in `events/events.jsonl` and never sends messages or takes action.
 
 ## How it works
 
@@ -236,9 +306,10 @@ teams/<name>.md       # frontmatter: members | rollup
 transcripts/          # TalkTrack drops transcripts here; consumed ones move to processed/
 signals/events.jsonl  # canonical append-only signal history (gitignored)
 insights/events.jsonl # explicit, append-only chat insight inbox (gitignored)
+events/events.jsonl   # canonical append-only capture history via the daemon (gitignored)
 alerts/               # daily compatibility view for dashboard and notifications
 days/                 # generated day summaries (gitignored)
-state/                # lock, shift, and sync-failure state (gitignored)
+state/                # lock, shift, sync-failure, and daemon config (gitignored)
 ```
 
 Open the vault in your editor (Obsidian, VS Code) — or use the local dashboard below.
@@ -364,7 +435,8 @@ npm test        # node --test (core is zero-dep; mcp/ has its own deps)
 ## Data safety
 
 The vault entity files and local runtime data under `people/`, `projects/`,
-`teams/`, `transcripts/`, `alerts/`, `signals/`, `insights/`, `days/`, and
-`state/` contain internal work information and are **gitignored**. Pushing the
-repository does not include that data unless someone force-adds it. Do not
-force-add files from those folders.
+`teams/`, `transcripts/`, `alerts/`, `signals/`, `insights/`, `events/`,
+`days/`, and `state/` contain internal work information and are **gitignored**.
+`state/daemon.json` additionally holds the daemon's bearer token (written
+`0600`). Pushing the repository does not include that data unless someone
+force-adds it. Do not force-add files from those folders.
