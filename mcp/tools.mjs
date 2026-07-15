@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { randomUUID as defaultRandomUUID } from "node:crypto";
 import { entityPath } from "../lib/vault.mjs";
 import { applyPayload } from "../lib/apply.mjs";
 import { TYPES, eachEntity, followupsByEntity, assertType, assertName, statusOf } from "../lib/query.mjs";
@@ -9,6 +10,8 @@ import {
   runInsightsCommand,
 } from "../lib/insightCommands.mjs";
 import { searchActiveInsights } from "../lib/insightContext.mjs";
+import { readDaemonConfig } from "../lib/daemonConfig.mjs";
+import { makePlatformApiClient } from "../lib/platformApiClient.mjs";
 
 export { TYPES };
 export const CHARACTER_LIMIT = 25000;
@@ -71,6 +74,22 @@ export async function search(vaultDir, query) {
   }
   if (!hits.length) return `No matches for ${JSON.stringify(query)}.`;
   return truncate(hits.join("\n"));
+}
+
+async function defaultCaptureClient(vaultDir) {
+  const config = await readDaemonConfig(vaultDir);
+  return makePlatformApiClient(config);
+}
+
+export async function captureContextTool(vaultDir, { kind, text, entity = null }, {
+  randomUUID = defaultRandomUUID,
+  idempotencyKey,
+  makeClient = defaultCaptureClient,
+} = {}) {
+  const key = idempotencyKey ?? `mcp-${randomUUID()}`;
+  const client = await makeClient(vaultDir);
+  const result = await client.capture({ kind, text, entity }, { idempotencyKey: key });
+  return `Captured ${result.event.aggregate.id} [${result.event.payload.kind}]`;
 }
 
 export async function captureInsightTool(vaultDir, input, options = {}) {
