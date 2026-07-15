@@ -29,8 +29,9 @@ Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
   is gated to `--source transcript` only (pending transcripts inlined into the
   prompt, capped at 200,000 chars); `check` and the day summary work fully
   either way since both build a self-contained prompt.
-- ESM `.mjs`, Node built-ins only, zero runtime dependencies in root/`lib/`.
-  (`mcp/` has its own package.json for the MCP SDK — keep it isolated there.)
+- ESM `.mjs`; `lib/` and `server/` import Node built-ins only. The only runtime
+  npm deps are `@modelcontextprotocol/sdk` + `zod`, declared in the root
+  `package.json` but imported solely from `mcp/` code — never from `lib/`.
 - TDD: failing test first, then implementation. `npm test` green before done.
 - No silent failures — throw loudly.
 - `signals/events.jsonl` is the canonical signal record. Daily markdown alerts
