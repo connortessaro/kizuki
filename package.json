@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "description": "Agent-neutral intelligence layer over your work: understands what a business, a team, and a person need — what changed, what matters, what's missing.",
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/connortessaro/kizuki.git" },
+  "keywords": ["mcp", "mcp-server", "intelligence", "agent", "org-intelligence", "claude", "codex"],
   "bin": {
     "kizuki": "./kizuki"
   },
