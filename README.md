@@ -46,7 +46,8 @@ args = ["-y", "kizuki", "mcp"]
 Once connected, the agent can list and read entities, search the vault, record a
 distilled thought, and safely rewrite the managed analysis section. The full
 tool set is in [Connect any MCP client](#connect-any-mcp-client). Point the
-server at a vault with `KIZUKI_VAULT`; it defaults to the current directory.
+server at a vault with `KIZUKI_VAULT`; it defaults to the repo root (the
+directory Kizuki is installed in).
 
 ## Quickstart
 
@@ -223,7 +224,7 @@ are running from a checkout instead, point the client at `mcp/server.mjs`:
 }
 ```
 
-`KIZUKI_VAULT` defaults to the current directory if unset. Any client that reads
+`KIZUKI_VAULT` defaults to the repo root if unset. Any client that reads
 a standard `mcpServers` map (Cursor, Windsurf, LM Studio, and others) takes the
 same JSON shape.
 
@@ -398,7 +399,7 @@ permissions, and governance.
 | Free OSS | Complete local product, one operator, BYO agent/model, Packs, portable export | Free |
 | Concierge beta | Dedicated instance, onboarding, 3–5 sources, configured Founder or Consultant Pack, weekly review, direct support | $49–99/mo |
 | Hosted Pro | Managed sync, reasoning, connectors, backups, remote web + MCP, model allowance, premium Packs | $29/mo or $290/yr |
-| Team | Shared workspace, private+shared evidence, roles, team briefs, agent and Pack grants | $25–40/active user/mo, with minimum |
+| Team | Shared workspace, private+shared evidence, roles, team briefs, agent and Pack grants | $25–40 per active user/mo with minimum |
 | Enterprise | Dedicated or customer-controlled deployment, governance, SSO/SCIM, audit, residency | Custom annual |
 
 Free OSS is this repository. Concierge beta is the first paid tier; join the
