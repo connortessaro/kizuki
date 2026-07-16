@@ -1,5 +1,7 @@
 # Kizuki release + monetization design
 
+> **Superseded July 16, 2026:** closed-source pivot — Kizuki is not being open-sourced and the OSS/Show HN launch is cancelled. Kept as a historical record.
+
 Date: 2026-07-14 (rev 2, reconciled with
 [`docs/2026-07-14-kizuki-direction-notes.md`](../../2026-07-14-kizuki-direction-notes.md)).
 Status: approved by operator (Connor).

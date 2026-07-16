@@ -10,6 +10,9 @@ notes to think against, not a roadmap.
 
 ## 1. Monetization thesis: open-core, TEE-hosted
 
+> **Superseded July 16, 2026:** closed-source pivot — no OSS CLI, no open-core.
+> (TEE hosting was already dropped earlier.) Kept for the reasoning record.
+
 **Verdict from strategy pass:** plain open-core freemium (OSS CLI + vanilla paid
 hosting) is structurally weak for the CLI alone — no moat (~200 lines,
 rebuildable in a weekend), and normal hosting *contradicts* the tool's one

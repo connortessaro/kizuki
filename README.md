@@ -396,13 +396,14 @@ permissions, and governance.
 
 | Edition | Offer | Price direction |
 |---|---|---|
-| Free OSS | Complete local product, one operator, BYO agent/model, Packs, portable export | Free |
+| Free local | Complete local product, one operator, BYO agent/model, Packs, portable export | Free |
 | Concierge beta | Dedicated instance, onboarding, 3–5 sources, configured Founder or Consultant Pack, weekly review, direct support | $49–99/mo |
 | Hosted Pro | Managed sync, reasoning, connectors, backups, remote web + MCP, model allowance, premium Packs | $29/mo or $290/yr |
 | Team | Shared workspace, private+shared evidence, roles, team briefs, agent and Pack grants | $25–40 per active user/mo with minimum |
 | Enterprise | Dedicated or customer-controlled deployment, governance, SSO/SCIM, audit, residency | Custom annual |
 
-Free OSS is this repository. Concierge beta is the first paid tier; join the
+Free local is the product in this repository, distributed as early access —
+the source is not published. Concierge beta is the first paid tier; join the
 founding cohort at [kizuki.dev](https://kizuki.dev). Hosted Pro and Team are on
 the waitlist there, and Enterprise is a direct conversation.
 
@@ -426,4 +427,6 @@ never includes that data unless someone force-adds it, so don't.
 
 ## License
 
-[Apache-2.0](LICENSE).
+Proprietary — see [LICENSE](LICENSE). All rights reserved; the repository is
+private and the source is not published. (Reversed from the earlier Apache-2.0
+open-core plan on July 16, 2026.)

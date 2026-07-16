@@ -1,5 +1,7 @@
 # Lane 1 — OSS Public Release Implementation Plan
 
+> **Superseded July 16, 2026:** closed-source pivot — Kizuki is not being open-sourced and the OSS/Show HN launch is cancelled. Kept as a historical record.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship kizuki publicly — single npm package with `kizuki mcp`, Apache-2.0, fresh-cut public repo, MCP-registry + HN/X launch, landing updated to the five-edition model — plus Lane 2 concierge materials.
