@@ -1,5 +1,7 @@
 # X launch — single tweet + thread
 
+> **Superseded July 16, 2026:** closed-source pivot — Kizuki is not being open-sourced and the OSS/Show HN launch is cancelled. Kept as a historical record.
+
 Post the same morning as the Show HN (link the HN thread in a reply once live).
 
 ## Single tweet (≤280)

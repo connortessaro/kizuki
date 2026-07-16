@@ -121,10 +121,14 @@ is real and unclaimed.
   structurally cannot. That reuses the founder's real edge (Phantom / TEE +
   attestation) and turns the privacy objection into the reason to buy.
 
-## The shape (open-core)
+## The shape (closed-source, local-first)
 
-- **Open-source core** — the vault + agent + MCP. Distribution and trust; anyone
-  can run it locally, private by default.
+(Revised July 16, 2026 — the open-core plan is reversed; the source is not
+published.)
+
+- **Local core** — the vault + agent + MCP. Runs on the customer's machine,
+  private by default; trust comes from local-first delivery and the
+  observe-and-advise guarantees, not from published source.
 - **Team** — shared, hosted alignment intelligence across teams. Per-seat.
 - **Enterprise / Confidential** — TEE-hosted with attestation receipts, SSO, RBAC,
   audit. The version legal/security actually approves; the version the incumbents
