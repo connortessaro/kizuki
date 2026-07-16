@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
+const LOOP_NUMERALS = ["一", "二", "三", "四", "五"];
+
 const LOOP = [
   ["Capture", "Say 'Kizuki this' in any connected chat. The agent distills one decision, learning, hypothesis, or question."],
   ["Validate", "Deterministic code checks identity, provenance, and lifecycle before anything touches disk. The model never writes files."],
@@ -108,15 +110,19 @@ export default function LandingPage() {
   return (
     <div className="landing">
       <header className="hero">
-        <div className="kanji" aria-hidden="true">気づき</div>
+        <div className="kanji" aria-hidden="true">
+          気<span className="lit-glyph">づ</span>き
+        </div>
         <h1>
           Kizuki<span>the noticing</span>
         </h1>
         <p className="one-liner">{HEADLINE}</p>
         <p className="sub">{SUBHEAD}</p>
         <p className="ctas">
+          <a className="primary" href={CONCIERGE_URL}>
+            Join the founding cohort
+          </a>
           <a href="https://demo.kizuki.dev">Live demo</a>
-          <a href={CONCIERGE_URL}>Join the founding cohort</a>
         </p>
         <p className="security-strip">
           {SECURITY_STRIP} <a href="#security">How we handle your data</a>
@@ -137,8 +143,11 @@ export default function LandingPage() {
       <section>
         <p className="eyebrow">HOW IT WORKS</p>
         <ol className="loop">
-          {LOOP.map(([name, text]) => (
+          {LOOP.map(([name, text], i) => (
             <li key={name}>
+              <span className="num" aria-hidden="true">
+                {LOOP_NUMERALS[i]}
+              </span>
               <strong>{name}</strong>
               <p>{text}</p>
             </li>
@@ -146,7 +155,7 @@ export default function LandingPage() {
         </ol>
       </section>
 
-      <section>
+      <section className="andon-band">
         <p className="eyebrow">THE NOTICING</p>
         <ul className="andon">
           <li>Sandbox credentials blocked ops since Tuesday.</li>
@@ -211,6 +220,7 @@ export default function LandingPage() {
           Kizuki 気づき — the noticing ·{" "}
           <a href="https://demo.kizuki.dev">Live demo</a>
         </p>
+        <img className="seal" src="/seal-ki.svg" alt="" width="34" height="34" />
       </footer>
     </div>
   );
