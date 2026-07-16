@@ -78,3 +78,20 @@ pitch.
 
 | Contact | Exact ask | Context |
 | --- | --- | --- |
+
+## Target contacts
+
+No existing network at VP/exec tier, so persona-matched by public record
+instead: the two most on-record CEOs for this exact appetite are Sebastian
+Siemiatkowski (Klarna — shrunk headcount ~40% citing AI, CNBC 2025-05-14;
+targets sub-2,000 employees by 2030, Business Insider/Fortune 2026-02) and
+Tobi Lütke (Shopify — April 2025 memo requiring teams to prove AI can't do
+a job before requesting headcount, covered by CNBC/WSJ/Business
+Insider/The Hill). Neither is realistically cold-reachable for a pressure-test
+conversation, so the actual targets are reachable proxies one level down, at
+the same companies, who'd share the culture:
+
+| Name | Role | Why they're a good test | Status |
+| --- | --- | --- | --- |
+| Farhan Thawar | VP & Head of Engineering, Shopify | Publicly drove Shopify's AI adoption (GitHub Copilot rollout, First Round Review feature; active as of 2026 per "Compile 26" conference talk) — directly implements the CEO's AI-first mandate this pitch's resource-signal feature would instrument. | Not yet contacted |
+| Yaron Shaer | Chief Technology Officer, Klarna | Confirmed current via Klarna's official investor-relations leadership page (2026); owns the engineering org at the company most publicly committed to AI-driven headcount reduction. | Not yet contacted |
