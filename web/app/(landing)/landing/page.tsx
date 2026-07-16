@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-const GITHUB_URL = "https://github.com/connortessaro/kizuki";
+const FREE_WAITLIST_URL =
+  "mailto:hello@kizuki.dev?subject=Kizuki%20Free%20early%20access";
 const CONCIERGE_URL =
   "mailto:hello@kizuki.dev?subject=Kizuki%20concierge%20founding%20cohort";
 const PRO_WAITLIST_URL =
@@ -62,11 +63,11 @@ type Tier = {
 const TIERS: Tier[] = [
   {
     name: "Free",
-    tag: "OSS",
+    tag: "local",
     price: "$0",
-    body: "The complete local product for one operator. Bring your own agent and model, use manual or community connectors and Packs, and export everything. Runs on your machine. Apache-2.0.",
-    cta: "Install",
-    href: GITHUB_URL,
+    body: "The complete local product for one operator. Bring your own agent and model, use manual or community connectors and Packs, and export everything. Runs on your machine.",
+    cta: "Get early access",
+    href: FREE_WAITLIST_URL,
   },
   {
     name: "Concierge",
@@ -115,7 +116,7 @@ export default function LandingPage() {
         <p className="sub">{SUBHEAD}</p>
         <p className="ctas">
           <a href="https://demo.kizuki.dev">Live demo</a>
-          <a href={GITHUB_URL}>Install</a>
+          <a href={CONCIERGE_URL}>Join the founding cohort</a>
         </p>
         <p className="security-strip">
           {SECURITY_STRIP} <a href="#security">How we handle your data</a>
@@ -197,17 +198,10 @@ export default function LandingPage() {
       </section>
 
       <section>
-        <p className="eyebrow">RUN IT</p>
-        <pre>
-          <code>{`claude mcp add kizuki -- npx -y kizuki mcp   # connect your agent
-
-npx kizuki init --agent claude              # or run the CLI
-kizuki doctor
-kizuki start`}</code>
-        </pre>
+        <p className="eyebrow">WORKS WITH</p>
         <p>
-          Apache-2.0. MCP server included. Works with Codex, Claude Code, Gemini
-          CLI, Cursor, and any OpenAI-compatible API.
+          MCP server included. Works with Codex, Claude Code, Gemini CLI,
+          Cursor, and any OpenAI-compatible API.
         </p>
       </section>
 
