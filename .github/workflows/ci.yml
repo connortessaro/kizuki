@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Deny by default. Each job re-grants only what it needs.
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_AUDIT: "false"
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    name: typecheck (web)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --prefix web
+      - run: npm run typecheck
+
+  test:
+    name: test (node ${{ matrix.node }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: ["20", "22", "24"]
+        include:
+          # kizuki start/stop and notifications are macOS-native paths.
+          - os: macos-latest
+            node: "22"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Run test suite
+        run: npm test
+      - name: Run MCP integration tests
+        # Not matched by the default node --test glob, so run it explicitly.
+        run: npm test --prefix mcp
+
+  dist-drift:
+    name: dist drift
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Committed dist/skills matches skills/
+        run: npm run verify:dist
+      - name: Regenerating dist/skills is a no-op
+        run: |
+          npm run build
+          git diff --exit-code -- dist/
+
+  package:
+    name: package leak gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: No vault data, private docs or config in the npm tarball
+        run: |
+          npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
+          if grep -qE 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt; then
+            echo "::error::private path leaked into the npm tarball"
+            grep -E 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt
+            exit 1
+          fi
+          echo "tarball clean"
+      - name: Tarball ships LICENSE and NOTICE
+        run: |
+          npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
+          grep -q 'LICENSE' /tmp/pack.txt || { echo "::error::LICENSE missing from tarball"; exit 1; }
+          grep -q 'NOTICE'  /tmp/pack.txt || { echo "::error::NOTICE missing from tarball";  exit 1; }
+
+  dependency-review:
+    name: dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          comment-summary-in-pr: on-failure
+          fail-on-severity: high
+          # Keep the dependency tree permissive-only, matching NOTICE.
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0

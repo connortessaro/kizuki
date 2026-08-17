@@ -1,0 +1,67 @@
+{
+  "name": "kizuki",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Agent-neutral intelligence layer over your work: understands what a business, a team, and a person need — what changed, what matters, what's missing.",
+  "license": "Apache-2.0",
+  "author": "Connor Tessaro",
+  "homepage": "https://github.com/connortessaro/kizuki#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connortessaro/kizuki.git"
+  },
+  "bugs": {
+    "url": "https://github.com/connortessaro/kizuki/issues"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "intelligence",
+    "agent",
+    "org-intelligence",
+    "local-first",
+    "claude",
+    "codex"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "bin": {
+    "kizuki": "./kizuki"
+  },
+  "files": [
+    "kizuki",
+    "lib/",
+    "mcp/",
+    "server/",
+    "skills/",
+    "dist/skills/",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "!**/*.test.mjs",
+    "!**/*.integration.mjs"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "npm --prefix web run typecheck",
+    "build": "node ./kizuki skills export --dist",
+    "verify:dist": "node ./kizuki skills export --check"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.11.0"
+  }
+}

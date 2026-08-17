@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ringi + Kizuki — design system</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#FAFAF7;--ink:#1A1A18;--stone:#6B6B66;--rule:#E7E4DB;--seal:#C8402E;--kizuki:#C4761F}
+  body{background:var(--paper);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;margin:0;padding:40px}
+  h1{font-family:"Shippori Mincho",serif;font-size:26px;margin:0 0 4px}
+  .eyebrow{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.08em;color:var(--stone);margin-bottom:32px}
+  h2{font-family:"Shippori Mincho",serif;font-size:18px;margin:36px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:20px}
+  figure{margin:0;border:1px solid var(--rule);border-radius:8px;background:#fff;overflow:hidden}
+  iframe{width:100%;height:340px;border:0;display:block}
+  figcaption{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.05em;color:var(--stone);padding:8px 12px;border-top:1px solid var(--rule)}
+  figcaption a{color:inherit}
+</style></head><body>
+<h1>Ringi + Kizuki</h1>
+<div class="eyebrow">稟議 / 気づき — SHARED DESIGN SYSTEM · docs/BRAND.md IN EACH REPO</div>
+
+<h2>Foundations</h2>
+<div class="grid">
+  <figure><iframe src="tokens.html" title="Family tokens" loading="lazy"></iframe><figcaption><a href="tokens.html">tokens.html</a> — family palette + type</figcaption></figure>
+</div>
+
+<h2>Motion</h2>
+<div class="grid">
+  <figure><iframe src="motion-discrete.html" title="Ringi motion: discrete" loading="lazy"></iframe><figcaption><a href="motion-discrete.html">motion-discrete.html</a> — ringi, stamps land one beat at a time (scroll inside)</figcaption></figure>
+  <figure><iframe src="motion-continuous.html" title="Kizuki motion: continuous" loading="lazy"></iframe><figcaption><a href="motion-continuous.html">motion-continuous.html</a> — kizuki, ambient field + amber pulse</figcaption></figure>
+</div>
+
+<h2>Marks</h2>
+<div class="grid">
+  <figure><iframe src="mark-seal-ki.html" title="気 seal" loading="lazy"></iframe><figcaption><a href="mark-seal-ki.html">mark-seal-ki.html</a> — kizuki primary mark</figcaption></figure>
+</div>
+
+<h2>Mascots</h2>
+<div class="grid">
+  <figure><iframe src="mascot-momonga.html" title="Ezo momonga" loading="lazy"></iframe><figcaption><a href="mascot-momonga.html">mascot-momonga.html</a> — kizuki secondary, diegetic</figcaption></figure>
+  <figure><iframe src="mascot-tancho.html" title="Tancho crane" loading="lazy"></iframe><figcaption><a href="mascot-tancho.html">mascot-tancho.html</a> — ringi secondary, hanko stays the logo</figcaption></figure>
+</div>
+
+<h2>Voice</h2>
+<div class="grid">
+  <figure><iframe src="voice.html" title="Voice registers" loading="lazy"></iframe><figcaption><a href="voice.html">voice.html</a> — memo register vs field notes</figcaption></figure>
+</div>
+</body></html>

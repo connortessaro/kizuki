@@ -1,0 +1,42 @@
+node_modules/
+.DS_Store
+
+# Machine-specific agent config (which AI CLI to spawn)
+kizuki.config.json
+
+# Vault data — contains internal work info. Never commit/push.
+# Keep the folder structure via .gitkeep, ignore the entity files themselves.
+transcripts/*
+!transcripts/.gitkeep
+people/*
+!people/.gitkeep
+projects/*
+!projects/.gitkeep
+teams/*
+!teams/.gitkeep
+
+# Shift state + day summaries — machine-local work data
+/state/
+/days/
+/alerts/
+/signals/
+/insights/
+/catches/
+/events/
+
+# SDD scratch (briefs, reports, review diffs, progress ledger)
+.superpowers/
+
+# Local agent memory — self-ignores via its own .gitignore, belt-and-braces here
+.remember/
+
+# npm pack output
+*.tgz
+
+# Next.js build output (web/)
+web/.next/
+web/next-env.d.ts
+web/tsconfig.tsbuildinfo
+.vercel/
+.claude/*.local.md
+.claude/settings.local.json

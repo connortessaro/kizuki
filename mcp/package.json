@@ -1,0 +1,9 @@
+{
+  "name": "kizuki-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing the Kizuki vault as tools (read + safe managed-section writes).",
+  "bin": { "kizuki-mcp": "./server.mjs" },
+  "scripts": { "test": "node --test tools.test.mjs server.integration.mjs" }
+}

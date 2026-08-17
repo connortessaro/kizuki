@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and validate, but do not publish"
+        type: boolean
+        default: true
+
+permissions: {}
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm test --prefix mcp
+      - run: npm run verify:dist
+      - name: Tag matches package.json version
+        if: github.event_name == 'push'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$TAG_NAME" != "$pkg" ]; then
+            echo "::error::tag $TAG_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+          echo "tag $TAG_NAME matches package.json"
+
+  publish-npm:
+    name: publish to npm
+    needs: verify
+    if: github.event_name == 'push' || inputs.dry_run == false
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      # Required for npm trusted publishing (OIDC). No long-lived npm token.
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@latest
+      - run: npm ci
+      - name: Publish
+        # No NODE_AUTH_TOKEN: authentication is OIDC via id-token: write.
+        # Requires a trusted publisher configured for this package on npmjs.com.
+        run: npm publish
+
+  github-release:
+    name: github release
+    needs: publish-npm
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG_NAME" \
+            --generate-notes \
+            --verify-tag

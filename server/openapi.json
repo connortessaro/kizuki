@@ -1,0 +1,304 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kizuki Local Platform API",
+    "version": "1.0.0",
+    "description": "Authenticated loopback API for the Kizuki personal platform foundation. Binds to 127.0.0.1 and requires a per-install bearer token. Never exposes file CRUD; all captures are private to the local operator."
+  },
+  "servers": [
+    { "url": "http://127.0.0.1:4247", "description": "Local daemon (default port)" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Report daemon health.",
+        "responses": {
+          "200": {
+            "description": "Daemon is reachable and authenticated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/captures": {
+      "get": {
+        "operationId": "listCaptures",
+        "summary": "List recent captured evidence, newest first.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Captures matching the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Capture" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createCapture",
+        "summary": "Record one private piece of evidence, idempotently.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "minLength": 1 },
+            "description": "Client-generated key. Retrying the same key with the same body returns the existing capture; reusing it with a different body is rejected."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CaptureInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A new capture was recorded.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaptureResult" }
+              }
+            }
+          },
+          "200": {
+            "description": "The idempotency key was already used with an identical body; the existing capture is returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaptureResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Error" },
+          "413": { "$ref": "#/components/responses/Error" },
+          "415": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/events/stream": {
+      "get": {
+        "operationId": "streamEvents",
+        "summary": "Server-sent stream of newly captured events.",
+        "description": "Sends a `ready` event on connect, one `capture.recorded` event per newly created capture, and a comment heartbeat every 25 seconds.",
+        "responses": {
+          "200": {
+            "description": "An open text/event-stream connection.",
+            "content": { "text/event-stream": { "schema": { "type": "string" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "getOpenapiContract",
+        "summary": "Return this OpenAPI contract.",
+        "responses": {
+          "200": {
+            "description": "The API contract document.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Per-install token from state/daemon.json. Never logged or echoed."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["status", "version"],
+            "properties": {
+              "status": { "type": "string", "enum": ["ok"] },
+              "version": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "CaptureEntity": {
+        "type": "object",
+        "required": ["type", "name"],
+        "properties": {
+          "type": { "type": "string", "enum": ["person", "project", "team"] },
+          "name": { "type": "string", "minLength": 1 }
+        }
+      },
+      "CaptureInput": {
+        "type": "object",
+        "required": ["kind", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["note", "correction", "decision", "hypothesis", "question"]
+          },
+          "text": { "type": "string", "minLength": 1, "maxLength": 50000 },
+          "entity": { "$ref": "#/components/schemas/CaptureEntity" },
+          "visibility": { "type": "string", "enum": ["private"] },
+          "packIds": { "type": "array", "items": { "type": "string" } },
+          "receipts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source", "locator", "observedAt", "excerpt"],
+              "properties": {
+                "source": { "type": "string" },
+                "locator": { "type": "string" },
+                "observedAt": { "type": "string", "format": "date-time" },
+                "excerpt": { "type": "string" }
+              }
+            }
+          }
+        },
+        "description": "Workspace, principal, and source-owner identity are always derived from the authenticated local daemon and can never be set by the client."
+      },
+      "Capture": {
+        "type": "object",
+        "required": ["captureId", "eventId", "at", "kind", "text", "visibility"],
+        "properties": {
+          "captureId": { "type": "string" },
+          "eventId": { "type": "string" },
+          "at": { "type": "string", "format": "date-time" },
+          "kind": { "type": "string" },
+          "text": { "type": "string" },
+          "entity": {
+            "oneOf": [{ "$ref": "#/components/schemas/CaptureEntity" }, { "type": "null" }]
+          },
+          "visibility": {
+            "type": "object",
+            "properties": {
+              "scope": { "type": "string", "enum": ["private"] },
+              "principalIds": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "CaptureEvent": {
+        "type": "object",
+        "required": ["eventId", "type", "aggregate", "payload", "visibility"],
+        "properties": {
+          "eventId": { "type": "string" },
+          "type": { "type": "string", "enum": ["capture.recorded"] },
+          "workspaceId": { "type": "string" },
+          "aggregate": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["capture"] },
+              "id": { "type": "string" },
+              "version": { "type": "integer" }
+            }
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string" },
+              "text": { "type": "string" },
+              "entity": { "oneOf": [{ "$ref": "#/components/schemas/CaptureEntity" }, { "type": "null" }] }
+            }
+          },
+          "visibility": {
+            "type": "object",
+            "properties": {
+              "scope": { "type": "string", "enum": ["private"] },
+              "principalIds": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "CaptureResult": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["disposition", "event"],
+            "properties": {
+              "disposition": { "type": "string", "enum": ["created", "existing"] },
+              "event": { "$ref": "#/components/schemas/CaptureEvent" }
+            }
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "unauthorized",
+                  "invalid_request",
+                  "invalid_json",
+                  "unsupported_media_type",
+                  "missing_idempotency_key",
+                  "idempotency_conflict",
+                  "body_too_large",
+                  "not_found",
+                  "method_not_allowed",
+                  "internal_error"
+                ]
+              },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid bearer token.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } }
+      },
+      "Error": {
+        "description": "A stable error envelope.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiError" } } }
+      }
+    }
+  }
+}
