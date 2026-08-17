@@ -1,0 +1,44 @@
+name: Feature request
+description: Suggest a capability or a change in behavior
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Kizuki has a deliberately narrow scope. Two rules shape what fits:
+
+        - It **observes and advises**. It never sends, posts, or mutates a source
+          system. Proposals that make Kizuki act on your behalf will be declined.
+        - **Deterministic code writes files**, never a model. Proposals that move
+          file-writing into a prompt will be declined.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Kizuki makes hard today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+      description: If you have a command or tool shape in mind, show it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not require Kizuki to send, post or mutate anything in an external system.
+          required: true
+        - label: This does not require a model to write vault files directly.
+          required: true

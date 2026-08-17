@@ -27,6 +27,12 @@ teams/*
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
 
+# Local agent memory — self-ignores via its own .gitignore, belt-and-braces here
+.remember/
+
+# npm pack output
+*.tgz
+
 # Next.js build output (web/)
 web/.next/
 web/next-env.d.ts
