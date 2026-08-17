@@ -157,4 +157,7 @@ jobs:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
           # Keep the dependency tree permissive-only, matching NOTICE.
-          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
+          # LGPL is intentionally allowed: it permits linking from
+          # differently-licensed code. sharp's libvips prebuilds are
+          # LGPL-3.0-or-later while sharp itself is Apache-2.0.
