@@ -121,14 +121,18 @@ is real and unclaimed.
   structurally cannot. That reuses the founder's real edge (Phantom / TEE +
   attestation) and turns the privacy objection into the reason to buy.
 
-## The shape (closed-source, local-first)
+## The shape (open-core)
 
-(Revised July 16, 2026 — the open-core plan is reversed; the source is not
-published.)
+> **Decision history.** Open-core was reversed to closed-source on July 16, 2026,
+> then restored on August 17, 2026. Kizuki ships Apache-2.0. The reasoning on both
+> sides is preserved in `docs/future-notes.md` §1 and in the superseded plans
+> under `docs/superpowers/`; this section states the current decision.
 
-- **Local core** — the vault + agent + MCP. Runs on the customer's machine,
-  private by default; trust comes from local-first delivery and the
-  observe-and-advise guarantees, not from published source.
+- **Open-source core** — the vault + agent + MCP, Apache-2.0. Runs on the
+  customer's machine, private by default. Trust comes from three things that
+  reinforce each other: published source, local-first delivery, and the
+  observe-and-advise guarantees. For the regulated buyers this is aimed at,
+  auditable source is not a giveaway — it is a precondition for approval.
 - **Team** — shared, hosted alignment intelligence across teams. Per-seat.
 - **Enterprise / Confidential** — TEE-hosted with attestation receipts, SSO, RBAC,
   audit. The version legal/security actually approves; the version the incumbents

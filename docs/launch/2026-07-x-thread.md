@@ -1,6 +1,8 @@
 # X launch — single tweet + thread
 
 > **Superseded July 16, 2026:** closed-source pivot — Kizuki is not being open-sourced and the OSS/Show HN launch is cancelled. Kept as a historical record.
+>
+> **Un-superseded August 17, 2026:** the closed-source pivot was reversed. Kizuki ships Apache-2.0, so the July 16 cancellation above no longer applies. Treat the content below as live again, but re-verify specifics (dates, prices, the fresh-cut repo strategy) before acting — the release now keeps its rewritten git history rather than starting from a clean cut.
 
 Post the same morning as the Show HN (link the HN thread in a reply once live).
 

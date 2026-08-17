@@ -1,8 +1,16 @@
 # Kizuki
 
-Kizuki is an agent-neutral intelligence layer over your work. It understands
-what a business, a team, and a person need — what changed, what matters now,
-what conflicts, what's missing — and prepares you and your AI agents to respond.
+[![CI](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml/badge.svg)](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/kizuki.svg)](https://www.npmjs.com/package/kizuki)
+[![Node](https://img.shields.io/node/v/kizuki.svg)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+**An agent-neutral intelligence layer over your work — local-first, and it never
+acts on your behalf.**
+
+Kizuki understands what a business, a team, and a person need — what changed,
+what matters now, what conflicts, what's missing — and prepares you and your AI
+agents to respond.
 
 It pulls your work activity (meeting transcripts plus Slack, GitHub, Atlassian,
 and Outlook through your AI agent's own connectors) into a local, git-tracked
@@ -43,6 +51,10 @@ command = "npx"
 args = ["-y", "kizuki", "mcp"]
 ```
 
+Running from a git checkout instead of npm? Use
+`claude mcp add kizuki -- node /ABS/PATH/kizuki/mcp/server.mjs`, or the
+[`mcpServers` JSON](#connect-any-mcp-client) below.
+
 Once connected, the agent can list and read entities, search the vault, record a
 distilled thought, and safely rewrite the managed analysis section. The full
 tool set is in [Connect any MCP client](#connect-any-mcp-client). Point the
@@ -66,6 +78,53 @@ kizuki stop                      # end the shift: final sync + day summary
 `codex`, `claude`, `gemini`, `opencode`, or `http`. Run
 [`kizuki doctor`](#requirements) any time setup feels off — it reports config,
 agent binary, vault dirs, and daemon health, and tells you exactly what to fix.
+
+## See it work
+
+Drop a meeting transcript into `transcripts/`, then sync one project:
+
+```console
+$ cp ~/Downloads/2026-11-03-checkout-standup.txt transcripts/
+$ kizuki sync --project checkout-v2
+Kizuki sync — scope: project/checkout-v2, sources: slack,github,atlassian,outlook
+  updated projects/checkout-v2.md
+  alert [warn] blocker project/checkout-v2
+```
+
+Kizuki rewrote exactly one block inside `projects/checkout-v2.md`. Anything you
+wrote by hand, outside the markers, is left alone:
+
+````markdown
+<!-- KIZUKI:ANALYSIS:START -->
+_Updated November 3, 2026, 9:12 AM_
+
+**Status:** At risk — launch date slipped to Nov 14
+**Blockers:** Payments team has not signed off on the refund path
+**Open questions:** Does the rollback plan cover partial refunds?
+
+**Follow-ups:**
+- Confirm refund-path owner with payments
+- Get a written launch-date decision
+
+**Recommended actions:**
+- Ask payments for a refund-path decision by Friday
+  ```
+  Hi — we are blocked on the refund path for checkout-v2.
+  Can you confirm an owner and a decision by Friday?
+  ```
+<!-- KIZUKI:ANALYSIS:END -->
+````
+
+Now the part that earns its keep. Before you send an update, check the draft
+against what the vault already knows:
+
+```console
+$ kizuki check "Checkout v2 is on track for the Nov 7 launch." --project checkout-v2
+[warn] project/checkout-v2: draft says on track for Nov 7, vault records the date slipped to Nov 14 (standup 2026-11-03)
+```
+
+Kizuki did not send the message and did not rewrite the draft. It told you what
+you were about to get wrong, and cited where it knows that from. You decide.
 
 ## What it answers
 
@@ -377,7 +436,9 @@ shows the pre-send contradiction story without using real work data.
 
 ## Requirements
 
-- Node >= 20
+- Node >= 20.11 (tested on 20, 22 and 24)
+- macOS or Linux. `kizuki start` / `kizuki stop` use macOS launchd; the daemon
+  supports macOS and Linux. Windows is not supported.
 - One of: an AI agent CLI that runs a prompt non-interactively and prints its
   final message to stdout, with MCP servers configured for
   slack/github/atlassian/outlook (Codex, Claude Code, Gemini CLI, opencode); or
@@ -396,16 +457,17 @@ permissions, and governance.
 
 | Edition | Offer | Price direction |
 |---|---|---|
-| Free local | Complete local product, one operator, BYO agent/model, Packs, portable export | Free |
+| Free OSS | Complete local product, one operator, BYO agent/model, Packs, portable export | Free |
 | Concierge beta | Dedicated instance, onboarding, 3–5 sources, configured Founder or Consultant Pack, weekly review, direct support | $49–99/mo |
 | Hosted Pro | Managed sync, reasoning, connectors, backups, remote web + MCP, model allowance, premium Packs | $29/mo or $290/yr |
 | Team | Shared workspace, private+shared evidence, roles, team briefs, agent and Pack grants | $25–40 per active user/mo with minimum |
 | Enterprise | Dedicated or customer-controlled deployment, governance, SSO/SCIM, audit, residency | Custom annual |
 
-Free local is the product in this repository, distributed as early access —
-the source is not published. Concierge beta is the first paid tier; join the
-founding cohort at [kizuki.dev](https://kizuki.dev). Hosted Pro and Team are on
-the waitlist there, and Enterprise is a direct conversation.
+Free OSS is this repository, Apache-2.0, with no feature gate and no telemetry —
+everything documented above runs locally and free, forever. Concierge beta is the
+first paid tier; join the founding cohort at [kizuki.dev](https://kizuki.dev).
+Hosted Pro and Team are on the waitlist there, and Enterprise is a direct
+conversation.
 
 ## Demo
 
@@ -416,8 +478,18 @@ Browse a live, read-only dashboard on synthetic data (no real work data):
 ## Development
 
 ```bash
-npm test        # node --test; the core is import-clean, the package ships the MCP SDK + zod
+npm ci
+npm run lint          # eslint
+npm test              # node --test; the whole suite
+npm test --prefix mcp # MCP integration tests
+npm run typecheck     # tsc --noEmit for web/ (needs: npm ci --prefix web)
+npm run verify:dist   # committed dist/skills matches skills/
 ```
+
+`lib/` and `server/` import Node built-ins only; the MCP SDK and zod are imported
+solely from `mcp/`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full
+architecture rules and the PR checklist, and [SECURITY.md](SECURITY.md) for the
+threat model and how to report a vulnerability.
 
 The vault entity files and runtime data under `people/`, `projects/`, `teams/`,
 `transcripts/`, `alerts/`, `signals/`, `insights/`, `events/`, `days/`, and
@@ -427,6 +499,5 @@ never includes that data unless someone force-adds it, so don't.
 
 ## License
 
-Proprietary — see [LICENSE](LICENSE). All rights reserved; the repository is
-private and the source is not published. (Reversed from the earlier Apache-2.0
-open-core plan on July 16, 2026.)
+[Apache-2.0](LICENSE). Copyright 2026 Connor Tessaro. See [NOTICE](NOTICE) for
+attribution and third-party license information.

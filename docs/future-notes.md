@@ -12,6 +12,12 @@ notes to think against, not a roadmap.
 
 > **Superseded July 16, 2026:** closed-source pivot — no OSS CLI, no open-core.
 > (TEE hosting was already dropped earlier.) Kept for the reasoning record.
+>
+> **Reinstated August 17, 2026:** the closed-source pivot above was itself
+> reversed. Kizuki ships Apache-2.0 and the open-core shape is current again —
+> see `docs/vision.md`. The strategy critique below still stands on its merits and
+> is worth re-reading before betting on the CLI as a moat; the answer is that the
+> moat was never the CLI.
 
 **Verdict from strategy pass:** plain open-core freemium (OSS CLI + vanilla paid
 hosting) is structurally weak for the CLI alone — no moat (~200 lines,
