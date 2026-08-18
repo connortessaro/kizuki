@@ -28,18 +28,18 @@ The fastest way in is to give your existing AI agent access to the vault over
 MCP. One command for Claude Code:
 
 ```bash
-claude mcp add kizuki -- npx -y kizuki mcp        # Claude Code
+claude mcp add kizuki -- npx -y github:connortessaro/kizuki mcp        # Claude Code
 ```
 
 Cursor (`.cursor/mcp.json`) and Codex (`~/.codex/config.toml`) use the same
-`npx -y kizuki mcp` command; drop it into their MCP config in the shape each
+`npx -y github:connortessaro/kizuki mcp` command; drop it into their MCP config in the shape each
 client expects:
 
 ```jsonc
 // Cursor — .cursor/mcp.json
 {
   "mcpServers": {
-    "kizuki": { "command": "npx", "args": ["-y", "kizuki", "mcp"] }
+    "kizuki": { "command": "npx", "args": ["-y", "github:connortessaro/kizuki", "mcp"] }
   }
 }
 ```
@@ -63,11 +63,11 @@ directory Kizuki is installed in).
 
 ## Quickstart
 
-Prefer the CLI? Install it globally (`npm i -g kizuki`) so the `kizuki` command
-is on your PATH, or prefix each command with `npx kizuki`.
+Prefer the CLI? Install it globally (`npm i -g github:connortessaro/kizuki`) so the `kizuki` command
+is on your PATH, or prefix each command with `npx github:connortessaro/kizuki`.
 
 ```bash
-npx kizuki init --agent claude   # create the vault dirs + a Claude Code config
+npx github:connortessaro/kizuki init --agent claude   # create the vault dirs + a Claude Code config
 kizuki doctor                    # check config, agent binary, and vault structure
 kizuki sync                      # pull activity and rewrite the analysis sections
 kizuki start                     # begin a shift: sync + brief + 30-min background sync
@@ -268,7 +268,7 @@ these tools to read and safely persist:
 model still never edits files directly. Re-runs stay idempotent and notes stay
 safe.
 
-The headline `npx -y kizuki mcp` command boots this server over stdio. If you
+The headline `npx -y github:connortessaro/kizuki mcp` command boots this server over stdio. If you
 are running from a checkout instead, point the client at `mcp/server.mjs`:
 
 ```json
