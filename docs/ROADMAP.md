@@ -250,7 +250,7 @@ Park here until promoted into a milestone. See also `docs/BACKLOG.md`.
 | Transcript watcher | **Shipped** — `kizuki watch` + `lib/watcher.mjs` |
 | Cross-shift trends | **Shipped** — `lib/trends.mjs`; brief + dashboard home |
 | LLM-written day summary | **Shipped** — prose synthesis prepended to `days/` file at `stop` (`lib/shift.mjs`); facts-only fallback |
-| Slack DM mirror for alerts | Work IT permitting |
+| Slack DM mirror for alerts | **Dropped 2026-07** — no work Slack admin; revisit only if IT grants an app |
 | Windows/Linux shift support | `lib/launchd.mjs` seam exists; needs schtasks/systemd |
 | Vercel eve hosted runtime | Full multi-user runtime still blocked on data-safety. **Public demo shipped** — `web/demo-vault/` + `KIZUKI_DEMO` deploys the read-only dashboard on synthetic data (no real data can reach a build) |
 | TEE / confidential enterprise | Post-v4; see `docs/future-notes.md` |
