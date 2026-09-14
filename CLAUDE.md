@@ -4,11 +4,16 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-Kizuki — a personal, single-operator org-intelligence CLI. It pulls the user's
-work activity (TalkTrack meeting transcripts + Slack/GitHub/Atlassian/Outlook via
-the configured AI agent's MCP servers) into a git-tracked markdown vault sorted by
-person/project/team, and rewrites a managed analysis section per file (status,
-needs, what they don't know, follow-ups, recommended actions with drafts).
+Kizuki has two halves.
+
+The original half is a personal, single-operator org-intelligence CLI: it pulls
+work activity (meeting transcripts, plus Slack/GitHub/Atlassian/Outlook via the
+configured agent's MCP servers) into a git-tracked markdown vault sorted by
+person/project/team, and rewrites a managed analysis section per file.
+
+The second half is a data plane that ingests real git history into a DuckDB
+warehouse, embeds the written record into pgvector, and answers questions using
+whichever half is needed — see `README.md` and the section below.
 
 It observes and advises only — it never sends messages or takes actions. Humans
 decide. Do not add autonomous action-taking without revisiting this.
@@ -175,11 +180,51 @@ vault: entity browser, follow-ups, day summaries, search, and a `/capture` form.
 - Entity/date URL params are validated (`assertName`-equivalent guard + date
   regex) before touching the filesystem.
 
+## Data plane (`analytics/`)
+
+A Python subpackage (uv-managed) that turns real git activity into answers. It is
+the only Python in the repo and is deliberately isolated: `lib/`, `server/` and
+`mcp/` never import from it, and it never imports from them — it shells out to
+the CLI instead.
+
+- **`lib/gitIngest.mjs`** — the connector, and the only git parser. One
+  `git log --all --numstat` pass per repo; resolves the default ref from a
+  candidate list rather than trusting `HEAD` (a detached checkout reports one
+  commit). Appends to `activity/events.jsonl` via `lib/activityEvents.mjs` +
+  `lib/activityStore.mjs`, a fifth append-only ledger alongside signals,
+  insights, catches and events. Commit identity is `sha256(repo|sha)`, so
+  re-ingesting is a no-op.
+- **`analytics/src/kizuki_analytics/warehouse.py`** — projects the ledger into
+  DuckDB behind an `OlapDriver` protocol. Builds to a staging file then
+  `os.replace`s: DuckDB refuses read-write on a file a reader holds, so without
+  the swap every rebuild fails while the ask service is up.
+- **`analytics/src/kizuki_analytics/identity.py`** — collapses raw git identities
+  into contributors and writes an audit row per merge. Bots may merge with bots,
+  never with people. Overrides key on salted hashes so the config carries no
+  addresses.
+- **`analytics/src/kizuki_analytics/ask/guard.py`** — validation for
+  model-generated SQL. The read-only DuckDB connection is the wall; the parser
+  layers are defence in depth. Always re-render from the validated AST.
+- **`analytics/evals/`** — ground truth is computed by shelling out to `git`,
+  never by the pipeline under test. Keep it that way; it is the only reason the
+  suite can catch a self-consistent error.
+
+The ledger is canonical. DuckDB and pgvector are derived and rebuildable — never
+read them as a source of truth, and never write to them as one.
+
+Corpus under `analytics/corpus/synthetic/` is **generated**. Commits, authors,
+dates and paths are real; meetings and decisions are fabricated. Every generated
+file carries a banner and every stored chunk an `is_synthetic` flag. Do not
+remove either.
+
+
 ## Conventions (match these)
 
 - **ESM `.mjs`. `lib/` and `server/` import Node built-ins only** — the only
   runtime npm deps are `@modelcontextprotocol/sdk` + `zod`, imported solely from
   `mcp/`. Do not add other npm packages. Tests use `node:test` + `node:assert`.
+  This still binds after the data plane: Python lives only in `analytics/`, and
+  the two planes talk over the CLI and loopback HTTP, never by importing.
 - **TDD.** Every change: failing test first, then implementation. Keep the suite
   green (`npm test`) before claiming done.
 - No comments unless non-obvious. Pure functions where possible.

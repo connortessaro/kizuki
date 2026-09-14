@@ -6,10 +6,28 @@ rules that matter for any agent. Keep the two in sync.
 
 ## What this is
 
-Kizuki — a personal, single-operator org-intelligence CLI + MCP server. It pulls
-work activity (meeting transcripts + Slack/GitHub/Atlassian/Outlook via the
+Kizuki has two halves.
+
+The original half is a personal org-intelligence CLI + MCP server: it pulls work
+activity (meeting transcripts, plus Slack/GitHub/Atlassian/Outlook via the
 configured agent's MCP servers) into a git-tracked markdown vault sorted by
 person/project/team, and rewrites a managed analysis section per file.
+
+The second half is a data plane (`analytics/`, Python + uv) that ingests real git
+history into DuckDB, embeds documents into pgvector, and answers questions with
+guarded text-to-SQL plus retrieval. `CLAUDE.md` carries the detail. The rules
+that matter for any agent working in it:
+
+- The ledger (`activity/events.jsonl`) is canonical. DuckDB and pgvector are
+  derived and rebuildable; never treat them as a source of truth.
+- `lib/`, `server/` and `mcp/` stay Node-built-ins-only. Python lives only in
+  `analytics/`, and the two planes talk over the CLI and loopback HTTP.
+- Generated SQL runs on a read-only connection. That is the real guard; the
+  parser checks in `ask/guard.py` are defence in depth, not a substitute.
+- Eval ground truth is computed from `git` directly, never from the pipeline
+  under test.
+- The meeting corpus is synthetic and labelled as such in the file, the database
+  and the UI. Never strip those markers.
 
 It observes and advises only — it never sends messages or takes actions on its
 own. Humans approve every outward action. Do not add autonomous action-taking.
