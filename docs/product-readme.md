@@ -1,8 +1,11 @@
 # Kizuki
 
+> **Note:** `kizuki` is not published to npm. Every `npx kizuki` command below
+> assumes a local clone — run `git clone https://github.com/connortessaro/kizuki`
+> and use `./kizuki` (or put the repo root on your `PATH`) in place of `npx -y kizuki`.
+> The MCP entry is `node /ABS/PATH/kizuki/mcp/server.mjs`.
+
 [![CI](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml/badge.svg)](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/kizuki.svg)](https://www.npmjs.com/package/kizuki)
-[![Node](https://img.shields.io/node/v/kizuki.svg)](https://nodejs.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 **An agent-neutral intelligence layer over your work — local-first, and it never

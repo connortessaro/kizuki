@@ -85,6 +85,50 @@ jobs:
         # Not matched by the default node --test glob, so run it explicitly.
         run: npm test --prefix mcp
 
+  analytics:
+    name: analytics (python)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: analytics/uv.lock
+      - name: Install
+        working-directory: analytics
+        run: uv sync --frozen --extra dev
+      - name: Lint
+        working-directory: analytics
+        run: uv run ruff check src tests evals
+      - name: Test
+        working-directory: analytics
+        run: uv run pytest tests -q
+
+  pii:
+    name: no personal identifiers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Needs full history: the check also scans commit author metadata, which a
+      # shallow clone would hide.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-pii.mjs
+
   dist-drift:
     name: dist drift
     runs-on: ubuntu-latest
@@ -127,9 +171,9 @@ jobs:
       - name: No vault data, private docs or config in the npm tarball
         run: |
           npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
-          if grep -qE 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt; then
+          if grep -qE 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|web/|docs/|analytics/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt; then
             echo "::error::private path leaked into the npm tarball"
-            grep -E 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt
+            grep -E 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|web/|docs/|analytics/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt
             exit 1
           fi
           echo "tarball clean"

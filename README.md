@@ -1,7 +1,6 @@
 # Kizuki
 
 [![CI](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml/badge.svg)](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml)
-[![Node](https://img.shields.io/node/v/kizuki.svg)](https://nodejs.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 **Ask questions about your engineering work that need both a number and a

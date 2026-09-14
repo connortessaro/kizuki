@@ -283,7 +283,7 @@ git -C /Users/tessaro/kizuki archive HEAD | (mkdir -p ~/src/kizuki-public && tar
 
 ```bash
 cd ~/src/kizuki-public
-grep -rniE "chewy|tessaro\.c@|northeastern" . && echo "SCRUB REQUIRED" || echo "names clean"
+node scripts/check-pii.mjs   # fails if any personal identifier is tracked
 npx -y gitleaks dir . 2>&1 | tail -5   # expected: no leaks found
 ls people projects teams transcripts days signals insights catches state 2>/dev/null && echo "VAULT DATA PRESENT — STOP" || echo "vault clean"
 ```

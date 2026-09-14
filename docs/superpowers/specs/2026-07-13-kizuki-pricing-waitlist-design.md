@@ -40,7 +40,7 @@ hyphen in implementation: "Pro hosted" rendered as label + sublabel).
 - No API route, no storage, no client component — dashboard's no-writes rule
   and the landing's static-only rule both hold.
 - Until Connor supplies the real form URL, the constant points to
-  `mailto:tessaro.c@northeastern.edu?subject=Kizuki%20Pro%20waitlist` so the
+  `mailto:hello@kizuki.dev?subject=Kizuki%20Pro%20waitlist` so the
   CTA works from day one.
 
 ## Styling
