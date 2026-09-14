@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-07
 **Status:** design approved, pre-implementation
-**Backlog origin:** `docs/ROADMAP.md` unranked appendix — "LLM-written day summary
+**Backlog origin:** `docs/product/ROADMAP.md` unranked appendix — "LLM-written day summary
 (deterministic aggregate is v1; prose summary later)."
 
 ## Goal

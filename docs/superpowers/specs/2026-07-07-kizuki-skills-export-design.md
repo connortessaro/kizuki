@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-07
 **Status:** design approved, pre-implementation
-**Backlog origin:** `docs/BACKLOG.md` — "Distribute rituals as an open Agent Skills
+**Backlog origin:** `docs/product/BACKLOG.md` — "Distribute rituals as an open Agent Skills
 pack (`npx skills add tessaro/kizuki`) — partial: `scripts/install-codex-prompts.mjs`
 for Codex; broader pack TBD."
 

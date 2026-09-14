@@ -15,7 +15,7 @@ required — usually both.
 > which sources are real and which are generated.
 
 The product story — a local-first, agent-neutral intelligence layer over your
-work — is in [`docs/product-readme.md`](docs/product-readme.md). This file is
+work — is in [`docs/product/product-readme.md`](docs/product/product-readme.md). This file is
 about how the data and retrieval system is built.
 
 ---

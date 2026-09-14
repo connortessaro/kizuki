@@ -15,7 +15,7 @@ decide. Do not add autonomous action-taking without revisiting this.
 
 Design + plan: `docs/2026-06-30-kizuki-design.md`,
 `docs/superpowers/plans/2026-06-30-kizuki-v1.md`.
-Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
+Roadmap (v2–v4): `docs/product/ROADMAP.md`. Ideation: `docs/product/BACKLOG.md`.
 
 ## Commands
 

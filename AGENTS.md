@@ -14,7 +14,7 @@ person/project/team, and rewrites a managed analysis section per file.
 It observes and advises only — it never sends messages or takes actions on its
 own. Humans approve every outward action. Do not add autonomous action-taking.
 
-Roadmap (v2–v4): `docs/ROADMAP.md`. Ideation: `docs/BACKLOG.md`.
+Roadmap (v2–v4): `docs/product/ROADMAP.md`. Ideation: `docs/product/BACKLOG.md`.
 
 ## Hard rules
 

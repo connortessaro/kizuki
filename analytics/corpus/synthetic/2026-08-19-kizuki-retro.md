@@ -19,7 +19,7 @@ grounded_paths:
   - package-lock.json
   - .github/ISSUE_TEMPLATE/bug_report.yml
   - .github/workflows/release.yml
-  - docs/launch/2026-07-show-hn.md
+  - docs/product/launch/2026-07-show-hn.md
   - .github/workflows/ci.yml
   - CODE_OF_CONDUCT.md
 ---
@@ -40,7 +40,7 @@ Files that carried the change:
 - `package-lock.json`
 - `.github/ISSUE_TEMPLATE/bug_report.yml`
 - `.github/workflows/release.yml`
-- `docs/launch/2026-07-show-hn.md`
+- `docs/product/launch/2026-07-show-hn.md`
 - `.github/workflows/ci.yml`
 - `CODE_OF_CONDUCT.md`
 

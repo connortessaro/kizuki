@@ -12,7 +12,7 @@
 
 **Tech Stack:** Node built-ins, `@modelcontextprotocol/sdk` + `zod` (only runtime deps), `node:test`, Next.js (web/ only), gh CLI, npm.
 
-**Spec:** `docs/superpowers/specs/2026-07-14-kizuki-release-monetization-design.md` (rev 2). Direction record: `docs/2026-07-14-kizuki-direction-notes.md`.
+**Spec:** `docs/superpowers/specs/2026-07-14-kizuki-release-monetization-design.md` (rev 2). Direction record: `docs/product/2026-07-14-kizuki-direction-notes.md`.
 
 ## Global Constraints
 
@@ -23,7 +23,7 @@
 - Positioning copy: intelligence layer / needs-and-gaps language; never "memory," never monitoring language. Alignment framing only.
 - Editions and prices verbatim from spec: Free OSS / Concierge beta $49–99/mo / Hosted Pro $29/mo or $290/yr / Team $25–40 per active user/mo / Enterprise custom.
 - **Nothing ships publicly before the Phase 0 gate and the Task 5 data audit pass.**
-- Vault dirs (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`, `insights/`, `catches/`, `days/`, `state/`) and `docs/concierge/` never enter the public repo or the npm tarball.
+- Vault dirs (`people/`, `projects/`, `teams/`, `transcripts/`, `alerts/`, `signals/`, `insights/`, `catches/`, `days/`, `state/`) and `docs/product/concierge/` never enter the public repo or the npm tarball.
 - Full suite green (`npm test`) before every commit claim.
 
 ---
@@ -277,7 +277,7 @@ git commit -m "chore: publishable package config with files whitelist"
 git -C /Users/tessaro/kizuki archive HEAD | (mkdir -p ~/src/kizuki-public && tar -x -C ~/src/kizuki-public)
 ```
 
-`git archive` honors tracked files only — gitignored vault data cannot enter. Then delete private-only paths from the export: `rm -rf ~/src/kizuki-public/docs/concierge` (if present) and review `docs/` for anything work-referencing.
+`git archive` honors tracked files only — gitignored vault data cannot enter. Then delete private-only paths from the export: `rm -rf ~/src/kizuki-public/docs/product/concierge` (if present) and review `docs/` for anything work-referencing.
 
 - [ ] **Step 2: Audit the tree (blocker)**
 
@@ -367,7 +367,7 @@ Deploy per existing Vercel flow. Verify live URL renders.
 ### Task 8: Launch posts
 
 **Files:**
-- Create: `docs/launch/2026-07-show-hn.md`, `docs/launch/2026-07-x-thread.md` (private repo only — add `docs/launch/` to the Task 5 private-only deletion list)
+- Create: `docs/product/launch/2026-07-show-hn.md`, `docs/product/launch/2026-07-x-thread.md` (private repo only — add `docs/product/launch/` to the Task 5 private-only deletion list)
 
 - [ ] **Step 1: Draft Show HN** — title: `Show HN: Kizuki – an intelligence layer your AI agent plugs into (local-first, Apache-2.0)`. Body: personal story (built to keep up with org chaos at work), what it answers (the seven questions), the `claude mcp add` one-liner, observe-and-advise trust rules, link repo + demo. No pricing push in the post; concierge mentioned once at the end.
 - [ ] **Step 2: Draft X thread** via the `launch-tweet` skill at execution time.
@@ -379,13 +379,13 @@ Deploy per existing Vercel flow. Verify live URL renders.
 ### Task 9: Lane 2 concierge materials (parallel-safe, private)
 
 **Files:**
-- Create: `docs/concierge/one-pager.md`, `docs/concierge/outreach.md`, `docs/concierge/onboarding-checklist.md`, `docs/concierge/terms.md` (private repo only; excluded in Task 5)
+- Create: `docs/product/concierge/one-pager.md`, `docs/product/concierge/outreach.md`, `docs/product/concierge/onboarding-checklist.md`, `docs/product/concierge/terms.md` (private repo only; excluded in Task 5)
 
 - [ ] **Step 1: One-pager** — offer verbatim from spec (dedicated instance, onboarding, 3–5 sources, configured Founder/Consultant Pack, weekly review, direct support, $49–99/mo founding price); the seven questions as the value section; "what we never do" trust block.
 - [ ] **Step 2: Outreach drafts** — one warm-intro email (network) + one cold variant for founders/consultants; ≤150 words each; single CTA: 20-minute call.
 - [ ] **Step 3: Onboarding checklist** — call agenda, source selection (3–5 from: mailbox, calendar, GitHub, transcripts), install/hosting choice, first-week cadence, catch-recording ritual (`kizuki catch`).
 - [ ] **Step 4: Terms sketch** — month-to-month, cancel anytime, data handling (their infra or dedicated instance; deletion on exit), founding-price lock. Mark "not reviewed by a lawyer."
-- [ ] **Step 5: Commit to private repo** — `git add docs/concierge && git commit -m "docs: concierge founding-cohort materials"`.
+- [ ] **Step 5: Commit to private repo** — `git add docs/product/concierge && git commit -m "docs: concierge founding-cohort materials"`.
 
 ---
 

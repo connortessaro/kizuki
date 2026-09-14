@@ -8,13 +8,12 @@ const out = process.argv[2] ?? join(homedir(), "src", "kizuki-public");
 const repo = new URL("..", import.meta.url).pathname;
 
 const PRIVATE_PATHS = [
-  "scripts/export-public.mjs",
+  // Both of these necessarily contain the identifiers the gate greps for.
+  "scripts/export-public.mjs", "scripts/check-pii.mjs",
   "backlog", ".claude",
-  "docs/concierge", "docs/launch",
-  "docs/2026-07-07-jarvis-presence-ideation.md",
-  "docs/2026-07-14-kizuki-direction-notes.md",
-  "docs/BACKLOG.md", "docs/ROADMAP.md", "docs/future-notes.md",
-  "docs/vision.md", "docs/PRODUCT.md",
+  // Product and go-to-market material lives under docs/product/ so one entry
+  // covers it, including anything added there later.
+  "docs/product",
   "docs/superpowers/specs/2026-07-13-kizuki-pricing-waitlist-design.md",
   "docs/superpowers/specs/2026-07-14-kizuki-release-monetization-design.md",
   "docs/superpowers/specs/2026-07-13-kizuki-landing-page-design.md",
