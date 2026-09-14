@@ -240,10 +240,13 @@ jobs:
           # No model in CI: SQL must come from the committed cache.
           a = pipe.ask("How many commits are recorded in total across all repositories?", allow_model=False)
           print("route:", a.route, "| sql:", (a.sql.executed_sql or "").replace("\n", " ")[:90])
+          assert a.route == "sql", f"expected a SQL route, got {a.route}"
           assert a.sql.cache_hit, "SQL cache missed; the committed cache is stale"
           assert a.sql.row_count > 0, "guarded SQL returned nothing"
 
-          b = pipe.ask("Which components have the most churn?", allow_model=False)
+          # A semantic question: retrieval only, so it needs no cached SQL.
+          b = pipe.ask("What was decided about concentrating work in the core component?", allow_model=False)
+          assert b.route == "semantic", f"expected a retrieval-only route, got {b.route}"
           assert b.citations, "retrieval returned no sources"
           assert all(c.source_path for c in b.citations), "a citation has no source"
           print("citations:", len(b.citations))
