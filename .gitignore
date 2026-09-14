@@ -23,6 +23,7 @@ teams/*
 /insights/
 /catches/
 /events/
+/activity/
 
 # SDD scratch (briefs, reports, review diffs, progress ledger)
 .superpowers/
@@ -40,3 +41,17 @@ web/tsconfig.tsbuildinfo
 .vercel/
 .claude/*.local.md
 .claude/settings.local.json
+
+# Python analytics plane — local artifacts only.
+# analytics/data/ holds warehouse.duckdb, whose contributor_identity table keeps
+# raw author emails. It must never be pushed. The SQL cache is the one exception:
+# it holds only questions and generated SQL, and CI needs it to run the eval
+# suite with no model calls.
+analytics/.venv/
+analytics/data/*
+!analytics/data/sqlcache/
+analytics/.fastembed_cache/
+analytics/**/__pycache__/
+analytics/.pytest_cache/
+analytics/.ruff_cache/
+analytics/.python-version
