@@ -1,0 +1,7 @@
+{
+  "question": "Which five files have been changed in the most commits?",
+  "sql": "SELECT path, COUNT(DISTINCT commit_sha) AS commit_count\nFROM v_commit_file\nGROUP BY path\nORDER BY commit_count DESC\nLIMIT 5",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "cc0b21725ecd782a",
+  "latency_ms": 10851
+}

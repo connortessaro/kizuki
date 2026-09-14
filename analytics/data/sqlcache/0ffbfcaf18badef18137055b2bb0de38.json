@@ -1,0 +1,7 @@
+{
+  "question": "Which month was busiest in kizuki and what was the team discussing then?",
+  "sql": "WITH busiest AS (\n  SELECT year_month\n  FROM v_repo_activity\n  WHERE repo_slug = 'kizuki'\n  ORDER BY commits DESC\n  LIMIT 1\n)\nSELECT\n  c.authored_date,\n  c.conventional_type,\n  c.subject\nFROM v_commit c\nJOIN busiest b ON c.year_month = b.year_month\nWHERE c.repo_slug = 'kizuki'\nORDER BY c.authored_date",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "cc0b21725ecd782a",
+  "latency_ms": 12530
+}

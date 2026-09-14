@@ -1,0 +1,7 @@
+{
+  "question": "How many distinct contributors are there, excluding bots?",
+  "sql": "SELECT COUNT(DISTINCT contributor_id) AS distinct_contributors FROM dim_contributor WHERE is_bot = FALSE",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 8935
+}

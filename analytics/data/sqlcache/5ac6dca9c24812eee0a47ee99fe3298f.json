@@ -1,0 +1,7 @@
+{
+  "question": "How many commits did Alice Nguyen author?",
+  "sql": "SELECT COUNT(*) AS commit_count FROM v_commit WHERE contributor = 'Alice Nguyen'",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "72a9704a6f6684ed",
+  "latency_ms": 6102
+}

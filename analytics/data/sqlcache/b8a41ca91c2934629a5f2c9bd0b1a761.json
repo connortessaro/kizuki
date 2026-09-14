@@ -1,0 +1,7 @@
+{
+  "question": "Why did activity in the harbor repository increase in April 2026?",
+  "sql": "SELECT contributor, commits, insertions, deletions\nFROM v_contributor_activity\nWHERE repo_slug = 'harbor' AND year_month = '2026-04'\nORDER BY commits DESC",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "cc0b21725ecd782a",
+  "latency_ms": 15853
+}
