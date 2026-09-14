@@ -116,6 +116,9 @@ def search(self, vector, k=8, **filters):
         cur.execute("SELECT ... ORDER BY embedding <=> %s LIMIT %s", [vector, k])
 ```
 
+(The driver has since changed from psycopg to pg8000 — see the note at the end of
+this section — but the bug and the fix are the same either way.)
+
 ### How it was found
 
 Not by profiling the database. It surfaced while measuring pgvector's recall
@@ -136,8 +139,8 @@ One long-lived connection per store, reopened only if it has been closed.
 
 ```python
 def _connect(self):
-    if self._con is None or self._con.closed:
-        con = psycopg.connect(self.dsn, autocommit=True)
+    if self._con is None:
+        con = Connection(user=..., host=..., port=..., database=...)
         register_vector(con)
         object.__setattr__(self, "_con", con)
     return self._con
@@ -149,10 +152,29 @@ Median of 6 query embeddings, after two warmup queries:
 
 | Strategy | p50 latency |
 |---|---:|
-| New connection per call | 5.766 ms |
-| Reused connection | **0.800 ms** |
+| New connection per call | 24.391 ms |
+| Reused connection | **2.326 ms** |
 
-**7.2× faster**, and the remaining 0.8 ms is actual query time.
+**10.5× faster**, and the remaining 2.3 ms is actual query time.
+
+### A driver change, and why
+
+The store originally used `psycopg`. It is **LGPL-3.0**, and this repository's
+`dependency-review` gate denies LGPL for an Apache-2.0 project — CI caught it on
+the pull request that introduced it.
+
+The tempting fix is to add an exception: nothing here redistributes psycopg, and
+LGPL's copyleft attaches to modifications of the library rather than to code that
+imports it. But a deny-list with a carve-out for the one thing that tripped it is
+not a deny-list. pgvector ships an adapter for `pg8000`, which is BSD-3-Clause,
+so the swap keeps the gate strict.
+
+It costs something, and the cost is worth stating: pg8000 is pure Python, so it
+is roughly 1.7× slower per query than the C-backed driver (2.33 ms against a
+previously measured 1.38 ms on the same corpus). At 153 chunks behind an LLM call
+that takes seconds, that is not a tradeoff worth arguing about. At a corpus where
+vector latency mattered, it would be — and the number above is what you would
+re-measure to decide.
 
 ---
 
@@ -163,11 +185,11 @@ uncomfortable answer.
 
 | Backend | Recall@10 vs exact | p50 latency |
 |---|---:|---:|
-| pgvector, HNSW (`m=16`, `ef_construction=64`) | 1.000 | 0.800 ms |
-| Exact cosine scan in numpy | 1.000 by definition | **0.033 ms** |
+| pgvector, HNSW (`m=16`, `ef_construction=64`) | 1.000 | 2.326 ms |
+| Exact cosine scan in numpy | 1.000 by definition | **0.130 ms** |
 
 At 153 chunks the entire corpus is a 153×384 float32 matrix — **230 KB**. One
-matmul over it is ~25× faster than an index lookup, and returns exactly the same
+matmul over it is ~18× faster than an index lookup, and returns exactly the same
 ten documents.
 
 So the ANN index currently costs latency and buys nothing. It is kept anyway,
@@ -192,7 +214,8 @@ check.
 ## Conditions
 
 All measurements on an 8 GB M1 MacBook Air (`MacBookAir10,1`), macOS 26.6,
-Node 26.0.0, Python 3.13.5, DuckDB 1.5.5, PostgreSQL 18.6 with pgvector 0.8.6.
+Node 26.0.0, Python 3.13.5, DuckDB 1.5.5, PostgreSQL 18.6 with pgvector 0.8.6,
+connected via pg8000 1.31.5.
 
 The machine runs under real memory pressure — around 0.3 GiB free with roughly
 1.2 GiB in the compressor during these runs — so absolute latencies are higher

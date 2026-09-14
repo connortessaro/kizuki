@@ -123,14 +123,15 @@ into 8 contributors, with a named rule and a confidence for every merge.
 ## Retrieval
 
 `bge-small-en-v1.5`, 384 dimensions, 153 chunks. Stored in Postgres with an HNSW
-index, and mirrored into an exact numpy scan so the index stays accountable.
+index via pg8000, and mirrored into an exact numpy scan so the index stays
+accountable.
 
 Measured, both backends, same vectors:
 
 | Backend | Recall@10 vs exact | p50 |
 |---|---:|---:|
-| pgvector HNSW | 1.000 | 1.38 ms |
-| Exact numpy scan | 1.000 by definition | 0.038 ms |
+| pgvector HNSW | 1.000 | 2.33 ms |
+| Exact numpy scan | 1.000 by definition | 0.13 ms |
 
 At this corpus size the ANN index costs latency and buys nothing. That is in the
 README rather than hidden because it is the honest result, and the eval suite
@@ -225,6 +226,7 @@ definition.
 |---|---|
 | DuckDB, not ClickHouse | In-process, zero daemon, 0.39 s rebuild. ClickHouse in server mode on 8 GB would cost more than the query workload justifies. The driver seam is named. |
 | Two stores (DuckDB + pgvector) | Columnar engine for analytics, pgvector for ANN. At 153 chunks either alone would do — this is a deliberate choice to exercise both, and the measured cost is published above rather than glossed. |
+| pg8000, not psycopg | psycopg is LGPL-3.0 and the dependency-review gate denies LGPL for an Apache-2.0 project. Adding a carve-out for the one thing that tripped the gate would defeat it; pg8000 is BSD-3-Clause and pgvector supports it. Costs ~1.7× per query, which is noise behind an LLM call. |
 | Dagster, not cron | Kizuki already had launchd and a watcher. Dagster adds the asset graph, partition grid, retry policy and asset checks. It runs CLI-only; the webserver is for screenshots. |
 | Rule-based router, not an LLM | Routing is a 3-class problem with strong lexical signals. Deterministic means eval numbers measure retrieval and SQL rather than drifting with a classifier. Its accuracy is measured like everything else. |
 | Local embeddings | No API key existed. The upside is reproducible evals. |

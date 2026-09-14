@@ -14,7 +14,9 @@ import hashlib
 import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from getpass import getuser
 from typing import Protocol
+from urllib.parse import urlparse
 
 import numpy as np
 
@@ -162,6 +164,15 @@ class VectorStore(Protocol):
 
 @dataclass
 class PgVectorStore:
+    """Postgres-backed vector store.
+
+    Uses pg8000 rather than psycopg. psycopg is LGPL-3.0, which this repository's
+    dependency-review gate denies for an Apache-2.0 project; pg8000 is
+    BSD-3-Clause and pgvector ships an adapter for it. It is pure Python, so it
+    is slower per round trip than a C driver — irrelevant at this corpus size,
+    and measured in docs/performance.md rather than assumed.
+    """
+
     dsn: str
     table: str = "kz.doc_chunk"
     _con: object | None = field(default=None, repr=False, compare=False)
@@ -169,98 +180,99 @@ class PgVectorStore:
     def _connect(self):
         """One long-lived connection, reused.
 
-        Opening a fresh connection per search dominated query time by two orders
-        of magnitude and made the index look slow when the handshake was the
-        actual cost.
+        Opening a fresh connection per search dominated query time by an order of
+        magnitude and made the index look slow when the handshake was the cost.
         """
-        import psycopg
-        from pgvector.psycopg import register_vector
+        from pg8000.native import Connection
+        from pgvector.pg8000 import register_vector
 
-        if self._con is None or self._con.closed:
-            con = psycopg.connect(self.dsn, autocommit=True)
+        if self._con is None:
+            parts = urlparse(self.dsn)
+            con = Connection(
+                user=parts.username or getuser(),
+                host=parts.hostname or "127.0.0.1",
+                port=parts.port or 5432,
+                database=(parts.path or "/").lstrip("/") or "postgres",
+                password=parts.password,
+            )
             register_vector(con)
             object.__setattr__(self, "_con", con)
         return self._con
 
     def close(self) -> None:
-        if self._con is not None and not self._con.closed:
-            self._con.close()
+        if self._con is not None:
+            try:
+                self._con.close()
+            finally:
+                object.__setattr__(self, "_con", None)
 
     def upsert(self, chunks: Sequence[Chunk], vectors: np.ndarray, model_id: str) -> int:
         if len(chunks) != len(vectors):
             raise ValueError("chunk count and vector count differ")
-        rows = [
-            (
-                c.chunk_id, c.doc_id, c.doc_kind, c.source_path, c.ordinal, c.title, c.body,
-                c.is_synthetic, c.repo_slug, c.entity_type, c.entity_name, c.occurred_on,
-                c.content_hash, model_id, v,
-            )
-            for c, v in zip(chunks, vectors)
-        ]
         con = self._connect()
-        with con.cursor() as cur:
-            cur.executemany(
-                f"""
-                INSERT INTO {self.table}
-                    (chunk_id, doc_id, doc_kind, source_path, ordinal, title, body,
-                     is_synthetic, repo_slug, entity_type, entity_name, occurred_on,
-                     content_hash, model_id, embedding)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (doc_id, ordinal) DO UPDATE SET
-                    chunk_id = EXCLUDED.chunk_id, body = EXCLUDED.body,
-                    title = EXCLUDED.title, embedding = EXCLUDED.embedding,
-                    content_hash = EXCLUDED.content_hash, model_id = EXCLUDED.model_id,
-                    embedded_at = now()
-                WHERE {self.table}.content_hash IS DISTINCT FROM EXCLUDED.content_hash
-                   OR {self.table}.model_id IS DISTINCT FROM EXCLUDED.model_id
-                """,
-                rows,
+        sql = f"""
+            INSERT INTO {self.table}
+                (chunk_id, doc_id, doc_kind, source_path, ordinal, title, body,
+                 is_synthetic, repo_slug, entity_type, entity_name, occurred_on,
+                 content_hash, model_id, embedding)
+            VALUES (:chunk_id, :doc_id, :doc_kind, :source_path, :ordinal, :title, :body,
+                    :is_synthetic, :repo_slug, :entity_type, :entity_name,
+                    CAST(:occurred_on AS DATE), :content_hash, :model_id, :embedding)
+            ON CONFLICT (doc_id, ordinal) DO UPDATE SET
+                chunk_id = EXCLUDED.chunk_id, body = EXCLUDED.body,
+                title = EXCLUDED.title, embedding = EXCLUDED.embedding,
+                content_hash = EXCLUDED.content_hash, model_id = EXCLUDED.model_id,
+                embedded_at = now()
+            WHERE {self.table}.content_hash IS DISTINCT FROM EXCLUDED.content_hash
+               OR {self.table}.model_id IS DISTINCT FROM EXCLUDED.model_id
+        """
+        for chunk, vector in zip(chunks, vectors):
+            con.run(
+                sql,
+                chunk_id=chunk.chunk_id, doc_id=chunk.doc_id, doc_kind=chunk.doc_kind,
+                source_path=chunk.source_path, ordinal=chunk.ordinal, title=chunk.title,
+                body=chunk.body, is_synthetic=chunk.is_synthetic, repo_slug=chunk.repo_slug,
+                entity_type=chunk.entity_type, entity_name=chunk.entity_name,
+                occurred_on=chunk.occurred_on, content_hash=chunk.content_hash,
+                model_id=model_id, embedding=vector,
             )
-        return len(rows)
+        return len(chunks)
 
     def search(self, vector: np.ndarray, k: int = 8, **filters) -> list[Hit]:
-        where, params = ["TRUE"], []
-        if (repo := filters.get("repo_slug")) is not None:
-            where.append("repo_slug = %s")
-            params.append(repo)
-        if (kinds := filters.get("doc_kinds")) is not None:
-            where.append("doc_kind = ANY(%s)")
-            params.append(list(kinds))
         con = self._connect()
-        with con.cursor() as cur:
-            cur.execute(
-                f"""
-                SELECT chunk_id, doc_id, doc_kind, source_path, title, body,
-                       is_synthetic, repo_slug, occurred_on,
-                       1 - (embedding <=> %s) AS score
-                FROM {self.table}
-                WHERE {' AND '.join(where)}
-                ORDER BY embedding <=> %s
-                LIMIT %s
-                """,
-                [vector, *params, vector, k],
-            )
-            return [_hit(r) for r in cur.fetchall()]
+        where, params = ["TRUE"], {"q": vector, "k": k}
+        if (repo := filters.get("repo_slug")) is not None:
+            where.append("repo_slug = :repo")
+            params["repo"] = repo
+        if (kinds := filters.get("doc_kinds")) is not None:
+            where.append("doc_kind = ANY(:kinds)")
+            params["kinds"] = list(kinds)
+        rows = con.run(
+            f"""
+            SELECT chunk_id, doc_id, doc_kind, source_path, title, body,
+                   is_synthetic, repo_slug, occurred_on,
+                   1 - (embedding <=> :q) AS score
+            FROM {self.table}
+            WHERE {' AND '.join(where)}
+            ORDER BY embedding <=> :q
+            LIMIT :k
+            """,
+            **params,
+        )
+        return [_hit(r) for r in rows]
 
     def count(self) -> int:
-        con = self._connect()
-        with con.cursor() as cur:
-            cur.execute(f"SELECT count(*) FROM {self.table}")
-            return cur.fetchone()[0]
+        return self._connect().run(f"SELECT count(*) FROM {self.table}")[0][0]
 
     def load_all(self) -> tuple[list[Hit], np.ndarray]:
-        con = self._connect()
-        with con.cursor() as cur:
-            cur.execute(
-                f"""
-                SELECT chunk_id, doc_id, doc_kind, source_path, title, body,
-                       is_synthetic, repo_slug, occurred_on, embedding
-                FROM {self.table} ORDER BY chunk_id
-                """
-            )
-            rows = cur.fetchall()
+        rows = self._connect().run(
+            f"""
+            SELECT chunk_id, doc_id, doc_kind, source_path, title, body,
+                   is_synthetic, repo_slug, occurred_on, embedding
+            FROM {self.table} ORDER BY chunk_id
+            """
+        )
         hits = [_hit((*r[:9], 0.0)) for r in rows]
-        # pgvector returns its own Vector wrapper; to_numpy() unwraps it.
         vectors = np.asarray(
             [r[9].to_numpy() if hasattr(r[9], "to_numpy") else r[9] for r in rows],
             dtype=np.float32,
