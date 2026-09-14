@@ -1,3 +1,7 @@
+-- Self-contained: creating the extension here means this file can be applied
+-- to a bare database (a CI service container) without a manual step first.
+CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE SCHEMA IF NOT EXISTS kz;
 
 CREATE TABLE IF NOT EXISTS kz.doc_chunk (
