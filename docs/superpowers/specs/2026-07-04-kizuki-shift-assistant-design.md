@@ -1,7 +1,7 @@
 # Kizuki shift assistant — design (v0 + v1)
 
 Date: 2026-07-04
-Status: approved scope — v0 + v1 only. Everything else lives in `docs/BACKLOG.md`
+Status: approved scope — v0 + v1 only. Everything else lives in `docs/product/BACKLOG.md`
 and is gated on the milestone above it.
 
 ## One-liner (the vision anchor)
@@ -102,7 +102,7 @@ pull-style questions.
 - launchd wiring gets a `--dry-run`-style seam (print plist + commands) so
   tests never touch real launchctl.
 
-## Out of scope (see docs/BACKLOG.md)
+## Out of scope (see docs/product/BACKLOG.md)
 
 Alerts + notifications, dashboard, LLM day-summary, approve-queue, website /
 public listing, multi-user, TEE/confidential mode.

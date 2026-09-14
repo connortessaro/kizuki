@@ -1,0 +1,7 @@
+{
+  "question": "Which components have the most churn?",
+  "sql": "SELECT component, SUM(churn) AS total_churn\nFROM v_component_churn\nGROUP BY component\nORDER BY total_churn DESC",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 10383
+}

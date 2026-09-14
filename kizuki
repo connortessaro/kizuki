@@ -20,6 +20,8 @@ import { runGateCommand } from "./lib/gateCommands.mjs";
 import { runSkillsCommand } from "./lib/skills.mjs";
 import { runCaptureCommand } from "./lib/captureCommands.mjs";
 import { runDaemonCommand } from "./lib/daemonCommands.mjs";
+import { runIngestCommand, formatIngestResults } from "./lib/gitIngest.mjs";
+import { runAskCommand, qualityReport, formatQuality } from "./lib/askCommands.mjs";
 
 const repoDir = dirname(fileURLToPath(import.meta.url));
 const vaultDir = process.env.KIZUKI_VAULT ? resolve(process.env.KIZUKI_VAULT) : repoDir;
@@ -31,6 +33,9 @@ const USAGE = `usage: kizuki <command>
   kizuki sync [person] [--project p] [--team t] [--source a,b] [--dry-run]
   kizuki sync --loop                               background mode (no-op unless a shift is on)
   kizuki watch                                     watch transcripts/ and sync on new files
+  kizuki ingest git <repo>... [--ref-scope all|default]   record commit activity into activity/events.jsonl
+  kizuki ask "<question>" [--k n] [--json]         hybrid analytical + retrieval answer
+  kizuki quality [--json]                          data-quality issues in the warehouse
   kizuki mcp                                       start the MCP server (stdio)
   kizuki start                                     begin shift: sync + brief + 30-min background sync
   kizuki stop                                      end shift: final sync + day summary + remove background sync
@@ -157,6 +162,13 @@ try {
     console.log(await runSkillsCommand(vaultDir, rest));
   } else if (command === "daemon") {
     console.log(await runDaemonCommand(vaultDir, repoDir, rest));
+  } else if (command === "quality") {
+    const report = await qualityReport(vaultDir);
+    console.log(rest.includes("--json") ? JSON.stringify(report, null, 2) : formatQuality(report));
+  } else if (command === "ask") {
+    console.log(await runAskCommand(rest, vaultDir, { json: rest.includes("--json") }));
+  } else if (command === "ingest") {
+    console.log(formatIngestResults(await runIngestCommand(rest, vaultDir)));
   } else if (command === "capture") {
     console.log(await runCaptureCommand(vaultDir, rest));
   } else if (command === "check") {

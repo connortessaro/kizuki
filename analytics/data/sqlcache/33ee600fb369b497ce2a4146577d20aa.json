@@ -1,0 +1,7 @@
+{
+  "question": "How many repositories have recorded commit activity?",
+  "sql": "SELECT COUNT(DISTINCT repo_slug) AS repo_count FROM v_repo_activity",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 11006
+}

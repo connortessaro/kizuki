@@ -711,7 +711,7 @@ git commit -m "docs: wire daemon setup and diagnostics"
 
 **Files:**
 - Create: `server/local.integration.test.mjs`
-- Modify: `docs/ROADMAP.md`
+- Modify: `docs/product/ROADMAP.md`
 
 **Interfaces:**
 - Consumes: complete foundation slice.
@@ -747,7 +747,7 @@ Expected: PASS. If it fails, change only the smallest module whose contract does
 
 - [ ] **Step 3: Update roadmap status without rewriting product history**
 
-Add a new platform-foundation section to `docs/ROADMAP.md`. Record the authenticated local daemon, canonical capture events, API clients, and writable capture page as shipped only after the commands below pass. Keep hosted PostgreSQL, OAuth connectors, Pack manifests, teams, billing, and enterprise deployment listed as subsequent plans.
+Add a new platform-foundation section to `docs/product/ROADMAP.md`. Record the authenticated local daemon, canonical capture events, API clients, and writable capture page as shipped only after the commands below pass. Keep hosted PostgreSQL, OAuth connectors, Pack manifests, teams, billing, and enterprise deployment listed as subsequent plans.
 
 - [ ] **Step 4: Run final verification**
 
@@ -766,7 +766,7 @@ Expected: every command exits `0`. Verify `git status --short` contains no gener
 - [ ] **Step 5: Commit**
 
 ```bash
-git add server/local.integration.test.mjs docs/ROADMAP.md
+git add server/local.integration.test.mjs docs/product/ROADMAP.md
 git commit -m "test: prove local platform capture flow"
 ```
 
