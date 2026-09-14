@@ -1,0 +1,7 @@
+{
+  "question": "What changed after the decision to freeze an interface, and how much churn followed?",
+  "sql": "WITH freeze AS (\n  SELECT MIN(authored_date) AS freeze_date\n  FROM v_commit\n  WHERE subject ILIKE '%freeze%' AND subject ILIKE '%interface%'\n)\nSELECT\n  c.commit_sha,\n  c.authored_date,\n  c.contributor,\n  c.subject,\n  c.touched_components,\n  (c.insertions + c.deletions) AS churn\nFROM v_commit c, freeze f\nWHERE f.freeze_date IS NOT NULL AND c.authored_date > f.freeze_date\nORDER BY c.authored_date",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 28297
+}

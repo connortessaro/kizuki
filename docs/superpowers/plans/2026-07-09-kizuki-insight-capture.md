@@ -636,7 +636,7 @@ git commit -m "feat: add insight capture MCP tools"
 - Modify: `lib/doctor.test.mjs`
 - Modify: `lib/init.test.mjs`
 - Modify: `README.md`
-- Modify: `docs/ROADMAP.md`
+- Modify: `docs/product/ROADMAP.md`
 - Modify: `AGENTS.md`
 - Modify: `CLAUDE.md`
 
@@ -725,7 +725,7 @@ Expected: all commands exit 0. No root runtime dependency change.
 - [ ] **Step 7: Commit setup/docs**
 
 ~~~bash
-git add .gitignore lib/doctor.mjs lib/doctor.test.mjs lib/init.test.mjs README.md docs/ROADMAP.md AGENTS.md CLAUDE.md
+git add .gitignore lib/doctor.mjs lib/doctor.test.mjs lib/init.test.mjs README.md docs/product/ROADMAP.md AGENTS.md CLAUDE.md
 git commit -m "docs: add insight capture setup and guidance"
 ~~~
 

@@ -1,0 +1,7 @@
+{
+  "question": "Which repository had the biggest jump in activity, and what was discussed at the time?",
+  "sql": "WITH monthly AS (\n  SELECT repo_slug, year_month, commits,\n         commits - LAG(commits) OVER (PARTITION BY repo_slug ORDER BY year_month) AS commit_jump\n  FROM v_repo_activity\n),\ntop_jump AS (\n  SELECT repo_slug, year_month, commit_jump\n  FROM monthly\n  WHERE commit_jump IS NOT NULL\n  ORDER BY commit_jump DESC\n  LIMIT 1\n)\nSELECT\n  t.repo_slug,\n  t.year_month,\n  t.commit_jump,\n  string_agg(DISTINCT c.subject, ' | ') AS commit_subjects\nFROM top_jump t\nJOIN v_commit c\n  ON c.repo_slug = t.repo_slug\n AND c.year_month = t.year_month\nGROUP BY t.repo_slug, t.year_month, t.commit_jump",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 17762
+}

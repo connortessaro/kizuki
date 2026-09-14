@@ -1,0 +1,7 @@
+{
+  "question": "Which repository had the most commits in July 2026?",
+  "sql": "SELECT repo_slug, commits AS commit_count\nFROM v_repo_activity\nWHERE year_month = '2026-07'\nORDER BY commits DESC\nLIMIT 1",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 11874
+}

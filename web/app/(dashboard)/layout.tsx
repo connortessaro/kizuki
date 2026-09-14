@@ -20,6 +20,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <Link href="/teams">Teams</Link>
         <Link href="/followups">Follow-ups</Link>
         <Link href="/days">Days</Link>
+        <Link href="/ask">Ask</Link>
+        <Link href="/quality">Quality</Link>
         <Link href="/capture">Capture</Link>
         <form action="/search">
           <input name="q" placeholder="Search vault…" aria-label="Search vault" />

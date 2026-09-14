@@ -1,0 +1,7 @@
+{
+  "question": "Compare commit volume in ringi across months and explain the reasoning recorded at the peak.",
+  "sql": "WITH monthly AS (\n  SELECT year_month, commits AS commit_count\n  FROM v_repo_activity\n  WHERE repo_slug = 'ringi'\n),\npeak_month AS (\n  SELECT year_month\n  FROM monthly\n  ORDER BY commit_count DESC\n  LIMIT 1\n)\nSELECT\n  m.year_month,\n  m.commit_count,\n  CASE WHEN m.year_month = p.year_month THEN string_agg(c.subject, ' | ') END AS peak_month_reasoning\nFROM monthly m\nCROSS JOIN peak_month p\nLEFT JOIN v_commit c\n  ON c.repo_slug = 'ringi'\n  AND c.year_month = m.year_month\n  AND m.year_month = p.year_month\nGROUP BY m.year_month, m.commit_count, p.year_month\nORDER BY m.year_month",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 26855
+}

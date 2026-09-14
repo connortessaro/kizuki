@@ -1,0 +1,7 @@
+{
+  "question": "How many commits did the harbor repository have in April 2026?",
+  "sql": "SELECT COUNT(*) AS commit_count FROM v_commit WHERE repo_slug = 'harbor' AND year_month = '2026-04'",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 14159
+}

@@ -1,0 +1,7 @@
+{
+  "question": "How many commits touched the core component and why was that decided?",
+  "sql": "SELECT COUNT(*) AS commit_count\nFROM v_commit\nWHERE list_contains(touched_components, 'core')",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 12735
+}

@@ -5,13 +5,13 @@
 > **Un-superseded August 17, 2026:** the closed-source pivot was reversed. Kizuki ships Apache-2.0, so the July 16 cancellation above no longer applies. Treat the content below as live again, but re-verify specifics (dates, prices, the fresh-cut repo strategy) before acting — the release now keeps its rewritten git history rather than starting from a clean cut.
 
 Date: 2026-07-14 (rev 2, reconciled with
-[`docs/2026-07-14-kizuki-direction-notes.md`](../../2026-07-14-kizuki-direction-notes.md)).
+[`docs/product/2026-07-14-kizuki-direction-notes.md`](../../2026-07-14-kizuki-direction-notes.md)).
 Status: approved by operator (Connor).
 
 ## Decision record
 
 Operator decision on 2026-07-14: pursue public release and revenue now. The
-v1–v4 evidence gates in `docs/ROADMAP.md` no longer block release work; gate
+v1–v4 evidence gates in `docs/product/ROADMAP.md` no longer block release work; gate
 instrumentation (`kizuki catch` / `kizuki gate`) keeps collecting evidence as
 the value metric ("true catches, acted signals, resolved conflicts"), per the
 direction notes.

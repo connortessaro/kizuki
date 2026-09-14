@@ -1,0 +1,7 @@
+{
+  "question": "Which month was busiest in kizuki and what was the team discussing then?",
+  "sql": "WITH busiest_month AS (\n  SELECT year_month\n  FROM v_repo_activity\n  WHERE repo_slug = 'kizuki'\n  ORDER BY commits DESC\n  LIMIT 1\n)\nSELECT\n  c.year_month AS busiest_month,\n  c.conventional_type AS commit_type,\n  COUNT(*) AS commit_count,\n  STRING_AGG(DISTINCT c.subject, ' | ') AS sample_subjects\nFROM v_commit c\nJOIN busiest_month b ON c.year_month = b.year_month\nWHERE c.repo_slug = 'kizuki'\nGROUP BY c.year_month, c.conventional_type\nORDER BY commit_count DESC",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 19960
+}

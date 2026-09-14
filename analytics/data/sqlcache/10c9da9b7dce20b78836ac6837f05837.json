@@ -1,0 +1,7 @@
+{
+  "question": "Which month had the highest commit count across all repositories?",
+  "sql": "SELECT year_month, SUM(commits) AS total_commits FROM v_repo_activity GROUP BY year_month ORDER BY total_commits DESC LIMIT 1",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 13350
+}

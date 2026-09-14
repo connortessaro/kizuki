@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-07
 **Status:** shipped 2026-07-07 (`lib/check.mjs`, `buildCheckPrompt`/`parseCheckPayload`, `kizuki check` subcommand; 12 tests)
-**Origin:** `docs/2026-07-07-jarvis-presence-ideation.md` — the first buildable
+**Origin:** `docs/product/2026-07-07-jarvis-presence-ideation.md` — the first buildable
 slice of the "pre-send / pre-write intercept," chosen because it doubles as
 validation of the core wedge.
 

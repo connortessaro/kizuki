@@ -1,0 +1,7 @@
+{
+  "question": "How many contributors worked on 4x-war and why did the work concentrate where it did?",
+  "sql": "WITH contributors AS (\n  SELECT COUNT(DISTINCT contributor) AS contributor_count\n  FROM v_commit_file\n  WHERE repo_slug = '4x-war'\n),\ncomponent_stats AS (\n  SELECT component,\n         COUNT(*) AS files_touched,\n         COUNT(DISTINCT contributor) AS contributors_in_component,\n         SUM(insertions + deletions) AS churn\n  FROM v_commit_file\n  WHERE repo_slug = '4x-war'\n  GROUP BY component\n)\nSELECT\n  component_stats.component,\n  component_stats.files_touched,\n  component_stats.contributors_in_component,\n  component_stats.churn,\n  contributors.contributor_count AS total_contributors\nFROM component_stats\nCROSS JOIN contributors\nORDER BY component_stats.churn DESC",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 18647
+}

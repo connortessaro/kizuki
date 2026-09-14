@@ -1,0 +1,7 @@
+{
+  "question": "Which repository has the most commits overall?",
+  "sql": "SELECT repo_slug, SUM(commits) AS total_commits\nFROM v_repo_activity\nGROUP BY repo_slug\nORDER BY total_commits DESC\nLIMIT 1",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 12187
+}

@@ -8,11 +8,11 @@
 Add a pricing section to the kizuki.dev landing that names the freemium shape
 and captures hosted-product demand — without building billing, accounts, or
 hosting. This is the smallest willingness-to-pay test consistent with
-`docs/future-notes.md`'s validation gate.
+`docs/product/future-notes.md`'s validation gate.
 
 Strategy note (July 13, 2026): Connor dropped the TEE/confidential-deployment
-thesis — no moat there for Kizuki. `docs/vision.md` ("why us") and
-`docs/future-notes.md` (monetization thesis) still assume it; both get a
+thesis — no moat there for Kizuki. `docs/product/vision.md` ("why us") and
+`docs/product/future-notes.md` (monetization thesis) still assume it; both get a
 revision pass as a docs follow-up, out of scope here.
 
 ## Page change
@@ -40,7 +40,7 @@ hyphen in implementation: "Pro hosted" rendered as label + sublabel).
 - No API route, no storage, no client component — dashboard's no-writes rule
   and the landing's static-only rule both hold.
 - Until Connor supplies the real form URL, the constant points to
-  `mailto:tessaro.c@northeastern.edu?subject=Kizuki%20Pro%20waitlist` so the
+  `mailto:hello@kizuki.dev?subject=Kizuki%20Pro%20waitlist` so the
   CTA works from day one.
 
 ## Styling
