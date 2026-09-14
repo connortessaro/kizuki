@@ -33,7 +33,7 @@
 At the top of `web/app/(landing)/landing/page.tsx` (module scope, after imports):
 
 ```tsx
-const WAITLIST_URL = "mailto:tessaro.c@northeastern.edu?subject=Kizuki%20Pro%20waitlist";
+const WAITLIST_URL = "mailto:hello@kizuki.dev?subject=Kizuki%20Pro%20waitlist";
 ```
 
 Insert between the WHAT IT REFUSES section and the RUN IT section:

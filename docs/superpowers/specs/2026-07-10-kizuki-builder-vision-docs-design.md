@@ -7,8 +7,8 @@ Status: approved design
 
 Give builders two short documents that answer different questions:
 
-- `docs/PRODUCT.md`: What are we building?
-- `docs/MANIFESTO.md`: Why should it exist?
+- `docs/product/PRODUCT.md`: What are we building?
+- `docs/product/MANIFESTO.md`: Why should it exist?
 
 Both describe Kizuki as a personal intelligence layer shared by the user's AI
 agents. Team and enterprise products remain possible later extensions, not the
@@ -16,7 +16,7 @@ center of these documents.
 
 ## File boundaries
 
-### `docs/PRODUCT.md`
+### `docs/product/PRODUCT.md`
 
 Builder operating model. A new contributor should understand Kizuki's end state
 without reading implementation specs or the roadmap.
@@ -37,7 +37,7 @@ The document describes the target product, not a release checklist. It may name
 current foundations where that helps explain the model, but it does not catalog
 commands or implementation files.
 
-### `docs/MANIFESTO.md`
+### `docs/product/MANIFESTO.md`
 
 Short statement of conviction. It should explain why agent-heavy work creates a
 continuity problem and why retrieval alone does not solve it.
@@ -100,15 +100,15 @@ The final prose can tighten these sketches, but it must preserve their meaning.
 
 ## Relationship to existing docs
 
-- `docs/vision.md` stays the longer strategic thesis: alignment wedge, personal
+- `docs/product/vision.md` stays the longer strategic thesis: alignment wedge, personal
   Jarvis arc, agent-age risk, business shape, and validation gates.
-- `docs/PRODUCT.md` becomes the canonical builder north star.
-- `docs/MANIFESTO.md` carries the product belief in a shorter voice.
-- `docs/ROADMAP.md` remains build order.
+- `docs/product/PRODUCT.md` becomes the canonical builder north star.
+- `docs/product/MANIFESTO.md` carries the product belief in a shorter voice.
+- `docs/product/ROADMAP.md` remains build order.
 - Feature specs remain implementation contracts.
 
 Add a short navigation note to `README.md` and cross-links near the top of
-`docs/vision.md`. Do not rewrite the existing strategy or roadmap in this task.
+`docs/product/vision.md`. Do not rewrite the existing strategy or roadmap in this task.
 
 ## Writing rules
 
@@ -139,6 +139,6 @@ The two files should complement each other without repeating whole sections.
 
 - No code, CLI, MCP, dashboard, or schema changes.
 - No new team or enterprise commitment.
-- No replacement of `docs/vision.md`.
+- No replacement of `docs/product/vision.md`.
 - No passive session ingestion design.
 - No implementation plan beyond these documentation edits.

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-07
 **Status:** design approved, pre-implementation
-**Backlog origin:** `docs/BACKLOG.md` — "Vercel eve as hosted runtime for v4 …
+**Backlog origin:** `docs/product/BACKLOG.md` — "Vercel eve as hosted runtime for v4 …
 blocked on data-safety story." Scope reduced to a **public demo on synthetic
 data**, which removes the data-safety blocker entirely.
 
@@ -73,6 +73,6 @@ Set `KIZUKI_DEMO=1` in the project env; deploy; capture the URL.
 
 - No hosted real vault, no multi-user runtime, no auth/OAuth/Slack (the full
   "eve" vision stays post-v4, gated on the data-safety story in
-  `docs/future-notes.md`).
+  `docs/product/future-notes.md`).
 - No writes (dashboard stays read-only — observe-and-advise holds).
 - No new npm dependencies.

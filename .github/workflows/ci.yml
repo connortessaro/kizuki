@@ -85,6 +85,175 @@ jobs:
         # Not matched by the default node --test glob, so run it explicitly.
         run: npm test --prefix mcp
 
+  analytics:
+    name: analytics (python)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: analytics/uv.lock
+      - name: Install
+        working-directory: analytics
+        run: uv sync --frozen --extra dev
+      - name: Lint
+        working-directory: analytics
+        run: uv run ruff check src tests evals
+      - name: Test
+        working-directory: analytics
+        run: uv run pytest tests -q
+
+  pii:
+    name: no personal identifiers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Needs full history: the check also scans commit author metadata, which a
+      # shallow clone would hide.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-pii.mjs
+
+  pipeline:
+    name: pipeline (integration)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: pgvector/pgvector@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a # pg18
+        env:
+          POSTGRES_PASSWORD: kizuki
+          POSTGRES_DB: kizuki
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      KIZUKI_PG_DSN: postgresql://postgres:kizuki@127.0.0.1:5432/kizuki
+      OMP_NUM_THREADS: "2"
+    steps:
+      # The connector reads real commit history, so it needs more than a shallow
+      # clone to have anything to ingest.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: analytics/uv.lock
+      - name: Cache the embedding model
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: analytics/.fastembed_cache
+          key: fastembed-bge-small-en-v1.5
+      - run: npm ci
+      - name: Install analytics
+        working-directory: analytics
+        run: uv sync --frozen --extra dev
+      - name: Ingest this repository's own history
+        run: |
+          ./kizuki ingest git .
+          test -s activity/events.jsonl
+      - name: Apply the vector schema
+        working-directory: analytics
+        run: |
+          uv run python - <<'PY'
+          import os, pathlib
+          from urllib.parse import urlparse
+          from pg8000.native import Connection
+          p = urlparse(os.environ["KIZUKI_PG_DSN"])
+          c = Connection(user=p.username, password=p.password, host=p.hostname,
+                         port=p.port, database=p.path.lstrip("/"))
+          for stmt in pathlib.Path("sql/pg/001_init.sql").read_text().split(";"):
+              if stmt.strip():
+                  c.run(stmt)
+          print("vector schema applied")
+          PY
+      - name: Build the warehouse and embed
+        working-directory: analytics
+        run: |
+          uv run python - <<'PY'
+          import os
+          from pathlib import Path
+          from kizuki_analytics.warehouse import DuckDBDriver
+          from kizuki_analytics.corpus import find_windows, build_meeting, pseudonym_map
+          from kizuki_analytics.embed_corpus import repo_summary_docs, meeting_docs, embed_and_store
+          from kizuki_analytics.retrieval import Embedder, PgVectorStore
+
+          driver = DuckDBDriver(published_path=Path("data/warehouse.duckdb"))
+          counts = driver.build(Path("..") / "activity" / "events.jsonl")
+          print("warehouse:", counts)
+          assert counts["fact_commit"] > 0, "no commits reached the warehouse"
+
+          con = driver.connect_read_only()
+          meetings = [build_meeting(w, pseudonym_map([])) for w in find_windows(con, min_commits=4)]
+          store = PgVectorStore(dsn=os.environ["KIZUKI_PG_DSN"])
+          stats = embed_and_store(repo_summary_docs(con) + meeting_docs(meetings), store, Embedder())
+          print("embedded:", stats)
+          assert store.count() > 0, "nothing was embedded"
+          store.close()
+          PY
+      - name: Answer a question end to end
+        working-directory: analytics
+        run: |
+          uv run python - <<'PY'
+          import os
+          from pathlib import Path
+          from kizuki_analytics.ask.pipeline import AskPipeline
+          from kizuki_analytics.retrieval import Embedder, PgVectorStore
+          from kizuki_analytics.warehouse import DuckDBDriver
+
+          pipe = AskPipeline(
+              driver=DuckDBDriver(published_path=Path("data/warehouse.duckdb")),
+              store=PgVectorStore(dsn=os.environ["KIZUKI_PG_DSN"]),
+              embedder=Embedder(),
+              cache_dir=Path("data/sqlcache"),
+          )
+
+          # No model in CI: SQL must come from the committed cache.
+          a = pipe.ask("How many commits are recorded in total across all repositories?", allow_model=False)
+          print("route:", a.route, "| sql:", (a.sql.executed_sql or "").replace("\n", " ")[:90])
+          assert a.route == "sql", f"expected a SQL route, got {a.route}"
+          assert a.sql.cache_hit, "SQL cache missed; the committed cache is stale"
+          assert a.sql.row_count > 0, "guarded SQL returned nothing"
+
+          # A semantic question: retrieval only, so it needs no cached SQL.
+          b = pipe.ask("What was decided about concentrating work in the core component?", allow_model=False)
+          assert b.route == "semantic", f"expected a retrieval-only route, got {b.route}"
+          assert b.citations, "retrieval returned no sources"
+          assert all(c.source_path for c in b.citations), "a citation has no source"
+          print("citations:", len(b.citations))
+          pipe.close()
+          print("pipeline ok")
+          PY
+
   dist-drift:
     name: dist drift
     runs-on: ubuntu-latest
@@ -127,9 +296,9 @@ jobs:
       - name: No vault data, private docs or config in the npm tarball
         run: |
           npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
-          if grep -qE 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt; then
+          if grep -qE 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|web/|docs/|analytics/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt; then
             echo "::error::private path leaked into the npm tarball"
-            grep -E 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|state/|web/|docs/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt
+            grep -E 'people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|web/|docs/|analytics/|backlog/|\.claude/|kizuki\.config\.json|concierge' /tmp/pack.txt
             exit 1
           fi
           echo "tarball clean"

@@ -1,0 +1,3 @@
+# Kizuki writes one markdown file per team here at runtime.
+# The directory is tracked and its contents are gitignored: this is work
+# data and never belongs in the repository. See docs/README.md.

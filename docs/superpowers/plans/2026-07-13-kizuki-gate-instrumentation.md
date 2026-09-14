@@ -1680,7 +1680,7 @@ git commit -m "feat: add skills export command"
 ### Task 9: Docs sync (CLAUDE.md, AGENTS.md, ROADMAP, BACKLOG)
 
 **Files:**
-- Modify: `CLAUDE.md`, `AGENTS.md`, `docs/ROADMAP.md`, `docs/BACKLOG.md`
+- Modify: `CLAUDE.md`, `AGENTS.md`, `docs/product/ROADMAP.md`, `docs/product/BACKLOG.md`
 
 **Interfaces:**
 - Consumes: everything shipped in Tasks 1–8.
@@ -1710,8 +1710,8 @@ Apply the same edits to `AGENTS.md` (it mirrors CLAUDE.md for non-Claude agents)
 
 - [ ] **Step 3: Update ROADMAP.md and BACKLOG.md**
 
-- `docs/ROADMAP.md`: in "Open v1 validation" and the gate table intro, note the tooling: "Track gate evidence with `kizuki catch` / `kizuki gate` (spec: `docs/superpowers/specs/2026-07-13-kizuki-gate-instrumentation-design.md`)."
-- `docs/BACKLOG.md`: mark the skills-pack line shipped: "Distribute rituals as an open Agent Skills pack — **shipped** (`kizuki skills export`, committed `dist/skills/`)."
+- `docs/product/ROADMAP.md`: in "Open v1 validation" and the gate table intro, note the tooling: "Track gate evidence with `kizuki catch` / `kizuki gate` (spec: `docs/superpowers/specs/2026-07-13-kizuki-gate-instrumentation-design.md`)."
+- `docs/product/BACKLOG.md`: mark the skills-pack line shipped: "Distribute rituals as an open Agent Skills pack — **shipped** (`kizuki skills export`, committed `dist/skills/`)."
 
 - [ ] **Step 4: Run the full suite one last time**
 
@@ -1721,6 +1721,6 @@ Expected: PASS, all files.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CLAUDE.md AGENTS.md docs/ROADMAP.md docs/BACKLOG.md
+git add CLAUDE.md AGENTS.md docs/product/ROADMAP.md docs/product/BACKLOG.md
 git commit -m "docs: sync gate instrumentation and skills export"
 ```

@@ -4,7 +4,7 @@
 
 **Goal:** Add a concise builder operating model and a separate product manifesto, both centered on Kizuki as a personal intelligence layer shared by the user's AI agents.
 
-**Architecture:** `docs/PRODUCT.md` owns the concrete product model. `docs/MANIFESTO.md` owns the belief and motivation. `README.md` and `docs/vision.md` link to both while retaining their current jobs. No code or runtime behavior changes.
+**Architecture:** `docs/product/PRODUCT.md` owns the concrete product model. `docs/product/MANIFESTO.md` owns the belief and motivation. `README.md` and `docs/product/vision.md` link to both while retaining their current jobs. No code or runtime behavior changes.
 
 **Tech Stack:** Markdown, plain-text ASCII diagrams, existing Git documentation workflow.
 
@@ -24,7 +24,7 @@
 ### Task 1: Builder operating model
 
 **Files:**
-- Create: `docs/PRODUCT.md`
+- Create: `docs/product/PRODUCT.md`
 
 **Interfaces:**
 - Consumes: approved design in `docs/superpowers/specs/2026-07-10-kizuki-builder-vision-docs-design.md`.
@@ -32,7 +32,7 @@
 
 - [ ] **Step 1: Draft the product definition and problem**
 
-Create `docs/PRODUCT.md` with this opening structure:
+Create `docs/product/PRODUCT.md` with this opening structure:
 
 ```markdown
 # Kizuki product model
@@ -152,10 +152,10 @@ human decides and acts
 Run:
 
 ```bash
-rg -n '^## ' docs/PRODUCT.md
-rg -n 'AI agents|deterministic|human decides|passively|hypoth' docs/PRODUCT.md
-awk 'length($0) > 100 { print NR ":" length($0) }' docs/PRODUCT.md
-rg -n '—|–|TBD|TODO' docs/PRODUCT.md
+rg -n '^## ' docs/product/PRODUCT.md
+rg -n 'AI agents|deterministic|human decides|passively|hypoth' docs/product/PRODUCT.md
+awk 'length($0) > 100 { print NR ":" length($0) }' docs/product/PRODUCT.md
+rg -n '—|–|TBD|TODO' docs/product/PRODUCT.md
 ```
 
 Expected:
@@ -170,7 +170,7 @@ Read the file aloud once. Apply stop-slop, then humanizer: remove filler, repeat
 - [ ] **Step 6: Commit the operating model**
 
 ```bash
-git add docs/PRODUCT.md
+git add docs/product/PRODUCT.md
 git commit -m "docs: add Kizuki product model"
 ```
 
@@ -179,7 +179,7 @@ git commit -m "docs: add Kizuki product model"
 ### Task 2: Product manifesto
 
 **Files:**
-- Create: `docs/MANIFESTO.md`
+- Create: `docs/product/MANIFESTO.md`
 
 **Interfaces:**
 - Consumes: product identity and boundaries from Task 1.
@@ -243,10 +243,10 @@ End on a concrete intended outcome: the user can move between agents without ret
 Run:
 
 ```bash
-rg -n '^## ' docs/MANIFESTO.md
-rg -n 'fragmented context|evidence|Human  = authority|passive|score|outward' docs/MANIFESTO.md
-awk 'length($0) > 100 { print NR ":" length($0) }' docs/MANIFESTO.md
-rg -n '—|–|TBD|TODO|groundbreaking|revolutionary|landscape|pivotal' docs/MANIFESTO.md
+rg -n '^## ' docs/product/MANIFESTO.md
+rg -n 'fragmented context|evidence|Human  = authority|passive|score|outward' docs/product/MANIFESTO.md
+awk 'length($0) > 100 { print NR ":" length($0) }' docs/product/MANIFESTO.md
+rg -n '—|–|TBD|TODO|groundbreaking|revolutionary|landscape|pivotal' docs/product/MANIFESTO.md
 ```
 
 Expected:
@@ -261,7 +261,7 @@ Apply stop-slop, then humanizer. Keep conviction and varied rhythm; remove manif
 - [ ] **Step 5: Commit the manifesto**
 
 ```bash
-git add docs/MANIFESTO.md
+git add docs/product/MANIFESTO.md
 git commit -m "docs: add Kizuki manifesto"
 ```
 
@@ -271,10 +271,10 @@ git commit -m "docs: add Kizuki manifesto"
 
 **Files:**
 - Modify: `README.md:10-21`
-- Modify: `docs/vision.md:1-6`
+- Modify: `docs/product/vision.md:1-6`
 
 **Interfaces:**
-- Consumes: `docs/PRODUCT.md` and `docs/MANIFESTO.md` from Tasks 1 and 2.
+- Consumes: `docs/product/PRODUCT.md` and `docs/product/MANIFESTO.md` from Tasks 1 and 2.
 - Produces: discoverable documentation map without changing existing strategy or roadmap content.
 
 - [ ] **Step 1: Link the product documents from README**
@@ -284,15 +284,15 @@ After the three "Use it" bullets and before `## Usage`, add:
 ```markdown
 Product direction:
 
-- [Product model](docs/PRODUCT.md): the builder north star and operating model.
-- [Manifesto](docs/MANIFESTO.md): why Kizuki should exist.
-- [Long-form vision](docs/vision.md): strategy, validation gates, and the personal Jarvis arc.
-- [Roadmap](docs/ROADMAP.md): build order.
+- [Product model](docs/product/PRODUCT.md): the builder north star and operating model.
+- [Manifesto](docs/product/MANIFESTO.md): why Kizuki should exist.
+- [Long-form vision](docs/product/vision.md): strategy, validation gates, and the personal Jarvis arc.
+- [Roadmap](docs/product/ROADMAP.md): build order.
 ```
 
 - [ ] **Step 2: Add navigation to the long-form vision**
 
-After the status quote in `docs/vision.md`, add:
+After the status quote in `docs/product/vision.md`, add:
 
 ```markdown
 Related docs:
@@ -302,17 +302,17 @@ Related docs:
 - [Roadmap](ROADMAP.md) for build order.
 ```
 
-Do not edit the rest of `docs/vision.md`.
+Do not edit the rest of `docs/product/vision.md`.
 
 - [ ] **Step 3: Verify links, scope, and prose**
 
 Run:
 
 ```bash
-test -f docs/PRODUCT.md
-test -f docs/MANIFESTO.md
-rg -n 'docs/PRODUCT.md|docs/MANIFESTO.md|docs/vision.md|docs/ROADMAP.md' README.md
-rg -n '\(PRODUCT.md\)|\(MANIFESTO.md\)|\(ROADMAP.md\)' docs/vision.md
+test -f docs/product/PRODUCT.md
+test -f docs/product/MANIFESTO.md
+rg -n 'docs/product/PRODUCT.md|docs/product/MANIFESTO.md|docs/product/vision.md|docs/product/ROADMAP.md' README.md
+rg -n '\(PRODUCT.md\)|\(MANIFESTO.md\)|\(ROADMAP.md\)' docs/product/vision.md
 git diff --check
 git status --short
 ```
@@ -324,12 +324,12 @@ Expected:
 - `git diff --check` exits 0.
 - Status lists only intended documentation edits plus the pre-existing untracked `.save` file.
 
-Read `docs/PRODUCT.md` followed by `docs/MANIFESTO.md`. Remove repeated paragraphs or diagrams. Confirm the product file answers "what," the manifesto answers "why," and `docs/vision.md` still owns strategy.
+Read `docs/product/PRODUCT.md` followed by `docs/product/MANIFESTO.md`. Remove repeated paragraphs or diagrams. Confirm the product file answers "what," the manifesto answers "why," and `docs/product/vision.md` still owns strategy.
 
 - [ ] **Step 4: Commit navigation**
 
 ```bash
-git add README.md docs/vision.md
+git add README.md docs/product/vision.md
 git commit -m "docs: link Kizuki product direction"
 ```
 
@@ -340,8 +340,8 @@ git commit -m "docs: link Kizuki product direction"
 Run:
 
 ```bash
-rg -n '—|–|TBD|TODO' docs/PRODUCT.md docs/MANIFESTO.md
-awk 'length($0) > 100 { print FILENAME ":" NR ":" length($0) }' docs/PRODUCT.md docs/MANIFESTO.md
+rg -n '—|–|TBD|TODO' docs/product/PRODUCT.md docs/product/MANIFESTO.md
+awk 'length($0) > 100 { print FILENAME ":" NR ":" length($0) }' docs/product/PRODUCT.md docs/product/MANIFESTO.md
 git diff --check
 git status --short --branch
 ```
