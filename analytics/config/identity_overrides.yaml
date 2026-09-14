@@ -1,0 +1,23 @@
+# Manual author-identity mappings.
+#
+# Keys are salted hashes of normalized emails, not the emails themselves, so this
+# file can be committed and published without exposing personal or employer
+# addresses. Regenerate a key with:
+#
+#   uv run python -c "from kizuki_analytics.identity import identity_hash; print(identity_hash('someone@example.com'))"
+#
+# Group labels are arbitrary and deliberately impersonal. They only need to be
+# stable and consistent; the warehouse derives display names from git metadata.
+#
+# Only add an entry when no automatic rule can make the link. A personal address
+# and an employer address belong to the same human, but nothing in the data says
+# so -- only the operator knows.
+
+groups:
+  54f7394e404ce91b: contributor-a   # personal address
+  693d51b57995d296: contributor-a   # github noreply
+  8ea51bbed481ef47: contributor-a   # employer address
+  85465ef69c25403d: contributor-a   # university address
+
+  356b5dcad4b1535e: contributor-b   # personal address
+  ae026707e27a0303: contributor-b   # github noreply

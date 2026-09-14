@@ -1,0 +1,7 @@
+{
+  "question": "How many commits are recorded in total across all repositories?",
+  "sql": "SELECT COUNT(*) AS total_commits FROM v_commit",
+  "prompt_version": "sqlgen-v1",
+  "schema_fingerprint": "61981605db1b9bdf",
+  "latency_ms": 13253
+}

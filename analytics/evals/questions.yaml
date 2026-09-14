@@ -1,0 +1,161 @@
+# Eval suite for the Kizuki ask pipeline.
+#
+# expected_route      what the router should choose
+# reference           a function in reference.py that computes the answer from
+#                     git directly, never from the warehouse under test
+# expected_contains   substrings the SQL result must contain (stringified rows)
+# gold_doc_prefixes   doc_id prefixes that a correct retrieval must surface;
+#                     known by construction because the corpus generator
+#                     records which window each record came from
+# unanswerable        the correct behaviour is to return nothing rather than
+#                     invent something
+
+suite_version: 1
+
+questions:
+  # --- pure SQL -----------------------------------------------------------
+  - id: sql-01
+    question: "Which repository had the most commits in July 2026?"
+    expected_route: sql
+    reference: busiest_repo_in_month_2026_07
+    expected_contains: ["kizuki"]
+
+  - id: sql-02
+    question: "How many commits are recorded in total across all repositories?"
+    expected_route: sql
+    reference: total_commits
+
+  - id: sql-03
+    question: "Which repository has the most commits overall?"
+    expected_route: sql
+    reference: repo_with_most_commits
+    expected_contains: ["harbor"]
+
+  - id: sql-04
+    question: "Which month had the highest commit count across all repositories?"
+    expected_route: sql
+    reference: busiest_month_overall
+    expected_contains: ["2026-07"]
+
+  - id: sql-05
+    question: "How many commits did the harbor repository have in April 2026?"
+    expected_route: sql
+    reference: harbor_commits_2026_04
+    expected_contains: ["236"]
+
+  - id: sql-06
+    question: "Which repository had the largest increase in commits from one month to the next?"
+    expected_route: sql
+    reference: largest_mom_increase
+    expected_contains: ["harbor"]
+
+  - id: sql-07
+    question: "Which five files have been changed in the most commits?"
+    expected_route: sql
+
+  - id: sql-08
+    question: "How many distinct contributors are there, excluding bots?"
+    expected_route: sql
+    reference: contributor_count
+
+  - id: sql-09
+    question: "Which components have the most churn?"
+    expected_route: sql
+    expected_contains: ["core"]
+
+  - id: sql-10
+    question: "How many repositories have recorded commit activity?"
+    expected_route: sql
+    reference: repos_with_activity
+    expected_contains: ["15"]
+
+  # --- pure retrieval -----------------------------------------------------
+  - id: rag-01
+    question: "What was decided about concentrating work in the core component?"
+    expected_route: semantic
+    gold_doc_prefixes: ["decision::"]
+
+  - id: rag-02
+    question: "Why was a file frozen for the rest of the cycle?"
+    expected_route: semantic
+    gold_doc_prefixes: ["decision::", "meeting::"]
+
+  - id: rag-03
+    question: "What is the rationale for deferring cleanup work?"
+    expected_route: semantic
+    gold_doc_prefixes: ["decision::"]
+
+  - id: rag-04
+    question: "Which decisions are still only proposed rather than accepted?"
+    expected_route: semantic
+    gold_doc_prefixes: ["decision::"]
+
+  - id: rag-05
+    question: "What concern was raised about parallel work being blocked?"
+    expected_route: semantic
+    gold_doc_prefixes: ["meeting::"]
+
+  - id: rag-06
+    question: "Summarise the kizuki repository."
+    expected_route: semantic
+    gold_doc_prefixes: ["repo::"]
+
+  - id: rag-07
+    question: "What does the harbor repository contain and who worked on it?"
+    expected_route: semantic
+    gold_doc_prefixes: ["repo::"]
+
+  - id: rag-08
+    question: "Explain the reasoning behind accepting a refactor as done."
+    expected_route: semantic
+    gold_doc_prefixes: ["decision::"]
+
+  # --- hybrid -------------------------------------------------------------
+  - id: hyb-01
+    question: "Why did activity in the harbor repository increase in April 2026, and how many commits were there?"
+    expected_route: hybrid
+    reference: harbor_commits_2026_04
+    expected_contains: ["236"]
+    gold_doc_prefixes: ["meeting::", "decision::", "repo::"]
+
+  - id: hyb-02
+    question: "Which repository had the biggest jump in activity, and what was discussed at the time?"
+    expected_route: hybrid
+    expected_contains: ["harbor"]
+    gold_doc_prefixes: ["meeting::", "decision::", "repo::"]
+
+  - id: hyb-03
+    question: "How many commits touched the core component and why was that decided?"
+    expected_route: hybrid
+    gold_doc_prefixes: ["decision::", "meeting::"]
+
+  - id: hyb-04
+    question: "What changed after the decision to freeze an interface, and how much churn followed?"
+    expected_route: hybrid
+    gold_doc_prefixes: ["decision::", "meeting::"]
+
+  - id: hyb-05
+    question: "Which month was busiest in kizuki and what was the team discussing then?"
+    expected_route: hybrid
+    gold_doc_prefixes: ["meeting::", "repo::", "decision::"]
+
+  - id: hyb-06
+    question: "How many contributors worked on 4x-war and why did the work concentrate where it did?"
+    expected_route: hybrid
+    gold_doc_prefixes: ["meeting::", "repo::", "decision::"]
+
+  - id: hyb-07
+    question: "Compare commit volume in ringi across months and explain the reasoning recorded at the peak."
+    expected_route: hybrid
+    gold_doc_prefixes: ["meeting::", "repo::", "decision::"]
+
+  # --- controls: the right answer is to decline -----------------------------
+  - id: ctl-01
+    question: "How many commits did Alice Nguyen author?"
+    expected_route: sql
+    unanswerable: true
+
+  - id: ctl-02
+    question: "What did we decide about the quantum billing subsystem?"
+    expected_route: semantic
+    unanswerable: true

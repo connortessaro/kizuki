@@ -1,0 +1,39 @@
+# Repos the connector walks. Paths are local and machine-specific; slugs are the
+# stable key used everywhere downstream.
+#
+# `vault` is where the activity ledger is written. It defaults to the Kizuki repo
+# root, matching KIZUKI_VAULT.
+
+vault: ~/kizuki
+
+repos:
+  - slug: kizuki
+    path: ~/kizuki
+  - slug: harbor
+    path: ~/harbor
+  - slug: 4x-war
+    path: ~/4x-war
+  - slug: ringi
+    path: ~/ringi
+  - slug: omni
+    path: ~/omni
+  - slug: polyedge
+    path: ~/polyedge
+  - slug: phantom
+    path: ~/phantom
+  - slug: shopify-web-replicator
+    path: ~/shopify-web-replicator
+  - slug: agentauth
+    path: ~/agentauth
+  - slug: polyedge-mcp
+    path: ~/polyedge-mcp
+  - slug: connortesaro.dev
+    path: ~/connortesaro.dev
+  - slug: agentsync
+    path: ~/agentsync
+  - slug: leadops
+    path: ~/leadops
+  - slug: trading
+    path: ~/trading
+  - slug: fulfillment-risk-monitor
+    path: ~/fulfillment-risk-monitor

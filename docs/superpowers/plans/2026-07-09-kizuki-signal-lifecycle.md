@@ -158,7 +158,7 @@ kizuki signals migrate-alerts [--dry-run]
 - Modify: `.gitignore`
 - Modify: `lib/doctor.mjs`, `lib/doctor.test.mjs`
 - Modify: `lib/init.test.mjs`
-- Modify: `README.md`, `docs/ROADMAP.md`
+- Modify: `README.md`, `docs/product/ROADMAP.md`
 - Modify together: `AGENTS.md`, `CLAUDE.md`
 
 **Consumes:** Task 3 command names and lifecycle semantics.
