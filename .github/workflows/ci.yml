@@ -182,15 +182,16 @@ jobs:
           ./kizuki ingest git .
           test -s activity/events.jsonl
       - name: Apply the vector schema
+        working-directory: analytics
         run: |
-          uv --directory analytics run python - <<'PY'
+          uv run python - <<'PY'
           import os, pathlib
           from urllib.parse import urlparse
           from pg8000.native import Connection
           p = urlparse(os.environ["KIZUKI_PG_DSN"])
           c = Connection(user=p.username, password=p.password, host=p.hostname,
                          port=p.port, database=p.path.lstrip("/"))
-          for stmt in pathlib.Path("analytics/sql/pg/001_init.sql").read_text().split(";"):
+          for stmt in pathlib.Path("sql/pg/001_init.sql").read_text().split(";"):
               if stmt.strip():
                   c.run(stmt)
           print("vector schema applied")
