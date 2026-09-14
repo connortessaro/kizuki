@@ -9,6 +9,7 @@ const repo = new URL("..", import.meta.url).pathname;
 
 const PRIVATE_PATHS = [
   "scripts/export-public.mjs",
+  "backlog", ".claude",
   "docs/concierge", "docs/launch",
   "docs/2026-07-07-jarvis-presence-ideation.md",
   "docs/2026-07-14-kizuki-direction-notes.md",

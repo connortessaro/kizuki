@@ -55,3 +55,10 @@ analytics/**/__pycache__/
 analytics/.pytest_cache/
 analytics/.ruff_cache/
 analytics/.python-version
+
+# Backlog.md tracker — roadmap and forward strategy (billing, teams, hosted
+# service, TEE). Same category as the docs the public export already strips.
+/backlog/
+
+# Vendored Claude skills. Third-party, regenerable, and large.
+.claude/skills/
