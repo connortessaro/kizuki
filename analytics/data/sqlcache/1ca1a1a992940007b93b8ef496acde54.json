@@ -1,7 +1,0 @@
-{
-  "question": "Which repository had the largest increase in commits from one month to the next?",
-  "sql": "SELECT repo_slug, year_month, commits - LAG(commits) OVER (PARTITION BY repo_slug ORDER BY year_month) AS commit_increase\nFROM v_repo_activity\nQUALIFY commit_increase IS NOT NULL\nORDER BY commit_increase DESC\nLIMIT 1",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "72a9704a6f6684ed",
-  "latency_ms": 11091
-}

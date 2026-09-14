@@ -1,7 +1,0 @@
-{
-  "question": "How many commits are recorded in total across all repositories?",
-  "sql": "SELECT SUM(commits_all_refs_incl_bots) AS total_commits FROM dim_repo",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "72a9704a6f6684ed",
-  "latency_ms": 7395
-}

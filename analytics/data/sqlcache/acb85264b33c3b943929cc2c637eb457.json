@@ -1,7 +1,0 @@
-{
-  "question": "What changed after the decision to freeze an interface, and how much churn followed?",
-  "sql": "WITH freeze_commit AS (\n    SELECT commit_sha, authored_date, touched_components\n    FROM v_commit\n    WHERE subject ILIKE '%freeze%' AND subject ILIKE '%interface%'\n    ORDER BY authored_date\n    LIMIT 1\n),\nfreeze_components AS (\n    SELECT UNNEST(touched_components) AS component, authored_date AS freeze_date\n    FROM freeze_commit\n)\nSELECT\n    fc.component AS frozen_component,\n    fc.freeze_date AS freeze_date,\n    COUNT(DISTINCT vcf.commit_sha) AS commits_after_freeze,\n    SUM(vcf.insertions + vcf.deletions) AS churn_after_freeze\nFROM freeze_components fc\nJOIN v_commit_file vcf\n    ON vcf.component = fc.component\n    AND vcf.authored_date > fc.freeze_date\nGROUP BY fc.component, fc.freeze_date\nORDER BY churn_after_freeze DESC",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "cc0b21725ecd782a",
-  "latency_ms": 15973
-}

@@ -1,7 +1,0 @@
-{
-  "question": "Why did activity in the harbor repository increase in April 2026, and how many commits were there?",
-  "sql": "SELECT component,\n       commits AS component_commits,\n       churn AS component_churn,\n       SUM(commits) OVER () AS total_commits_april_2026\nFROM v_component_churn\nWHERE repo_slug = 'harbor' AND month_start = DATE '2026-04-01'\nORDER BY component_churn DESC",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "72a9704a6f6684ed",
-  "latency_ms": 15576
-}

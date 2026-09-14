@@ -1,7 +1,0 @@
-{
-  "question": "Which repository has the most commits overall?",
-  "sql": "SELECT repo_slug, commit_count AS total_commits\nFROM dim_repo\nORDER BY commit_count DESC\nLIMIT 1",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "cc0b21725ecd782a",
-  "latency_ms": 10192
-}

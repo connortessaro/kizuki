@@ -1,7 +1,0 @@
-{
-  "question": "Why did activity in the harbor repository increase in April 2026, and how many commits were there?",
-  "sql": "SELECT year_month, commits AS commit_count, contributors, insertions, deletions, files_touched\nFROM v_repo_activity\nWHERE repo_slug = 'harbor' AND year_month IN ('2026-03', '2026-04')\nORDER BY year_month",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "cc0b21725ecd782a",
-  "latency_ms": 10535
-}

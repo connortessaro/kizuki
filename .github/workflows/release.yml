@@ -5,10 +5,10 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: "Build and validate, but do not publish"
+      publish_npm:
+        description: "Also publish to npm (needs a trusted publisher on npmjs.com)"
         type: boolean
-        default: true
+        default: false
 
 permissions: {}
 
@@ -45,15 +45,67 @@ jobs:
           fi
           echo "tag $TAG_NAME matches package.json"
 
+  release:
+    name: github release
+    needs: verify
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Pack the tarball
+        id: pack
+        run: |
+          file=$(npm pack --silent)
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          echo "packed $file ($(du -h "$file" | cut -f1))"
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+          ASSET: ${{ steps.pack.outputs.file }}
+        run: |
+          gh release create "$TAG_NAME" "$ASSET" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG_NAME" \
+            --generate-notes \
+            --verify-tag \
+            --notes-file - <<NOTES
+          Install from this release without npm:
+
+          \`\`\`bash
+          curl -fsSLO https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG_NAME/$ASSET
+          npm install -g ./$ASSET
+          \`\`\`
+
+          Or run from a clone with \`./kizuki\`. The package is not published to
+          npm; see the README.
+          NOTES
+
   publish-npm:
     name: publish to npm
     needs: verify
-    if: github.event_name == 'push' || inputs.dry_run == false
+    # Opt-in only. The package has no trusted publisher configured on npmjs.com,
+    # so an automated first publish 404s. This used to gate the GitHub release,
+    # which meant one npm misconfiguration silently suppressed the release
+    # itself. It no longer blocks anything.
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_npm
     runs-on: ubuntu-latest
     environment: release
     permissions:
       contents: read
-      # Required for npm trusted publishing (OIDC). No long-lived npm token.
+      # npm trusted publishing (OIDC). No long-lived token.
       id-token: write
     steps:
       - name: Checkout
@@ -69,31 +121,4 @@ jobs:
       - name: Use an npm that supports trusted publishing
         run: npm install -g npm@latest
       - run: npm ci
-      - name: Publish
-        # No NODE_AUTH_TOKEN: authentication is OIDC via id-token: write.
-        # Requires a trusted publisher configured for this package on npmjs.com.
-        run: npm publish
-
-  github-release:
-    name: github release
-    needs: publish-npm
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.ref_name }}
-        run: |
-          gh release create "$TAG_NAME" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$TAG_NAME" \
-            --generate-notes \
-            --verify-tag
+      - run: npm publish

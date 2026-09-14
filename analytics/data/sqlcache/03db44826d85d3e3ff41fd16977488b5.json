@@ -1,7 +1,0 @@
-{
-  "question": "How many commits touched the core component and why was that decided?",
-  "sql": "SELECT COUNT(DISTINCT commit_sha) AS core_commit_count FROM v_commit_file WHERE component = 'core'",
-  "prompt_version": "sqlgen-v1",
-  "schema_fingerprint": "72a9704a6f6684ed",
-  "latency_ms": 9982
-}
