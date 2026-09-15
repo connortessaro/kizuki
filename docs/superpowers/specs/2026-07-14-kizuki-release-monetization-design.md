@@ -5,7 +5,7 @@
 > **Un-superseded August 17, 2026:** the closed-source pivot was reversed. Kizuki ships Apache-2.0, so the July 16 cancellation above no longer applies. Treat the content below as live again, but re-verify specifics (dates, prices, the fresh-cut repo strategy) before acting — the release now keeps its rewritten git history rather than starting from a clean cut.
 
 Date: 2026-07-14 (rev 2, reconciled with
-[`docs/product/2026-07-14-kizuki-direction-notes.md`](../../2026-07-14-kizuki-direction-notes.md)).
+[`docs/product/2026-07-14-kizuki-direction-notes.md`](../../product/2026-07-14-kizuki-direction-notes.md)).
 Status: approved by operator (Connor).
 
 ## Decision record
@@ -66,7 +66,7 @@ single launch week). Sequencing:
 
 Gated on platform-foundation completion (T7 MCP capture adapter, T8 web
 evidence canvas, T9 init/doctor wiring + docs, T10 end-to-end local proof —
-`docs/superpowers/plans/2026-07-14-kizuki-platform-foundation.md`).
+`docs/superpowers/specs/2026-07-14-kizuki-platform-design.md`).
 
 1. **Git-history audit (hard blocker), resolved by fresh-cut:** publish a new
    public repo with a clean "initial public release" history. The private repo

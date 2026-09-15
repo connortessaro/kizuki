@@ -18,8 +18,8 @@ whichever half is needed — see `README.md` and the section below.
 It observes and advises only — it never sends messages or takes actions. Humans
 decide. Do not add autonomous action-taking without revisiting this.
 
-Design + plan: `docs/2026-06-30-kizuki-design.md`,
-`docs/superpowers/plans/2026-06-30-kizuki-v1.md`.
+Design: `docs/2026-06-30-kizuki-design.md`. Per-feature design records:
+`docs/superpowers/specs/`.
 Roadmap (v2–v4): `docs/product/ROADMAP.md`. Ideation: `docs/product/BACKLOG.md`.
 
 ## Commands

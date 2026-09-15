@@ -6,7 +6,7 @@
 > The MCP entry is `node /ABS/PATH/kizuki/mcp/server.mjs`.
 
 [![CI](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml/badge.svg)](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE)
 
 **An agent-neutral intelligence layer over your work — local-first, and it never
 acts on your behalf.**
@@ -490,8 +490,8 @@ npm run verify:dist   # committed dist/skills matches skills/
 ```
 
 `lib/` and `server/` import Node built-ins only; the MCP SDK and zod are imported
-solely from `mcp/`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full
-architecture rules and the PR checklist, and [SECURITY.md](SECURITY.md) for the
+solely from `mcp/`. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full
+architecture rules and the PR checklist, and [SECURITY.md](../../SECURITY.md) for the
 threat model and how to report a vulnerability.
 
 The vault entity files and runtime data under `people/`, `projects/`, `teams/`,
@@ -502,5 +502,5 @@ never includes that data unless someone force-adds it, so don't.
 
 ## License
 
-[Apache-2.0](LICENSE). Copyright 2026 Connor Tessaro. See [NOTICE](NOTICE) for
+[Apache-2.0](../../LICENSE). Copyright 2026 Connor Tessaro. See [NOTICE](../../NOTICE) for
 attribution and third-party license information.

@@ -254,8 +254,8 @@ jobs:
           print("pipeline ok")
           PY
 
-  dist-drift:
-    name: dist drift
+  skills-export:
+    name: skills export
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -270,12 +270,27 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Committed dist/skills matches skills/
-        run: npm run verify:dist
-      - name: Regenerating dist/skills is a no-op
+      - name: dist/ is generated, not committed
         run: |
+          if git ls-files --error-unmatch dist/ >/dev/null 2>&1; then
+            echo "::error::dist/ is tracked; it is build output and must stay generated"
+            exit 1
+          fi
+      - name: Build the skill pack
+        run: npm run build
+      - name: Generated output matches the ritual sources
+        run: npm run verify:dist
+      - name: The build is deterministic
+        run: |
+          find dist -type f | sort | xargs shasum > /tmp/first.txt
+          rm -rf dist
           npm run build
-          git diff --exit-code -- dist/
+          find dist -type f | sort | xargs shasum > /tmp/second.txt
+          diff /tmp/first.txt /tmp/second.txt || {
+            echo "::error::two builds from the same sources produced different output"
+            exit 1
+          }
+          echo "$(wc -l < /tmp/first.txt) files, byte-identical across two builds"
 
   package:
     name: package leak gate

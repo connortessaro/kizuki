@@ -4,7 +4,7 @@ Date: 2026-07-07
 Status: approved
 
 Roadmap: `docs/product/ROADMAP.md` (v2). Implementation plan to follow in
-`docs/superpowers/plans/` when v1 validation gate passes.
+an implementation plan when the v1 validation gate passes.
 
 ## What
 
