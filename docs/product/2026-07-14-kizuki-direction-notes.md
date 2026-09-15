@@ -3,8 +3,8 @@
 Status: discussion record
 
 This file records the product decisions and new ideas discussed on July 14. It
-supplements the approved [platform design](superpowers/specs/2026-07-14-kizuki-platform-design.md),
-the [foundation plan](superpowers/plans/2026-07-14-kizuki-platform-foundation.md),
+supplements the approved [platform design](../superpowers/specs/2026-07-14-kizuki-platform-design.md),
+the [platform design](../superpowers/specs/2026-07-14-kizuki-platform-design.md),
 and the [backlog](BACKLOG.md). The approved platform design wins if these notes
 conflict with it.
 

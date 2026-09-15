@@ -18,10 +18,6 @@ const PRIVATE_PATHS = [
   "docs/superpowers/specs/2026-07-14-kizuki-release-monetization-design.md",
   "docs/superpowers/specs/2026-07-13-kizuki-landing-page-design.md",
   "docs/superpowers/specs/2026-07-10-kizuki-builder-vision-docs-design.md",
-  "docs/superpowers/plans/2026-07-13-kizuki-pricing-waitlist.md",
-  "docs/superpowers/plans/2026-07-14-kizuki-lane1-oss-release.md",
-  "docs/superpowers/plans/2026-07-13-kizuki-landing-page.md",
-  "docs/superpowers/plans/2026-07-10-kizuki-builder-vision-docs.md",
 ];
 
 const DANGLING_REF_FIX = {

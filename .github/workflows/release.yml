@@ -64,6 +64,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Build the skill pack
+        run: npm run build
       - name: Pack the tarball
         id: pack
         run: |

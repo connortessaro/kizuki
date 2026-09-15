@@ -15,7 +15,7 @@ North star: `docs/vision.md`. Monetization / TEE / team product:
 - CLI `--project` / `--team`, `kizuki watch`, cross-shift trends (`lib/trends.mjs`)
 - Platform foundation, tasks 6–10 — shipped 2026-07-14 (see `docs/ROADMAP.md`
   Platform foundation section; plan:
-  `docs/superpowers/plans/2026-07-14-kizuki-platform-foundation.md`)
+  `docs/superpowers/specs/2026-07-14-kizuki-platform-foundation-design.md`)
 
 ## Open work (needs doing)
 

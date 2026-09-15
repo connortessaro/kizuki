@@ -208,7 +208,7 @@ product (`docs/future-notes.md` gates that separately).
 **Status:** local slice shipped 2026-07-14. Full suite green plus a fresh
 temp-vault end-to-end proof: daemon start → authenticated capture → one canonical
 event → list round-trip (`server/local.integration.test.mjs`, completion gate of
-`docs/superpowers/plans/2026-07-14-kizuki-platform-foundation.md`).
+`docs/superpowers/specs/2026-07-14-kizuki-platform-foundation-design.md`).
 
 **Goal:** A private, single-operator substrate later hosted/multiplayer work can
 build on without breaking the observe-and-advise rule. Every capture stays local,
