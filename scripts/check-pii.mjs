@@ -48,17 +48,41 @@ for (const file of files) {
 // backup tag kept before a history rewrite, say — are reported separately
 // rather than failing the check, so keeping a safety net does not force a
 // choice between that and a clean gate.
+function resolves(rev) {
+  try {
+    execFileSync("git", ["rev-parse", "--verify", "--quiet", `${rev}^{commit}`], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function refsOnRemote() {
+  let names;
   try {
     const out = execFileSync("git", ["ls-remote", "--heads", "--tags", "origin"], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     });
-    const names = out.split("\n").map((l) => l.split("\t")[1]).filter(Boolean);
-    return names.filter((r) => !r.endsWith("^{}"));
+    names = out.split("\n").map((l) => l.split("\t")[1]).filter(Boolean);
   } catch {
     return null; // offline or no remote: fall back to scanning everything
   }
+
+  // A remote ref name is not necessarily a local one. A CI checkout has the
+  // branch under refs/remotes/origin/ (or only as a detached HEAD), so each
+  // name is mapped to whatever actually resolves here and the rest dropped.
+  const local = [];
+  for (const name of names.filter((r) => !r.endsWith("^{}"))) {
+    const candidates = [name.replace(/^refs\/heads\//, "refs/remotes/origin/"), name];
+    const found = candidates.find(resolves);
+    if (found) local.push(found);
+  }
+  // HEAD is what CI is actually proposing to publish.
+  if (resolves("HEAD")) local.push("HEAD");
+  return local.length > 0 ? [...new Set(local)] : null;
 }
 
 function authorsFor(revs) {
