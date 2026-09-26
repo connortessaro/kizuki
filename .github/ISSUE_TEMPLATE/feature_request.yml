@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest a capability or a change in behavior
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Kizuki has a narrow scope on purpose. Two rules shape what fits:
+
+        - It **never misinforms**. The model never writes facts in its own words,
+          and every quote is checked against your material. Ideas that need the
+          model to explain or answer in its own words will be declined.
+        - It **runs on your computer**. Ideas that need your data to leave your
+          computer by default will be declined.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Kizuki makes hard today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+      description: If you have a screen or flow in mind, describe it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not need the model to write facts in its own words or to show unchecked quotes.
+          required: true
+        - label: This does not need your data to leave your computer by default.
+          required: true

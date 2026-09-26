@@ -1,0 +1,10 @@
+# Secret scanning for Kizuki. Run: gitleaks git -c .gitleaks.toml
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures"
+regexes = [
+  # lib/settings.test.ts checks that settings refuse a key in place of a variable name.
+  '''sk-abc123def456''',
+]

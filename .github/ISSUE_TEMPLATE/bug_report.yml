@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in Kizuki behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not paste your own course material or
+        answers unless you are happy for them to be public.
+
+        Found a security problem? Do not file it here. See
+        [SECURITY.md](https://github.com/connortessaro/kizuki/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: What you clicked or ran, step by step.
+      placeholder: |
+        1. Started Kizuki
+        2. Created a course and added a PDF
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which part
+      options:
+        - Starting Kizuki
+        - Adding or reading a file
+        - Concept review or suggested order
+        - Teach-back session
+        - Review schedule
+        - Settings or models
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Kizuki version or commit
+      placeholder: "0.2.0, or the commit you are running"
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: OS and Node version
+      placeholder: "macOS 26, Node 24.1.0, Ollama 0.34"
+    validations:
+      required: true
+
+  - type: input
+    id: models
+    attributes:
+      label: Models
+      description: The answer model and meaning-search model from Settings.
+      placeholder: "qwen3.5:2b and nomic-embed-text through Ollama"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      render: shell
+
+  - type: checkboxes
+    id: hygiene
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed course material and answers I do not want public.
+          required: true
+        - label: I searched existing issues for a duplicate.
+          required: true

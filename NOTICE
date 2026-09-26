@@ -1,0 +1,37 @@
+Kizuki
+Copyright 2026 Connor Tessaro
+
+This product is licensed under the Apache License, Version 2.0 (the
+"License"); you may not use this product except in compliance with the
+License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+---
+
+Kizuki does not bundle or redistribute third-party source code in this
+repository. Its direct runtime dependencies are resolved from the npm registry
+at install time and remain under their own licenses:
+
+  - ai, @ai-sdk/openai-compatible  (Apache-2.0)  https://github.com/vercel/ai
+  - workflow                       (Apache-2.0)  https://github.com/vercel/workflow
+  - next                           (MIT)         https://github.com/vercel/next.js
+  - react, react-dom               (MIT)         https://github.com/facebook/react
+  - better-sqlite3                 (MIT)         https://github.com/WiseLibs/better-sqlite3
+  - sqlite-vec                     (MIT OR Apache-2.0)  https://github.com/asg017/sqlite-vec
+  - unpdf                          (MIT)         https://github.com/unjs/unpdf
+  - fast-xml-parser                (MIT)         https://github.com/NaturalIntelligence/fast-xml-parser
+  - fflate                         (MIT)         https://github.com/101arrowz/fflate
+  - zod                            (MIT)         https://github.com/colinhacks/zod
+
+The published npm package includes the built app (.next/), which contains
+compiled code from these dependencies under their own licenses. The only
+copyleft code in the dependency tree is sharp's prebuilt libvips binary
+(LGPL-3.0-or-later), which Next.js loads unmodified as a separate library for
+image handling.

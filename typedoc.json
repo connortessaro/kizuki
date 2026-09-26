@@ -1,0 +1,110 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "lib",
+    "workflows",
+    "app",
+    "proxy.ts",
+    "next.config.ts",
+    "bin/cli.d.mts"
+  ],
+  "entryPointStrategy": "expand",
+  "exclude": [
+    "**/*.test.ts",
+    "**/test-helpers/**",
+    "**/.well-known/**"
+  ],
+  "out": "docs/api",
+  "name": "Kizuki",
+  "readme": "docs/index.md",
+  "projectDocuments": [
+    "docs/guides/*.md"
+  ],
+  "plugin": [
+    "./scripts/typedoc-plugin.mjs"
+  ],
+  "navigationLinks": {
+    "HTTP API": "/docs/http-api/",
+    "GitHub": "https://github.com/connortessaro/kizuki"
+  },
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "blockTags": [
+    "@defaultValue",
+    "@deprecated",
+    "@example",
+    "@jsx",
+    "@param",
+    "@privateRemarks",
+    "@remarks",
+    "@returns",
+    "@see",
+    "@throws",
+    "@typeParam",
+    "@author",
+    "@callback",
+    "@category",
+    "@categoryDescription",
+    "@default",
+    "@document",
+    "@extends",
+    "@augments",
+    "@yields",
+    "@group",
+    "@groupDescription",
+    "@import",
+    "@inheritDoc",
+    "@license",
+    "@module",
+    "@mergeModuleWith",
+    "@prop",
+    "@property",
+    "@return",
+    "@satisfies",
+    "@since",
+    "@sortStrategy",
+    "@template",
+    "@this",
+    "@type",
+    "@typedef",
+    "@summary",
+    "@preventInline",
+    "@inlineType",
+    "@preventExpand",
+    "@expandType",
+    "@openapi"
+  ],
+  "excludeTags": [
+    "@override",
+    "@virtual",
+    "@privateRemarks",
+    "@satisfies",
+    "@overload",
+    "@inline",
+    "@inlineType",
+    "@openapi"
+  ],
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": true,
+    "invalidPath": true
+  },
+  "treatWarningsAsErrors": true,
+  "treatValidationWarningsAsErrors": true,
+  "requiredToBeDocumented": [
+    "Enum",
+    "EnumMember",
+    "Variable",
+    "Function",
+    "Class",
+    "Interface",
+    "Method",
+    "Accessor",
+    "Constructor",
+    "TypeAlias"
+  ],
+  "sourceLinkTemplate": "https://github.com/connortessaro/kizuki/blob/{gitRevision}/{path}#L{line}",
+  "disableGit": true,
+  "gitRevision": "main"
+}

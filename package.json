@@ -1,0 +1,110 @@
+{
+  "name": "kizuki",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "A study tool that runs on your computer. You teach, Kizuki plays the student, and every question quotes your own material.",
+  "license": "Apache-2.0",
+  "author": "Connor Tessaro",
+  "homepage": "https://kizuki.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connortessaro/kizuki.git"
+  },
+  "bugs": {
+    "url": "https://github.com/connortessaro/kizuki/issues"
+  },
+  "keywords": [
+    "study",
+    "learning",
+    "teach-back",
+    "local-first",
+    "ollama",
+    "nextjs"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "bin": {
+    "kizuki": "./bin/kizuki.mjs"
+  },
+  "files": [
+    "bin/",
+    "!bin/*.test.ts",
+    ".next/",
+    "!.next/cache/",
+    "!.next/dev/",
+    "!.next/**/*.map",
+    "public/",
+    "next.config.ts",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "qc": "npm run lint && npm run typecheck && npm run docs:check && npm run coverage && npm run check:pii && npm audit --omit=dev --audit-level=high",
+    "eval": "evalite",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "docs": "node scripts/docs.ts",
+    "check:pii": "node scripts/check-pii.mjs",
+    "prepack": "next build && node scripts/record-links.mjs",
+    "eval:summary": "node scripts/eval-summary.mjs",
+    "docs:check": "node scripts/docs.ts --check",
+    "docs:site": "node scripts/docs.ts --site",
+    "version": "npm run docs && git add docs/openapi.json"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.55",
+    "ai": "^7.0.113",
+    "better-sqlite3": "^13.0.3",
+    "fast-xml-parser": "^5.11.1",
+    "fflate": "^0.8.3",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sqlite-vec": "^0.1.9",
+    "unpdf": "^1.8.1",
+    "workflow": "^4.8.9",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@scalar/api-reference": "^1.72.0",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.11.0",
+    "evalite": "^0.19.0",
+    "globals": "^17.12.0",
+    "typedoc": "^0.28.20",
+    "typescript": "~6.0",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^4.1.11",
+    "yaml": "^2.9.1"
+  },
+  "overrides": {
+    "better-sqlite3": "^13.0.3",
+    "undici": "^7.29.1",
+    "@workflow/core": {
+      "nanoid": "^5.1.16"
+    },
+    "evalite": {
+      "@fastify/static": "^10.1.4",
+      "file-type": "^22.0.0"
+    }
+  }
+}
