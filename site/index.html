@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kizuki: teach it back</title>
+    <meta
+      name="description"
+      content="A study tool that runs on your computer. You explain a concept in your own words. Kizuki plays the student and asks about what you got wrong, and each question quotes your course material."
+    />
+    <link rel="icon" href="/seal-ki.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to the content</a>
+    <header class="top">
+      <a class="brand" href="/"><img src="/seal-ki.svg" alt="" width="28" height="28" />Kizuki</a>
+      <nav aria-label="Site">
+        <a href="#how">How it works</a>
+        <a href="#setup">Set up</a>
+        <a href="https://github.com/connortessaro/kizuki">Source</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="title">
+        <p class="column" lang="ja" aria-hidden="true">気付き</p>
+        <div class="pitch">
+          <h1 id="title">Teach it back.</h1>
+          <p class="lede">
+            Kizuki is a study tool that plays the student. You explain a concept in your own words, and Kizuki asks about what you got
+            wrong, what you left out, and what you said vaguely. Each question quotes your course material.
+          </p>
+          <p class="lede quiet">
+            <span lang="ja">気付き</span> (kizuki) is Japanese for noticing, as in noticing a gap in what you know.
+          </p>
+          <div class="start">
+            <code>npx kizuki</code>
+            <a href="#setup">What you need first</a>
+          </div>
+        </div>
+
+        <figure class="exchange" aria-label="A real teach-back exchange">
+          <div class="turn you">
+            <p class="who">You wrote</p>
+            <p>The Calvin cycle happens in the <mark>thylakoid membranes</mark>. It uses ATP and NADPH to turn carbon dioxide into sugar.</p>
+          </div>
+          <div class="turn kizuki">
+            <p class="who">Kizuki asks</p>
+            <p>
+              The section “The Calvin cycle” of <em>photosynthesis.md</em> says: <q>The Calvin cycle takes place in the stroma.</q> You wrote:
+              <q>thylakoid membranes</q>. How does that fit?
+            </p>
+            <div class="choices" aria-hidden="true">
+              <span>The material is right. I got this wrong.</span>
+              <span>The material is wrong.</span>
+              <span>Kizuki misread me.</span>
+            </div>
+          </div>
+          <figcaption>From a real session with the default small model, running on a laptop.</figcaption>
+        </figure>
+      </section>
+
+      <section id="how" class="band" aria-labelledby="how-title">
+        <h2 id="how-title">How a session goes</h2>
+        <ol class="steps">
+          <li>
+            <h3>Add your material</h3>
+            <p>Slides, PDFs, Word and Excel files, notes. Kizuki reads the text and remembers the page, slide, or cell each passage came from.</p>
+          </li>
+          <li>
+            <h3>Confirm the concepts</h3>
+            <p>Kizuki turns each heading into a concept, and a small model suggests ideas inside each section. Kizuki only uses the ones you confirm.</p>
+          </li>
+          <li>
+            <h3>Explain one without your notes</h3>
+            <p>Write it the way you would explain it to a classmate.</p>
+          </li>
+          <li>
+            <h3>Answer the student’s questions</h3>
+            <p>
+              Up to three rounds. Kizuki asks where your explanation disagrees with the material, what the material says that you left out,
+              and what you meant by vague words.
+            </p>
+          </li>
+          <li>
+            <h3>Confirm what you missed</h3>
+            <p>You tick the points you missed. After a clean session Kizuki waits twice as long before the next review; after a miss, the concept comes back tomorrow. If you set an exam date, Kizuki moves reviews before it.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="band split" aria-labelledby="rule-title">
+        <div>
+          <h2 id="rule-title">It only quotes your material</h2>
+          <p>
+            If a study tool states a wrong fact, you learn the wrong fact. Kizuki's model can't write facts, quotes, or questions in its own
+            words, and the code checks this before you see anything.
+          </p>
+        </div>
+        <ul class="rules">
+          <li>The model only points at sentences of your material. Kizuki shows those sentences word for word.</li>
+          <li>Kizuki writes each question from a fixed template around the exact sentence, with a link to where it came from.</li>
+          <li>If nothing in your material matches what you wrote, Kizuki says “not in your material” and asks nothing.</li>
+          <li>When you and your material disagree, you decide. If the slide had a typo, you correct it, and Kizuki uses your version from then on.</li>
+        </ul>
+      </section>
+
+      <section class="band split" aria-labelledby="local-title">
+        <div>
+          <h2 id="local-title">It stays on your computer</h2>
+          <p>
+            You don't need an account. Kizuki runs a small model through Ollama, and it keeps your files and history in one folder you can copy
+            or delete.
+          </p>
+        </div>
+        <ul class="rules">
+          <li>Your data: <code>~/.kizuki</code></li>
+          <li>Default models: <code>qwen3.5:2b</code> and <code>nomic-embed-text</code></li>
+          <li>You can use MLX on Apple chips, or a hosted model. Before Kizuki sends anything off your computer, Settings asks you to tick that you understand.</li>
+        </ul>
+      </section>
+
+      <section id="setup" class="band" aria-labelledby="setup-title">
+        <h2 id="setup-title">Set up</h2>
+        <ol class="steps compact">
+          <li>
+            <h3>Install Node.js and Ollama</h3>
+            <p><a href="https://nodejs.org">Node.js</a> 22.18 or newer, and <a href="https://ollama.com">Ollama</a>.</p>
+          </li>
+          <li>
+            <h3>Download the two models</h3>
+            <pre><code>ollama pull qwen3.5:2b
+ollama pull nomic-embed-text</code></pre>
+          </li>
+          <li>
+            <h3>Start Kizuki</h3>
+            <pre class="wrap"><code>npx kizuki</code></pre>
+            <p>It checks the models, starts, and opens the dashboard in your browser. To keep it installed, run <code>npm install -g kizuki</code> and start it with <code>kizuki</code>.</p>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>Kizuki is free and open source under the Apache 2.0 license.</p>
+      <p><a href="https://github.com/connortessaro/kizuki">Source and issues on GitHub</a> · <a href="/docs/">Code docs</a></p>
+    </footer>
+  </body>
+</html>

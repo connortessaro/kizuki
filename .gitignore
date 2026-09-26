@@ -1,0 +1,54 @@
+node_modules/
+.DS_Store
+
+# Build and tool output
+.next/
+next-env.d.ts
+tsconfig.tsbuildinfo
+docs/api/
+.workflow-data/
+evalite.db*
+node_modules/.evalite/
+/dist/
+*.tgz
+.vercel/
+
+# Study data never lives in the repo. It lives in ~/.kizuki/ (or KIZUKI_HOME).
+# If a test or a dev run points KIZUKI_HOME inside the repo, keep it out of git.
+/.kizuki/
+
+# Work data from the old org-intelligence tool (tag org-intel-final).
+# These folders may still exist in a local checkout and hold private work data.
+# Never commit them.
+transcripts/
+people/
+projects/
+teams/
+/state/
+/days/
+/alerts/
+/signals/
+/insights/
+/catches/
+/events/
+/activity/
+kizuki.config.json
+
+# Local planning and agent files
+/backlog/
+.superpowers/
+.remember/
+.claude/skills/
+.claude/*.local.md
+.claude/settings.local.json
+/.swc
+
+# Test coverage report
+/coverage/
+
+# End-to-end test output
+/test-results/
+/playwright-report/
+
+# The code docs copied into the site at deploy time
+/site/docs/

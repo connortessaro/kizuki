@@ -1,0 +1,3289 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kizuki local HTTP API",
+    "description": "Everything the Kizuki dashboard answers over HTTP. Kizuki runs on your computer and listens\nonly on `127.0.0.1`, so this reference is for reading how the app works, for testing, and\nfor tools you run on the same computer. No server on the internet hosts it.\n\nMost addresses are pages that return HTML. Changes to your data go through **form\nactions**: a page's forms post back to that page's address, and Next.js picks the action\nfrom the `Next-Action` header. The action ids come from each build, so treat them as part\nof the page, not as a stable API. The only other data address is `GET /files/{materialId}`,\nwhich returns a file you added.\n\nThere is no login. Every address except the built files under `/_next/` checks the `Host`\nheader and refuses any name other than this computer (see the Host parameter). Every\nanswer carries the four safety headers listed under each response.\n\nNext.js also answers `HEAD` for every page and file, with the same headers and no body, and\n`OPTIONS` for route handlers. Addresses Kizuki has no page for get the 404 \"Not found\"\npage.\n\n## Requests Kizuki sends\n\nKizuki itself calls out only to the model servers in your settings (`baseURL`):\n\n- **POST {baseURL}/embeddings**: Turns texts into numbers for meaning search, through the AI SDK: the passages of a file when it is added (32 at a time) or the search file is rebuilt, and your explanation and answers when a session looks for related passages. For nomic models each text starts with `search_document: ` or `search_query: `. Headers: `Authorization`: `Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`).\n- **POST {baseURL}/chat/completions**: Asks the answer model, through the AI SDK, to propose concepts, prerequisite links, or questions, or to list what you missed. The body holds Kizuki's instructions, the labeled sentences of your material, your corrections and readings, and (in a session) your explanation and answers. Temperature is 0.2. With reasoning `none` it adds `reasoning_effort: \"none\"` and `chat_template_kwargs: {\"enable_thinking\": false}`; with reply shape `server` it adds a `response_format` with the reply's JSON Schema. Headers: `Authorization`: `Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`).\n- **GET {baseURL}/models**: Lists the models a server has, to check that the answer model and the meaning-search model are installed. Sent once per server address each time the Today or Settings page loads, and by the `kizuki` command at start. Gives up after 5 seconds. Carries no study data. Headers: `Authorization`: `Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`). The key is read from that environment variable.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "version": "0.3.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3700",
+      "description": "`npx kizuki` (change the port with --port)"
+    },
+    {
+      "url": "http://127.0.0.1:3000",
+      "description": "`npm run dev` while working on Kizuki"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "Pages",
+      "description": "The dashboard's pages. Each reads your data fresh from the logs on every request and returns HTML."
+    },
+    {
+      "name": "Form actions",
+      "description": "The forms on each page. The browser posts them back to the page's own address, and each one changes your data through the checked commands in lib/, then sends the browser to the next page."
+    },
+    {
+      "name": "Files",
+      "description": "The copies of the files you added."
+    },
+    {
+      "name": "Background jobs",
+      "description": "Addresses the Workflow SDK adds for Kizuki's background jobs (reading a file, running a session). Kizuki's own job queue calls them on this computer; you never need to."
+    },
+    {
+      "name": "Static files",
+      "description": "Pictures and built scripts that never change while Kizuki runs."
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Today",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "The Today page: concepts due now, coming up, and waiting on others, and this week's catches.\n\nAlso checks that both models answer, and lists the problems if not.",
+        "operationId": "get"
+      },
+      "post": {
+        "summary": "Today: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `createCourseAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "title": "createCourseAction",
+                "description": "Creates a course and opens it.\n\n**Result:** Opens the new course at `/courses/{courseId}`. On an error, goes to `/courses` with the message.",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The course name. It must differ from your other courses' names, ignoring letter case."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post"
+      }
+    },
+    "/_next/image": {
+      "get": {
+        "summary": "Next.js image resizer (unused)",
+        "description": "Next.js answers here to resize pictures for pages that ask for it. Kizuki's pages never do. Its only picture is an SVG, which the resizer refuses, and it refuses addresses on other sites, so in Kizuki this answers 400. The host check does not run here.",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "description": "The picture to resize.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "w",
+            "in": "query",
+            "required": true,
+            "description": "The width in pixels.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "The quality from 1 to 100.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "A plain-text reason, such as `\"url\" parameter is required`, `\"url\" parameter is not allowed`, or `The requested resource isn't a valid image.`",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Static files"
+        ],
+        "operationId": "getNextImage"
+      }
+    },
+    "/_next/static/{path}": {
+      "get": {
+        "summary": "Built scripts and styles",
+        "description": "The JavaScript and CSS files that `next build` made for the pages. Their names change with every build. The host check does not run on these addresses, because they hold no study data.",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "description": "The file's path under `.next/static/`, such as `chunks/abc123.css`. It may contain slashes.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file, with a content type that matches its ending.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "404": {
+            "description": "No built file has this path.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Static files"
+        ],
+        "operationId": "getNextStaticPath"
+      }
+    },
+    "/.well-known/workflow/v1/flow": {
+      "get": {
+        "summary": "Run a workflow's next part",
+        "description": "Kizuki's job queue posts here to move a workflow (processing a file, or running a teach-back session) to its next step. The request and answer formats belong to the Workflow SDK and can change with its version. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present (with any value, or none) to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, such as `{\"healthy\":true,\"endpoint\":\"/.well-known/workflow/v1/flow\"}`, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "No request body, as in `{\"error\":\"Missing request body\"}`, or a body the SDK cannot read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "getWellKnownWorkflowV1Flow"
+      },
+      "head": {
+        "summary": "Run a workflow's next part",
+        "description": "Kizuki's job queue posts here to move a workflow (processing a file, or running a teach-back session) to its next step. The request and answer formats belong to the Workflow SDK and can change with its version. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present (with any value, or none) to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, such as `{\"healthy\":true,\"endpoint\":\"/.well-known/workflow/v1/flow\"}`, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "No request body, as in `{\"error\":\"Missing request body\"}`, or a body the SDK cannot read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "headWellKnownWorkflowV1Flow"
+      },
+      "options": {
+        "summary": "Run a workflow's next part",
+        "description": "Kizuki's job queue posts here to move a workflow (processing a file, or running a teach-back session) to its next step. The request and answer formats belong to the Workflow SDK and can change with its version. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present (with any value, or none) to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, such as `{\"healthy\":true,\"endpoint\":\"/.well-known/workflow/v1/flow\"}`, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "No request body, as in `{\"error\":\"Missing request body\"}`, or a body the SDK cannot read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "optionsWellKnownWorkflowV1Flow"
+      },
+      "post": {
+        "summary": "Run a workflow's next part",
+        "description": "Kizuki's job queue posts here to move a workflow (processing a file, or running a teach-back session) to its next step. The request and answer formats belong to the Workflow SDK and can change with its version. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present (with any value, or none) to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, such as `{\"healthy\":true,\"endpoint\":\"/.well-known/workflow/v1/flow\"}`, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "No request body, as in `{\"error\":\"Missing request body\"}`, or a body the SDK cannot read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "postWellKnownWorkflowV1Flow"
+      }
+    },
+    "/.well-known/workflow/v1/step": {
+      "head": {
+        "summary": "Run one workflow step",
+        "description": "Kizuki's job queue posts here to run one step, such as reading a file's text or asking the model for questions. The formats belong to the Workflow SDK. `GET` answers 405. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "A request the SDK cannot read, such as one with no body.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "headWellKnownWorkflowV1Step"
+      },
+      "post": {
+        "summary": "Run one workflow step",
+        "description": "Kizuki's job queue posts here to run one step, such as reading a file's text or asking the model for questions. The formats belong to the Workflow SDK. `GET` answers 405. With `?__health` in the address, it answers whether the endpoint works instead.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "__health",
+            "in": "query",
+            "required": false,
+            "description": "Present to ask for a health check.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The health check answer, or the result of a queue message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "400": {
+            "description": "A request the SDK cannot read, such as one with no body.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "postWellKnownWorkflowV1Step"
+      }
+    },
+    "/.well-known/workflow/v1/webhook/{token}": {
+      "delete": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "deleteWellKnownWorkflowV1WebhookToken"
+      },
+      "get": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "getWellKnownWorkflowV1WebhookToken"
+      },
+      "head": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "headWellKnownWorkflowV1WebhookToken"
+      },
+      "options": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "optionsWellKnownWorkflowV1WebhookToken"
+      },
+      "patch": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "patchWellKnownWorkflowV1WebhookToken"
+      },
+      "post": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "postWellKnownWorkflowV1WebhookToken"
+      },
+      "put": {
+        "summary": "Resume a workflow from outside (unused)",
+        "description": "The Workflow SDK adds this so a workflow can wait for a call from another service. Kizuki's workflows only pause with `createHook`, and Kizuki resumes them itself from its form actions. The SDK refuses to resume those pauses from this address, so every request here gets 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "The name of the pause to resume.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No pause with this name accepts calls from this address. The body is empty.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Background jobs"
+        ],
+        "operationId": "putWellKnownWorkflowV1WebhookToken"
+      }
+    },
+    "/concepts/{conceptId}": {
+      "get": {
+        "summary": "One concept",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "conceptId",
+            "in": "path",
+            "required": true,
+            "description": "The concept id, as in `con_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "307": {
+            "description": "The concept was merged into another. The browser goes to the concept it was merged into.",
+            "headers": {
+              "location": {
+                "description": "The address of the concept this one was merged into, as in `/concepts/con_…`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No concept has this id. The \"Not found\" page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "One concept: its review date, the teach-back form, its quotes, and its past sessions.",
+        "operationId": "getConceptsConceptId"
+      },
+      "post": {
+        "summary": "One concept: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `dropConceptAction`, `renameConceptAction`, `mergeConceptAction`, `startSessionAction`, `abandonSessionAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "conceptId",
+            "in": "path",
+            "required": true,
+            "description": "The concept id, as in `con_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "title": "dropConceptAction",
+                    "description": "Drops a concept.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "renameConceptAction",
+                    "description": "Renames a concept.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "The new name: 1 to 120 characters, not used by another proposed or confirmed concept in the course."
+                      }
+                    }
+                  },
+                  {
+                    "title": "mergeConceptAction",
+                    "description": "Merges a concept into another one.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {
+                      "into": {
+                        "type": "string",
+                        "description": "The id of the concept to merge into. It must be in the same course, and the merge must not make a loop in the confirmed order."
+                      }
+                    }
+                  },
+                  {
+                    "title": "startSessionAction",
+                    "description": "Starts a teach-back session with your explanation.\n\n**Result:** Starts the session and its background run, then opens `/sessions/{sessionId}`. On an error, back to the concept.\n\n**Set by the page:** `conceptId`",
+                    "type": "object",
+                    "properties": {
+                      "explanation": {
+                        "type": "string",
+                        "description": "Your explanation of the concept, in your own words. Required."
+                      }
+                    }
+                  },
+                  {
+                    "title": "abandonSessionAction",
+                    "description": "Stops an open session so a new one can start.\n\n**Result:** Marks the session as stopped (\"You stopped this session.\"), then opens the concept page so you can start again.\n\n**Set by the page:** `sessionId`, `conceptId`",
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "postConceptsConceptId"
+      }
+    },
+    "/courses": {
+      "get": {
+        "summary": "Courses",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "The list of your courses, with a form to add one.",
+        "operationId": "getCourses"
+      },
+      "post": {
+        "summary": "Courses: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `createCourseAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "title": "createCourseAction",
+                "description": "Creates a course and opens it.\n\n**Result:** Opens the new course at `/courses/{courseId}`. On an error, goes to `/courses` with the message.",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The course name. It must differ from your other courses' names, ignoring letter case."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postCourses"
+      }
+    },
+    "/courses/{courseId}": {
+      "get": {
+        "summary": "One course",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "description": "The course id, as in `course_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No course has this id. The \"Not found\" page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "One course: its files, the concepts and links to review, questions about the material, and the concept map.\n\nWhile a file is being processed, the page reloads its data every two seconds.",
+        "operationId": "getCoursesCourseId"
+      },
+      "post": {
+        "summary": "One course: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `setExamDateAction`, `uploadAction`, `retryMaterialAction`, `doneReviewingAction`, `confirmConceptAction`, `confirmAllAction`, `dropConceptAction`, `renameConceptAction`, `mergeConceptAction`, `confirmLinkAction`, `dropLinkAction`, `answerClarificationAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "description": "The course id, as in `course_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "title": "setExamDateAction",
+                    "description": "Sets or clears a course's exam date.\n\n**Result:** Back to the course.\n\n**Set by the page:** `courseId`",
+                    "type": "object",
+                    "properties": {
+                      "examDate": {
+                        "type": "string",
+                        "description": "The exam date as `YYYY-MM-DD`, or empty to clear it."
+                      }
+                    }
+                  },
+                  {
+                    "title": "uploadAction",
+                    "description": "Adds uploaded files to a course and starts processing each one.\n\n**Result:** Back to the course. Each file is copied into the data folder and its processing starts in the background. A file Kizuki can't read, or one already in the course, is named in the error message; the other files are still added.\n\n**Set by the page:** `courseId`",
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "type": "string",
+                        "description": "One or more files; repeat the field for each. Kizuki reads `.pdf`, `.pptx`, `.docx`, `.xlsx`, `.csv`, `.md`, `.markdown`, and `.txt`. Empty entries are skipped. The whole request may be up to 200 MB."
+                      }
+                    }
+                  },
+                  {
+                    "title": "retryMaterialAction",
+                    "description": "Starts processing a file again after it failed.\n\n**Result:** Starts processing the file again, then back to the course.\n\n**Set by the page:** `courseId`, `materialId`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "doneReviewingAction",
+                    "description": "Tells a file's workflow you finished reviewing its concepts, so it goes on to suggest links.\n\n**Result:** Tells the file's paused workflow that you finished reviewing its concepts, waits up to 15 seconds for the file to leave review, then back to the course. If that workflow is gone (for example after a restart), Kizuki records the review and asks the model for links itself.\n\n**Set by the page:** `courseId`, `materialId`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "confirmConceptAction",
+                    "description": "Confirms a concept.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "confirmAllAction",
+                    "description": "Confirms every proposed concept from one file.\n\n**Result:** Confirms every proposed concept from the file, then back to the page in `back`.\n\n**Set by the page:** `materialId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "dropConceptAction",
+                    "description": "Drops a concept.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "renameConceptAction",
+                    "description": "Renames a concept.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "The new name: 1 to 120 characters, not used by another proposed or confirmed concept in the course."
+                      }
+                    }
+                  },
+                  {
+                    "title": "mergeConceptAction",
+                    "description": "Merges a concept into another one.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `conceptId`, `back`",
+                    "type": "object",
+                    "properties": {
+                      "into": {
+                        "type": "string",
+                        "description": "The id of the concept to merge into. It must be in the same course, and the merge must not make a loop in the confirmed order."
+                      }
+                    }
+                  },
+                  {
+                    "title": "confirmLinkAction",
+                    "description": "Confirms a prerequisite link.\n\n**Result:** Back to the page in `back`. Refused if the link would make a loop.\n\n**Set by the page:** `linkId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "dropLinkAction",
+                    "description": "Drops a prerequisite link.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `linkId`, `back`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "answerClarificationAction",
+                    "description": "Saves your answer to a \"what does this mean?\" question.\n\n**Result:** Back to the page in `back`.\n\n**Set by the page:** `clarificationId`, `back`",
+                    "type": "object",
+                    "properties": {
+                      "answer": {
+                        "type": "string",
+                        "description": "What the sentence means, in your words. Required."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "postCoursesCourseId"
+      }
+    },
+    "/files/{materialId}": {
+      "get": {
+        "summary": "Open an added file",
+        "description": "Returns the copy of a file you added, byte for byte, from `files/` in the data folder. Source pages link here, with `#page=N` added for a PDF so the browser opens it at the quoted page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "materialId",
+            "in": "path",
+            "required": true,
+            "description": "The file's id, as in `mat_` followed by 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file.",
+            "headers": {
+              "content-type": {
+                "description": "Set from the file's format: `application/pdf`; the Office types for pptx, docx, and xlsx (`application/vnd.openxmlformats-officedocument.…`); or `text/csv`, `text/markdown`, or `text/plain`, each with `; charset=utf-8`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "content-disposition": {
+                "description": "`inline` for PDF, markdown, text, and CSV, which a browser can show in a tab, and `attachment` for slides, documents, and workbooks, which download. Both carry the file's original name as `filename*=UTF-8''<name>`, with the name percent-encoded.",
+                "schema": {
+                  "type": "string",
+                  "examples": [
+                    "inline; filename*=UTF-8''Week%203.pdf"
+                  ]
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "contentMediaType": "application/octet-stream"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No file has this id. The body is the text `Not found`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "const": "Not found"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "500": {
+            "description": "The copy is missing from `files/`, or the log line for the file was changed so that it points outside `files/` (`storedFilePath` in lib/paths.ts refuses it).",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "operationId": "getFilesMaterialId"
+      }
+    },
+    "/history": {
+      "get": {
+        "summary": "History",
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "Your weeks of study (sessions and catches each week, against the goal of one catch a week) and every catch, newest first.\n\nThe weeks table covers the current week and the seven before it.",
+        "operationId": "getHistory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          }
+        ]
+      }
+    },
+    "/seal-ki.svg": {
+      "get": {
+        "summary": "The Kizuki seal",
+        "description": "The picture in the header and the browser tab, served from `public/`.",
+        "responses": {
+          "200": {
+            "description": "The picture.",
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          }
+        },
+        "tags": [
+          "Static files"
+        ],
+        "operationId": "getSealKiSvg",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          }
+        ]
+      }
+    },
+    "/sessions/{sessionId}": {
+      "get": {
+        "summary": "One teach-back session",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "description": "The session id, as in `ses_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No session has this id. The \"Not found\" page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "One teach-back session: your explanation, each round of questions, what you may have missed, and the result.\n\nWhile Kizuki is choosing questions, the page reloads its data every 1.5 seconds.",
+        "operationId": "getSessionsSessionId"
+      },
+      "post": {
+        "summary": "One teach-back session: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `answerRoundAction`, `finishReviewAction`, `restartSessionAction`, `recordCatchAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "description": "The session id, as in `ses_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "title": "answerRoundAction",
+                    "description": "Sends your answers to one round of questions.\n\n**Result:** Sends the answers to the session's paused run, waits up to 15 seconds for them to be saved, then back to the session. If the run is gone, Kizuki starts a new run that skips finished steps and sends the answers again.\n\n**Set by the page:** `sessionId`, `round`",
+                    "type": "object",
+                    "properties": {
+                      "answer:{questionId}": {
+                        "type": "string",
+                        "description": "Your answer to one question. May be empty."
+                      },
+                      "verdict:{questionId}": {
+                        "type": "string",
+                        "description": "For a \"Does this fit?\" question, required: `material-right` (you got it wrong), `material-wrong` (the material is wrong), or `misread` (Kizuki misread you)."
+                      },
+                      "correction:{questionId}": {
+                        "type": "string",
+                        "description": "Your version, required when the verdict is `material-wrong`. It is saved as a correction."
+                      },
+                      "finish": {
+                        "type": "string",
+                        "description": "`yes` to stop asking after this round. Any other value asks for another round, up to three."
+                      }
+                    }
+                  },
+                  {
+                    "title": "finishReviewAction",
+                    "description": "Sends which proposed misses you confirm, which ends the session.\n\n**Result:** Sends your choice to the session's paused run, which ends the session, waits up to 15 seconds, then back to the session.\n\n**Set by the page:** `sessionId`",
+                    "type": "object",
+                    "properties": {
+                      "missed": {
+                        "type": "string",
+                        "description": "The id of a proposed miss you missed; repeat the field for each. Leave it out if you missed none."
+                      }
+                    }
+                  },
+                  {
+                    "title": "restartSessionAction",
+                    "description": "Starts a new run for a session that stopped making progress. Finished steps are skipped.\n\n**Result:** Starts a new run for the session (finished steps are skipped), then back to the session.\n\n**Set by the page:** `sessionId`",
+                    "type": "object",
+                    "properties": {}
+                  },
+                  {
+                    "title": "recordCatchAction",
+                    "description": "Records a catch for a finished session.\n\n**Result:** Back to the session with \"Catch recorded.\" Refused if the session has not ended.\n\n**Set by the page:** `sessionId`",
+                    "type": "object",
+                    "properties": {
+                      "note": {
+                        "type": "string",
+                        "description": "What you would have gotten wrong. May be empty."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "postSessionsSessionId"
+      }
+    },
+    "/settings": {
+      "get": {
+        "summary": "Settings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "Model settings, the model check, and rebuilding the search file.",
+        "operationId": "getSettings"
+      },
+      "post": {
+        "summary": "Settings: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `saveSettingsAction`, `presetAction`, `rebuildIndexAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "title": "saveSettingsAction",
+                    "description": "Saves the model settings from the settings form.\n\n**Result:** Checks and saves `settings.json`, then back to Settings with \"Settings saved.\" If the meaning model changed, the message says to rebuild the search file.",
+                    "type": "object",
+                    "properties": {
+                      "chatBaseURL": {
+                        "type": "string",
+                        "description": "The answer model's server address, such as `http://localhost:11434/v1`."
+                      },
+                      "chatModel": {
+                        "type": "string",
+                        "description": "The answer model's name, such as `qwen3.5:2b`."
+                      },
+                      "chatApiKeyEnv": {
+                        "type": "string",
+                        "description": "Optional: the name of the environment variable that holds the API key, ending in `_API_KEY`. Never the key itself."
+                      },
+                      "reasoning": {
+                        "type": "string",
+                        "description": "`default` leaves thinking to the model. Any other value turns thinking off."
+                      },
+                      "replyShape": {
+                        "type": "string",
+                        "description": "`prompt` makes Kizuki describe and check the reply shape itself (for MLX). Any other value leaves it to the server."
+                      },
+                      "embedBaseURL": {
+                        "type": "string",
+                        "description": "The meaning-search model's server address."
+                      },
+                      "embedModel": {
+                        "type": "string",
+                        "description": "The meaning-search model's name, such as `nomic-embed-text`."
+                      },
+                      "embedApiKeyEnv": {
+                        "type": "string",
+                        "description": "Optional: the environment variable that holds its API key."
+                      },
+                      "sendOut": {
+                        "type": "string",
+                        "description": "`yes` means you agree to send your material off this computer. Required when the new settings would start doing that."
+                      }
+                    }
+                  },
+                  {
+                    "title": "presetAction",
+                    "description": "Switches to one of the ready-made model settings. The hosted one needs your OK first, because it sends your material out.\n\n**Result:** Saves the ready-made settings (`preset` is `ollama`, `mlx`, or `hosted`), then back to Settings.\n\n**Set by the page:** `preset`",
+                    "type": "object",
+                    "properties": {
+                      "sendOut": {
+                        "type": "string",
+                        "description": "`yes` means you agree to send your material off this computer. Required for the hosted preset when your current settings keep everything local."
+                      }
+                    }
+                  },
+                  {
+                    "title": "rebuildIndexAction",
+                    "description": "Rebuilds the search file from the logs with the current meaning model.\n\n**Result:** Builds the search file again from the logs with the current meaning model, then back to Settings with the number of passages.",
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "postSettings"
+      }
+    },
+    "/sources/{passageId}": {
+      "get": {
+        "summary": "One passage of your material",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "passageId",
+            "in": "path",
+            "required": true,
+            "description": "The passage id, as in `psg_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "description": "The id of a message a form action left for this page, such as \"Settings saved.\" or an error. Only ids this running Kizuki made show anything; any other value is ignored.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "No passage has this id. The \"Not found\" page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "500": {
+            "description": "Kizuki could not read your data, for example because a log line is broken. The page shows \"Something went wrong\"; the full message, with the file and line, is printed where Kizuki runs.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pages"
+        ],
+        "description": "One passage of your material in context, with your corrections and a form to add one.",
+        "operationId": "getSourcesPassageId"
+      },
+      "post": {
+        "summary": "One passage of your material: forms",
+        "description": "The forms on this page post here. The React code in the page sends the form as `multipart/form-data` with the action's id in the `Next-Action` header, and adds values the page bound when it rendered the form (such as the course id). With JavaScript on, React puts a prefix such as `_1_` before each field name. Without JavaScript, the browser posts the form itself, with the action id in a field named `$ACTION_ID_<id>`, and gets a 303 answer instead of a 200. Every action ends by sending the browser to a page: on success the next page, on an error the same page with a `note` id that shows the message. The body may be up to 200 MB (`serverActions.bodySizeLimit` in next.config.ts).\n\nForms on this page run: `addCorrectionAction`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Host"
+          },
+          {
+            "name": "passageId",
+            "in": "path",
+            "required": true,
+            "description": "The passage id, as in `psg_` and 16 letters and digits.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Next-Action",
+            "in": "header",
+            "required": false,
+            "description": "The id of the action to run. Next.js makes the ids when it builds the app, so they change with every build. Sent by React when JavaScript is on.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "409ac59643feb68cc6f88f4b937fd7218dd032ba25"
+              ]
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": false,
+            "description": "Set by the browser. Next.js refuses to run an action when Origin names a different host from the Host header, so another site's page cannot post Kizuki's forms.",
+            "schema": {
+              "type": "string",
+              "examples": [
+                "http://127.0.0.1:3700"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The action ran (JavaScript on). The body is React's page data, and the browser then opens the address in `x-action-redirect`.",
+            "headers": {
+              "x-action-redirect": {
+                "description": "Where the browser goes next, followed by `;push`, as in `/courses/course_…;push` or, after an error, `/courses?note=…;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/x-component": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "The action ran (form posted without JavaScript). The browser goes to the next page.",
+            "headers": {
+              "location": {
+                "description": "The next page, as for `x-action-redirect` but without `;push`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/NotThisComputer"
+          },
+          "404": {
+            "description": "The action id is not one this build knows. The body is `Server action not found.`",
+            "headers": {
+              "x-nextjs-action-not-found": {
+                "description": "Always `1`.",
+                "schema": {
+                  "type": "string",
+                  "const": "1"
+                }
+              },
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Next.js refused to run the action because Origin names a different host from Host.",
+            "headers": {
+              "X-Frame-Options": {
+                "$ref": "#/components/headers/X-Frame-Options"
+              },
+              "Content-Security-Policy": {
+                "$ref": "#/components/headers/Content-Security-Policy"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/X-Content-Type-Options"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/Referrer-Policy"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Form actions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "title": "addCorrectionAction",
+                "description": "Records your correction to a passage. The wrong text must appear in the passage word for word.\n\n**Result:** Back to the passage with \"Correction saved. Your version wins from now on.\"\n\n**Set by the page:** `passageId`",
+                "type": "object",
+                "properties": {
+                  "quote": {
+                    "type": "string",
+                    "description": "The wrong text, copied from the passage. It must pass the word-for-word quote check against the passage."
+                  },
+                  "correction": {
+                    "type": "string",
+                    "description": "Your version. Required."
+                  },
+                  "note": {
+                    "type": "string",
+                    "description": "Optional: where the correction comes from, such as a lecture date."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postSourcesPassageId"
+      }
+    }
+  },
+  "components": {
+    "headers": {
+      "X-Frame-Options": {
+        "description": "Always `DENY`. No other site may show Kizuki inside a frame, where it could trick you into a click.",
+        "schema": {
+          "type": "string",
+          "const": "DENY"
+        }
+      },
+      "Content-Security-Policy": {
+        "description": "Always `frame-ancestors 'none'`, the same rule as X-Frame-Options for newer browsers.",
+        "schema": {
+          "type": "string",
+          "const": "frame-ancestors 'none'"
+        }
+      },
+      "X-Content-Type-Options": {
+        "description": "Always `nosniff`. Browsers must use the content type Kizuki sends and never guess another.",
+        "schema": {
+          "type": "string",
+          "const": "nosniff"
+        }
+      },
+      "Referrer-Policy": {
+        "description": "Always `no-referrer`. When you follow a link out of Kizuki, the other site is not told which Kizuki page you came from.",
+        "schema": {
+          "type": "string",
+          "const": "no-referrer"
+        }
+      }
+    },
+    "parameters": {
+      "Host": {
+        "name": "Host",
+        "in": "header",
+        "required": true,
+        "description": "Must name this computer: `127.0.0.1`, `localhost`, or `[::1]`, with any port. Browsers and HTTP tools set it from the address you open. Any other name, or no Host header at all, gets the 403 answer. This stops a website that points its own domain name at your computer from reaching Kizuki, which has no login.",
+        "schema": {
+          "type": "string",
+          "examples": [
+            "127.0.0.1:3700"
+          ]
+        }
+      }
+    },
+    "responses": {
+      "NotThisComputer": {
+        "description": "The Host header does not name this computer (see the Host parameter).",
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "string",
+              "const": "Kizuki only answers requests addressed to this computer."
+            }
+          }
+        },
+        "headers": {
+          "X-Frame-Options": {
+            "$ref": "#/components/headers/X-Frame-Options"
+          },
+          "Content-Security-Policy": {
+            "$ref": "#/components/headers/Content-Security-Policy"
+          },
+          "X-Content-Type-Options": {
+            "$ref": "#/components/headers/X-Content-Type-Options"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/Referrer-Policy"
+          }
+        }
+      }
+    }
+  },
+  "x-outbound-requests": {
+    "POST {baseURL}/embeddings": {
+      "description": "Turns texts into numbers for meaning search, through the AI SDK: the passages of a file when it is added (32 at a time) or the search file is rebuilt, and your explanation and answers when a session looks for related passages. For nomic models each text starts with `search_document: ` or `search_query: `.",
+      "headers": {
+        "Authorization": "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
+      }
+    },
+    "POST {baseURL}/chat/completions": {
+      "description": "Asks the answer model, through the AI SDK, to propose concepts, prerequisite links, or questions, or to list what you missed. The body holds Kizuki's instructions, the labeled sentences of your material, your corrections and readings, and (in a session) your explanation and answers. Temperature is 0.2. With reasoning `none` it adds `reasoning_effort: \"none\"` and `chat_template_kwargs: {\"enable_thinking\": false}`; with reply shape `server` it adds a `response_format` with the reply's JSON Schema.",
+      "headers": {
+        "Authorization": "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
+      }
+    },
+    "GET {baseURL}/models": {
+      "description": "Lists the models a server has, to check that the answer model and the meaning-search model are installed. Sent once per server address each time the Today or Settings page loads, and by the `kizuki` command at start. Gives up after 5 seconds. Carries no study data.",
+      "headers": {
+        "Authorization": "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`). The key is read from that environment variable."
+      }
+    }
+  }
+}
