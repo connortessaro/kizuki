@@ -79,4 +79,6 @@ The text above `@openapi` becomes the description. A key can name several method
 
 kizuki.dev is built by Vercel from `site/`. `site/vercel.json` runs `npm run docs:site` and copies `docs/api/` to `/docs`, so the code docs are at kizuki.dev/docs and the HTTP reference at kizuki.dev/docs/http-api/. Every push to `main` that touches the site or the code the docs describe deploys it, and every pull request gets a preview. CI runs `npm run docs:check` on every pull request and push to `main`. The docs are not part of the npm package.
 
+GitHub Pages carries a second copy at connortessaro.github.io/kizuki. `.github/workflows/pages.yml` builds it with `npm run docs:site` on every push to `main` and deploys it.
+
 When you bump the version, `npm version` runs `npm run docs` and adds the new `docs/openapi.json` to the version commit, because the reference names the version.
