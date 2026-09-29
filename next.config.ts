@@ -70,8 +70,7 @@ export { home as kizukiHomeForConfig };
  *     answer carries the four safety headers listed under each response.
  *
  *     Next.js also answers `HEAD` for every page and file, with the same headers and no body, and
- *     `OPTIONS` for route handlers. Addresses Kizuki has no page for get the 404 "Not found"
- *     page.
+ *     `OPTIONS` for route handlers. An address with no page gets the 404 "Not found" page.
  *   license:
  *     name: Apache-2.0
  *     identifier: Apache-2.0
