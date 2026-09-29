@@ -146,5 +146,43 @@ ollama pull nomic-embed-text</code></pre>
       <p>Kizuki is free and open source under the Apache 2.0 license.</p>
       <p><a href="https://github.com/connortessaro/kizuki">Source and issues on GitHub</a> · <a href="/docs/">Code docs</a></p>
     </footer>
+    <script>
+      // Turns the start command into a button that copies it. Without this script it stays text you can select.
+      (() => {
+        const code = document.querySelector(".start > code");
+        if (!code || !navigator.clipboard) return;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "copy";
+        button.setAttribute("aria-label", `Copy ${code.textContent}`);
+        const done = document.createElement("span");
+        done.className = "done";
+        done.textContent = "Copied";
+        done.setAttribute("aria-hidden", "true");
+        const status = document.createElement("span");
+        status.className = "status";
+        status.setAttribute("role", "status");
+        code.replaceWith(button);
+        button.append(code, done);
+        button.after(status);
+        let timer;
+        button.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+          } catch {
+            // The browser refused; select the command so it can be copied by hand.
+            getSelection().selectAllChildren(code);
+            return;
+          }
+          button.dataset.copied = "";
+          status.textContent = "Copied";
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            delete button.dataset.copied;
+            status.textContent = "";
+          }, 1600);
+        });
+      })();
+    </script>
   </body>
 </html>
