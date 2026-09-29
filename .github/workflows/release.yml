@@ -65,7 +65,9 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: npm
+          # No dependency cache here either: this job builds the tarball that
+          # gets signed and attached to the release.
+          package-manager-cache: false
       - run: npm ci
       - name: Pack the tarball (builds the app first)
         id: pack
@@ -127,7 +129,9 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: npm
+          # No dependency cache in the job that can publish: a poisoned cache
+          # entry would run here with the right to publish.
+          package-manager-cache: false
           registry-url: https://registry.npmjs.org
       - name: Use an npm that supports trusted publishing
         # Pinned: an unpinned "latest" would run whatever npm publishes next, in the job that can publish.
