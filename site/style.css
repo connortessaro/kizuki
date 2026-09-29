@@ -33,10 +33,18 @@ body {
 a {
   color: var(--pencil-deep);
   text-underline-offset: 0.18em;
+  transition: color 150ms ease;
 }
 
-a:hover {
-  color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    color: var(--ink);
+  }
+}
+
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 :focus-visible {
@@ -91,16 +99,21 @@ pre {
 .top nav {
   display: flex;
   gap: 1.4rem;
+  margin: -0.625rem 0;
   font-size: 0.95rem;
 }
 
+/* The padding makes each link at least 44px tall to tap; the nav's negative margin keeps the header height. */
 .top nav a {
+  padding: 0.625rem 0;
   color: var(--stone);
   text-decoration: none;
 }
 
-.top nav a:hover {
-  color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .top nav a:hover {
+    color: var(--ink);
+  }
 }
 
 main {
@@ -160,15 +173,59 @@ main {
   margin-top: 2rem;
 }
 
-.start code {
+.start > code,
+.copy {
   background: var(--ink);
   color: var(--paper);
   padding: 0.7rem 1.1rem;
   border-radius: 4px;
   font-size: 0.9rem;
-  user-select: all;
   line-height: 1.5;
   max-width: 100%;
+}
+
+.start > code {
+  user-select: all;
+}
+
+/* The script in index.html turns the command into this button. */
+.copy {
+  display: inline-grid;
+  border: 0;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: transform 160ms ease-out;
+}
+
+.copy:active {
+  transform: scale(0.97);
+}
+
+/* The command and "Copied" share one spot, so the button keeps its width. */
+.copy > * {
+  grid-area: 1 / 1;
+}
+
+.copy code {
+  font-size: inherit;
+}
+
+.copy .done,
+.copy[data-copied] code {
+  visibility: hidden;
+}
+
+.copy[data-copied] .done {
+  visibility: visible;
+}
+
+.start .status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .exchange {
@@ -238,7 +295,7 @@ main {
 }
 
 .choices span {
-  border: 1px solid var(--rule);
+  border: 1px dashed var(--rule);
   border-radius: 999px;
   padding: 0.25rem 0.75rem;
   color: var(--stone);
@@ -379,6 +436,11 @@ main {
   margin: 0 0 0.3rem;
 }
 
+/* Taller to tap. Padding on a link inside a line does not move the text around it. */
+.foot a {
+  padding: 0.875rem 0;
+}
+
 /* Smaller screens */
 
 @media (max-width: 960px) {
@@ -412,7 +474,7 @@ main {
 }
 
 @media (max-width: 560px) {
-  .top nav a:not(:last-child) {
+  .top nav a:first-child {
     display: none;
   }
 

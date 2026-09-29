@@ -663,7 +663,7 @@ export function specText(spec: Json): string {
 
 /** The viewer page for the HTTP reference. It loads the Scalar viewer from the same folder, so it makes no requests to other sites. */
 export function viewerPage(): string {
-  const config = { url: "./openapi.json", hideTestRequestButton: true, hideClientButton: true, telemetry: false, withDefaultFonts: false, showDeveloperTools: "never", hideModels: true, agent: { disabled: true }, mcp: { disabled: true } };
+  const config = { url: "./openapi.json", hideTestRequestButton: true, hideClientButton: true, telemetry: false, withDefaultFonts: false, showDeveloperTools: "never", hideModels: true, agent: { disabled: true }, mcp: { disabled: true }, forceDarkModeState: "light", hideDarkModeToggle: true };
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -671,7 +671,14 @@ export function viewerPage(): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kizuki HTTP API</title>
     <link rel="icon" href="/seal-ki.svg" type="image/svg+xml" />
-    <style>:root { --scalar-font: system-ui, -apple-system, "Segoe UI", sans-serif; --scalar-font-code: ui-monospace, "SF Mono", Menlo, monospace; } .back { display: block; padding: 0.5rem 1rem; font: 14px system-ui, sans-serif; }</style>
+    <style>
+      :root { --scalar-font: system-ui, -apple-system, "Segoe UI", sans-serif; --scalar-font-code: ui-monospace, "SF Mono", Menlo, monospace; }
+      /* The colors of kizuki.dev (site/style.css). The page stays light, like the home page. */
+      .light-mode { --scalar-color-1: #1a1a18; --scalar-color-2: #6b6b66; --scalar-color-accent: #8f5412; --scalar-background-1: #fafaf7; --scalar-background-2: #f3f0e7; --scalar-background-3: #e7e4db; --scalar-background-accent: #c4761f1f; --scalar-border-color: #e7e4db; }
+      .back { display: block; padding: 0.8rem 1rem; font: 14px/1.4 system-ui, sans-serif; color: #8f5412; text-underline-offset: 0.18em; transition: color 150ms ease; }
+      .back:focus-visible { outline: 2px solid #c4761f; outline-offset: -2px; }
+      @media (hover: hover) and (pointer: fine) { .back:hover { color: #1a1a18; } }
+    </style>
   </head>
   <body>
     <a class="back" href="../index.html">← Kizuki code docs and guides</a>
