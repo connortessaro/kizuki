@@ -1,5 +1,7 @@
 # Kizuki
 
+[![npm](https://img.shields.io/npm/v/kizuki)](https://www.npmjs.com/package/kizuki) [![CI](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml/badge.svg)](https://github.com/connortessaro/kizuki/actions/workflows/ci.yml) [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/connortessaro/kizuki/badge)](https://scorecard.dev/viewer/?uri=github.com/connortessaro/kizuki)
+
 A study tool for your terminal. You add your course material and teach a concept in your own words. Kizuki plays the student: it asks about what you got wrong, what you left out, and what you said unclearly, and every question quotes your own material. Concepts you miss come back for review before you forget them.
 
 *Kizuki* (気付き) means "noticing": the moment something clicks.
