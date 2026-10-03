@@ -222,6 +222,9 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
+          # No fixed version exists. It only arrives through @workflow/nest >
+          # @swc/cli, which Kizuki never runs. Matches pnpm-workspace.yaml.
+          allow-ghsas: GHSA-ch52-4w7c-c8xp
           # Keep the dependency tree permissive-only, matching NOTICE.
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
           # sharp's prebuilt libvips binaries (used by Next.js for images) are
