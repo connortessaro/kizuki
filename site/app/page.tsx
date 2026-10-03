@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -25,6 +24,14 @@ import {
 } from "@/components/ui/table"
 
 const GITHUB = "https://github.com/connortessaro/kizuki"
+
+/** The top bar's links. Narrow screens hide the first two. */
+const NAV = [
+  { href: "#research", label: "Research", hideBelow: "hidden md:inline-flex" },
+  { href: "#how", label: "How it works", hideBelow: "hidden sm:inline-flex" },
+  { href: "#commands", label: "Commands" },
+  { href: "#setup", label: "Set up" },
+]
 
 const RESEARCH = [
   {
@@ -146,7 +153,7 @@ function Seal({ className = "" }: { className?: string }) {
   return (
     <span
       aria-hidden
-      className={`inline-block bg-foreground [mask:url(/seal-ki.svg)_center/contain_no-repeat] ${className}`}
+      className={cn("inline-block bg-foreground [mask:url(/seal-ki.svg)_center/contain_no-repeat]", className)}
     />
   )
 }
@@ -171,20 +178,15 @@ export default function Page() {
             Kizuki
           </Link>
           <nav aria-label="Site" className="flex items-center gap-1">
-            {[
-              ["#research", "Research", "hidden md:inline-flex"],
-              ["#how", "How it works", "hidden sm:inline-flex"],
-              ["#commands", "Commands", ""],
-              ["#setup", "Set up", ""],
-            ].map(([href, label, cls]) => (
+            {NAV.map((item) => (
               <Button
-                key={href}
+                key={item.href}
                 asChild
                 variant="ghost"
                 size="sm"
-                className={`h-11 px-2.5 text-muted-foreground hover:text-foreground ${cls}`}
+                className={cn("h-11 px-2.5", item.hideBelow)}
               >
-                <a href={href}>{label}</a>
+                <a href={item.href}>{item.label}</a>
               </Button>
             ))}
             <Button
@@ -194,7 +196,7 @@ export default function Page() {
               className="ml-1 h-9 gap-1"
             >
               <a href={GITHUB}>
-                GitHub <ArrowUpRight aria-hidden />
+                GitHub <ArrowUpRight data-icon="inline-end" aria-hidden />
               </a>
             </Button>
           </nav>
@@ -264,19 +266,17 @@ export default function Page() {
         >
           <div className="grid gap-4 sm:grid-cols-2">
             {RESEARCH.map((r) => (
-              <Card key={r.figure} className="gap-0 py-6">
-                <CardHeader className="px-6">
-                  <CardTitle className="text-5xl font-semibold tracking-tighter tabular-nums sm:text-6xl">
+              <Card key={r.figure} className="py-6">
+                <CardContent className="flex flex-1 flex-col gap-3 px-6">
+                  <p className="text-5xl font-semibold tracking-tighter tabular-nums sm:text-6xl">
                     {r.figure}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="mt-3 px-6 text-base text-muted-foreground">
-                  {r.text}
+                  </p>
+                  <p className="text-muted-foreground">{r.text}</p>
                 </CardContent>
-                <CardFooter className="mt-auto border-t px-6 pt-4 pb-0 text-xs text-muted-foreground">
+                <CardFooter className="px-6">
                   <a
                     href={r.href}
-                    className="underline-offset-4 hover:text-foreground hover:underline"
+                    className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
                     {r.source}
                   </a>
@@ -290,15 +290,13 @@ export default function Page() {
           </h3>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {MEASURED.map((m) => (
-              <Card key={m.figure} className="bg-muted/50 py-6">
-                <CardHeader className="px-6">
-                  <CardTitle className="text-5xl font-semibold tracking-tighter tabular-nums">
+              <Card key={m.figure} className="py-6">
+                <CardContent className="flex flex-col gap-3 px-6">
+                  <p className="text-5xl font-semibold tracking-tighter tabular-nums">
                     {m.figure}
-                  </CardTitle>
-                  <CardDescription className="mt-2 text-base">
-                    {m.text}
-                  </CardDescription>
-                </CardHeader>
+                  </p>
+                  <p className="text-muted-foreground">{m.text}</p>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -389,16 +387,13 @@ export default function Page() {
         >
           <Card className="py-8">
             <CardHeader className="px-8">
-              <CardTitle
-                id="rule-title"
-                className="text-3xl font-semibold tracking-tight"
-              >
+              <h2 className="text-3xl font-semibold tracking-tight">
                 It only quotes your material.
-              </CardTitle>
-              <CardDescription className="mt-2 text-base">
+              </h2>
+              <p className="mt-2 text-muted-foreground">
                 Kizuki&apos;s model can&apos;t write facts, quotes, or questions
                 in its own words. The code checks this before you see anything.
-              </CardDescription>
+              </p>
             </CardHeader>
             <CardContent className="px-8">
               <ul className="divide-y border-t text-[15px]">
@@ -424,14 +419,14 @@ export default function Page() {
           </Card>
           <Card className="py-8">
             <CardHeader className="px-8">
-              <CardTitle className="text-3xl font-semibold tracking-tight">
+              <h2 className="text-3xl font-semibold tracking-tight">
                 It stays on your computer.
-              </CardTitle>
-              <CardDescription className="mt-2 text-base">
+              </h2>
+              <p className="mt-2 text-muted-foreground">
                 You don&apos;t need an account. Kizuki runs a small model
                 through Ollama, and it keeps your files and history in one
                 folder you can copy or delete.
-              </CardDescription>
+              </p>
             </CardHeader>
             <CardContent className="px-8">
               <ul className="divide-y border-t text-[15px] [&_code]:font-mono [&_code]:text-[13px]">
@@ -455,7 +450,7 @@ export default function Page() {
         <Separator className="mx-auto max-w-5xl" />
 
         <Section id="setup" title="Set up.">
-          <ol className="mx-auto max-w-2xl space-y-10">
+          <ol className="mx-auto flex max-w-2xl flex-col gap-10">
             <li className="flex gap-5">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-sm font-semibold text-background">
                 1

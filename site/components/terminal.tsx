@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+import { cn } from "@/lib/utils"
+
 /** Quoted material, in the same yellow the app uses. */
 function Q({ children }: { children: ReactNode }) {
   return <span className="text-[#FFD60A]">“{children}”</span>
@@ -23,9 +25,9 @@ function Line({
 }) {
   return (
     <div
-      className={`term-line flex ${gap ? "mt-4" : "mt-1"} ${indent ? "pl-4" : ""}`}
+      className={cn("term-line flex", gap ? "mt-4" : "mt-1", indent && "pl-4")}
     >
-      <span aria-hidden className={`w-5 shrink-0 ${markClass ?? ""}`}>
+      <span aria-hidden className={cn("w-5 shrink-0", markClass)}>
         {mark ?? ""}
       </span>
       <p className={className}>{children}</p>
