@@ -1,20 +1,5 @@
-import { addDays, localDate, planReviews, type ReviewPlan } from "./schedule";
+import { planReviews, type ReviewPlan } from "./schedule";
 import { resolveConceptId, type State } from "./state";
-
-/** The Monday that starts the week containing `date` (`YYYY-MM-DD`). */
-export function startOfWeek(date: string): string {
-  const day = new Date(`${date}T00:00:00.000Z`).getUTCDay();
-  return addDays(date, -((day + 6) % 7));
-}
-
-/** How many catches were recorded in the week (Monday to Sunday) containing `today`. */
-export function catchesThisWeek(state: State, today: string, timeZone?: string): number {
-  const monday = startOfWeek(today);
-  return state.catches.filter((c) => {
-    const d = localDate(c.at, timeZone);
-    return d >= monday && d <= addDays(monday, 6);
-  }).length;
-}
 
 /** Works out the review plan for every confirmed concept, counting sessions for merged concepts toward their target. */
 export function reviewPlans(state: State, today: string, timeZone?: string): Map<string, ReviewPlan> {

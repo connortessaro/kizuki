@@ -41,7 +41,8 @@ body:
         - Concept review or suggested order
         - Teach-back session
         - Review schedule
-        - Settings or models
+        - Models (/model)
+        - kizuki.dev website
         - Not sure
     validations:
       required: true
@@ -50,7 +51,7 @@ body:
     id: version
     attributes:
       label: Kizuki version or commit
-      placeholder: "0.2.0, or the commit you are running"
+      placeholder: "1.0.0 (kizuki --version), or the commit you are running"
     validations:
       required: true
 
@@ -66,7 +67,7 @@ body:
     id: models
     attributes:
       label: Models
-      description: The answer model and meaning-search model from Settings.
+      description: Run /model in Kizuki and paste its two lines.
       placeholder: "qwen3.5:2b and nomic-embed-text through Ollama"
 
   - type: textarea

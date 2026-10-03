@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { reduceState, type Logs } from "./state";
-import { catchesThisWeek, startOfWeek, todayView, weakPrerequisites } from "./views";
+import { todayView, weakPrerequisites } from "./views";
 
 const at = (d: string) => `${d}T12:00:00.000Z`;
 
@@ -29,23 +29,6 @@ describe("todayView", () => {
     const view = todayView(reduceState(logs()), "2026-09-10", "UTC");
     expect(view.due.map((d) => d.name)).toEqual(["Atoms"]);
     expect(view.blocked).toEqual([{ conceptId: "b", name: "Bonds", courseId: "c1", courseName: "Biology", waitingOn: ["Atoms"] }]);
-  });
-});
-
-describe("weeks", () => {
-  it("starts weeks on Monday", () => {
-    expect(startOfWeek("2026-09-24")).toBe("2026-09-21");
-    expect(startOfWeek("2026-09-21")).toBe("2026-09-21");
-    expect(startOfWeek("2026-09-20")).toBe("2026-09-14");
-  });
-
-  it("counts catches recorded this week", () => {
-    const l = logs();
-    l.catches.push(
-      { type: "catch.recorded", at: at("2026-09-22"), catchId: "k1", sessionId: "s", conceptId: "a", note: "" },
-      { type: "catch.recorded", at: at("2026-09-18"), catchId: "k2", sessionId: "s", conceptId: "a", note: "" },
-    );
-    expect(catchesThisWeek(reduceState(l), "2026-09-24", "UTC")).toBe(1);
   });
 });
 

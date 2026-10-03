@@ -9,7 +9,7 @@ Website: [kizuki.dev](https://kizuki.dev) · Docs: [kizuki.dev/docs](https://kiz
 - **It never makes things up.** The model never writes facts in its own words. It points at sentences of your material, and Kizuki shows those sentences word for word, each with a numbered link to the page, slide, or cell it came from.
 - **Your material wins.** When you and your material disagree, Kizuki shows the passage and asks which is right. If the material is wrong (a slide typo, or your professor corrected it in class), your correction wins from then on.
 - **Nothing is saved without your OK.** Proposed concepts, prerequisite links, and "what you missed" all wait for you to confirm them.
-- **Everything stays on your computer** unless you choose otherwise. By default Kizuki runs a small model through Ollama. There is no account and no cloud.
+- **Everything stays on your computer** unless you choose otherwise. By default Kizuki runs a small model through Ollama.
 
 ## Start
 
@@ -33,15 +33,10 @@ Type `/course Biology 101` to make a course, then:
 
 1. **Add material.** Drop files onto the window, or type `/add ~/Downloads/lecture1.pdf`. Kizuki reads PDFs with a text layer, PowerPoint, Word, Excel, CSV, markdown, and text, and remembers where every passage came from.
 2. **Review concepts.** Every heading in your file becomes a proposed concept, and the model adds smaller ideas inside each section. `/review` shows them in a list: untick the ones you don't want and press Enter. Then Kizuki suggests an order ("A needs B first"), which you confirm too.
-3. **Teach it back.** `/teach` picks the first concept that is due. Explain it from memory: Kizuki hides the material until you finish. It asks up to three rounds of questions:
-   - *Does this fit?* The material says something different from what you wrote. You say which is right: the material, you (the material is wrong, so you correct it), or neither (Kizuki misread you).
-   - *Something you left out.* The material has an idea you did not mention.
-   - *Say more.* You used vague words.
+3. **Teach it back.** `/teach` picks the first concept that is due. Explain it from memory: Kizuki hides the material until you finish. Over up to three rounds, it asks where you disagree with the material, what you left out, and what you said vaguely. When you disagree, you say which is right; if the material is wrong, your correction wins.
 4. **Confirm what you missed.** Kizuki lists sentences from the material you may have missed. You tick the ones you missed. Then it shows the passages, so you read the material after recalling it.
 5. **Try again.** After misses, Kizuki offers another try right away, from memory, up to three tries.
 6. **Review.** A clean session doubles the wait before the next review (1, 2, 4, 8 days, up to 60). A session with misses brings the concept back tomorrow. A concept waits until the concepts it needs are solid. Set an exam date with `/exam 2026-12-15` and reviews move before it.
-
-The goal is at least one **catch** a week: something Kizuki caught that you would have gotten wrong on an exam. Record one with `/catch <note>` after a session; `/history` counts them.
 
 ## Commands
 
@@ -72,41 +67,15 @@ The defaults are `qwen3.5:2b` for choosing questions and `nomic-embed-text` for 
 
 For bigger models without a fast computer, use [Vercel AI Gateway](https://vercel.com/ai-gateway): set `AI_GATEWAY_API_KEY` where you start Kizuki, then type `/model gateway`. This sends your material, your explanations, and your answers off your computer, so Kizuki asks you first. `/model answer <name>` picks any model the gateway lists. API keys are read from environment variables and never saved.
 
-A bigger model asks better questions and finds more misses. The rules stay the same at any size: code checks every quote and writes every question.
+See [Models](docs/guides/local-models.md) for every setting.
 
 ## Your data
 
-Everything lives in `~/.kizuki/` (or the folder in `KIZUKI_HOME` or `--home`):
+Everything lives in `~/.kizuki/` (or the folder in `KIZUKI_HOME` or `--home`). To back up your study data, copy that folder. See [Storage and privacy](docs/guides/storage-and-privacy.md).
 
-- `files/`: copies of your original files
-- `data/*.jsonl`: logs of everything that happened. Each line is one event, and lines are only ever added. The logs are the truth.
-- `index.sqlite`: the search file. `/rebuild` rebuilds it from the logs at any time.
-- `settings.json`: which models to use
+## Docs and development
 
-To back up your study data, copy that folder.
-
-## Develop
-
-```bash
-pnpm install
-pnpm build      # bundle the app into dist/
-pnpm dev        # build, then start Kizuki
-pnpm test       # plain tests, no model needed
-pnpm qc         # every check CI runs: lint, types, docs, tests with coverage, PII check, pnpm audit
-pnpm eval       # model tests against your local Ollama (slow)
-pnpm run docs   # the docs site into docs/api/ (also at kizuki.dev/docs)
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Docs
-
-[kizuki.dev/docs](https://kizuki.dev/docs/) is generated from the code on `main` and rebuilt whenever a push to `main` changes it:
-
-- Code reference: every exported function and type, from the doc comments.
-- Guides: adding material, teach-back sessions, the rules that keep the model from making things up, how people learn, spaced review, models, and storage ([docs/guides/](docs/guides/)).
-
-The docs build fails when an export has no doc comment or a link points at nothing. See [How these docs are made](docs/guides/how-the-docs-are-made.md).
+The code reference and guides are at [kizuki.dev/docs](https://kizuki.dev/docs/). To work on Kizuki, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

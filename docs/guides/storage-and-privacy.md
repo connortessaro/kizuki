@@ -45,9 +45,7 @@ Kizuki creates `files/` and `data/` as folders only your user can open (mode 700
 
 ## What leaves your computer
 
-With the default settings, nothing. Kizuki sends requests only to the model servers in your settings. With a hosted model, those requests carry your material's sentences, your corrections, and what you wrote in sessions; Kizuki asks for your OK before settings that do this take effect. See [Models](./local-models.md).
-
-The kizuki.dev site, which hosts these docs, is separate from the app and never sees your data.
+With the default settings, nothing. A hosted model receives what you send it, and Kizuki asks first; [Models](./local-models.md) explains what goes out and when. The kizuki.dev site is separate from the app and never sees your data.
 
 ## Other things Kizuki keeps
 
