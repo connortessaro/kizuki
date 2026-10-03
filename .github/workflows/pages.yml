@@ -1,6 +1,6 @@
 name: Pages
 
-# Publishes the code docs (TypeDoc, with the guides and the HTTP reference) to
+# Publishes the code docs (TypeDoc, with the guides) to
 # GitHub Pages on each push to main: https://connortessaro.github.io/kizuki/.
 # `pnpm docs:site` builds the same site locally into docs/api/.
 
@@ -42,15 +42,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Build the site from the committed docs/openapi.json
+      - name: Build the site
         run: pnpm docs:site
-      # typedoc.json links to /docs/http-api/, where kizuki.dev serves it.
-      # Pages serves this site under /kizuki/ instead.
-      - name: Point the links at the Pages address
-        run: |
-          grep -rl 'href="/docs/http-api/"' docs/api | xargs sed -i 's|href="/docs/http-api/"|href="/kizuki/http-api/"|g'
-          cp public/seal-ki.svg docs/api/seal-ki.svg
-          sed -i 's|href="/seal-ki.svg"|href="../seal-ki.svg"|' docs/api/http-api/index.html
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: docs/api

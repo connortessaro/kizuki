@@ -15,6 +15,7 @@ export const COMMANDS = [
   "/exam",
   "/help",
   "/history",
+  "/links",
   "/merge",
   "/model",
   "/open",

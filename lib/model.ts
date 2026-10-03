@@ -91,17 +91,6 @@ export function embedPrefix(model: string, kind: "document" | "query"): string {
 
 /**
  * A function that turns texts into numbers for meaning search, using the configured model.
- *
- * @openapi
- * outbound:
- *   POST {baseURL}/embeddings:
- *     description: >-
- *       Turns texts into numbers for meaning search, through the AI SDK: the passages of a file
- *       when it is added (32 at a time) or the search file is rebuilt, and your explanation and
- *       answers when a session looks for related passages. For nomic models each text starts
- *       with `search_document: ` or `search_query: `.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
  */
 export function makeEmbedder(embed: EmbedSettings, env: Env = process.env): Embedder {
   return async (texts, kind) => {
@@ -137,19 +126,6 @@ export type Ask = <T>(request: { system: string; prompt: string; schema: z.ZodTy
 /**
  * Makes an {@link Ask} function for the configured answer model. With `replyShape: "prompt"`
  * the shape goes into the instructions and Kizuki reads and checks the reply itself.
- *
- * @openapi
- * outbound:
- *   POST {baseURL}/chat/completions:
- *     description: >-
- *       Asks the answer model, through the AI SDK, to propose concepts, prerequisite links, or
- *       questions, or to list what you missed. The body holds Kizuki's instructions, the
- *       labeled sentences of your material, your corrections and readings, and (in a
- *       session) your explanation and answers. Temperature is 0.2. With reasoning `none` it
- *       adds `reasoning_effort: "none"` and `chat_template_kwargs: {"enable_thinking": false}`;
- *       with reply shape `server` it adds a `response_format` with the reply's JSON Schema.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
  */
 export function makeAsk(chat: ChatSettings, env: Env = process.env): Ask {
   return async ({ system, prompt, schema }) => {
@@ -185,16 +161,6 @@ export interface ModelCheck {
 
 /**
  * Checks that the model servers answer and both models are installed, with fix-it messages.
- *
- * @openapi
- * outbound:
- *   GET {baseURL}/models:
- *     description: >-
- *       Lists the models a server has, to check that the answer model and the meaning-search
- *       model are installed. Sent once per server address each time the Today or Settings page loads, and by
- *       the `kizuki` command at start. Gives up after 5 seconds. Carries no study data.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`). The key is read from that environment variable."
  */
 export async function checkModels(settings: Settings, env: Env = process.env, fetchImpl: typeof fetch = fetch): Promise<ModelCheck> {
   const problems: string[] = [];

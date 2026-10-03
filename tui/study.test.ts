@@ -303,3 +303,242 @@ describe("models", () => {
     expect(said(s)).toContain("Run /rebuild");
   });
 });
+
+describe("courses and concepts", () => {
+  it("lists courses, switches by name, and refuses a bad exam date", async () => {
+    const s = study();
+    await s.start();
+    await type(s, "/course");
+    expect(said(s)).toContain("No courses yet");
+    await type(s, "/course Biology");
+    await type(s, "/course Chemistry");
+    await type(s, "/course biology");
+    expect(said(s)).toContain("Switched to Biology.");
+    await type(s, "/course");
+    expect(said(s)).toContain("❯ Biology");
+    await type(s, "/exam next week");
+    expect(said(s)).toContain("YYYY-MM-DD");
+    await type(s, "/exam 2099-12-15");
+    await type(s, "/course");
+    expect(said(s)).toContain("Biology · exam 2099-12-15");
+    await type(s, "/exam none");
+    expect(said(s)).toContain("Exam date cleared.");
+  });
+
+  it("renames, merges, and drops concepts by name, and asks before dropping", async () => {
+    const s = study();
+    await courseWithConcepts(s);
+    await type(s, "/concepts");
+    expect(said(s)).toMatch(/Photosynthesis · (due now|next )/);
+    await type(s, "/rename photo = Light reactions");
+    expect(said(s)).toContain("Renamed Photosynthesis to Light reactions.");
+    await type(s, "/rename nothing here");
+    expect(said(s)).toContain("Write it as /rename old name = new name.");
+    await type(s, "/drop respiration");
+    await pick(s, ["no"]);
+    expect(said(s)).toContain("Nothing changed.");
+    await type(s, "/merge respiration into light");
+    expect(said(s)).toContain("would make a loop");
+    await type(s, "/links");
+    await pick(s, []);
+    expect(said(s)).toContain("Removed 1 link.");
+    await type(s, "/links");
+    expect(said(s)).toContain("No confirmed links.");
+    await type(s, "/merge respiration into light");
+    expect(said(s)).toContain("Merged Respiration into Light reactions.");
+    await type(s, "/drop light");
+    await pick(s, ["yes"]);
+    const statuses = [...(await loadState(home)).concepts.values()].map((c) => c.status);
+    expect(statuses).toEqual(["dropped", "merged"]);
+    await type(s, "/concepts");
+    expect(said(s)).toContain("No confirmed concepts yet");
+  });
+
+  it("asks you to type more of a name that matches several concepts", async () => {
+    const s = study();
+    await courseWithConcepts(s);
+    await type(s, "/drop s");
+    expect(said(s)).toContain('"s" matches Photosynthesis, Respiration');
+  });
+
+  it("shows what is due, coming up, and waiting", async () => {
+    const s = study();
+    await courseWithConcepts(s);
+    await type(s, "/due");
+    expect(said(s)).toContain("Due now: Photosynthesis");
+    expect(said(s)).toContain("Waiting: Respiration needs Photosynthesis first");
+  });
+});
+
+describe("history and models", () => {
+  it("summarizes the last 8 weeks", async () => {
+    const s = study("gap");
+    await courseWithConcepts(s);
+    await type(s, "/history");
+    expect(said(s)).toContain("No sessions in the last 8 weeks.");
+    await type(s, "/teach");
+    await type(s, "Photosynthesis makes chemical energy from light.");
+    await type(s, "");
+    await pick(s, ["no"]);
+    await pick(s, []);
+    await type(s, "/history");
+    expect(said(s)).toMatch(/Last 8 weeks: 1 sessions, 1 clean, 0 catches/);
+  });
+
+  it("shows the models, changes one by name, and rebuilds the search file", async () => {
+    const s = study();
+    await courseWithConcepts(s);
+    await type(s, "/model");
+    expect(said(s)).toContain("Answer model: qwen3.5:2b at http://localhost:11434/v1");
+    await type(s, "/model answer qwen3.5:9b");
+    expect((await readSettings(home)).chat.model).toBe("qwen3.5:9b");
+    await type(s, "/model search other-embed");
+    expect(said(s)).toContain("Run /rebuild");
+    await type(s, "/model sideways");
+    expect(said(s)).toContain("Use /model, /model ollama|mlx|gateway");
+    await type(s, "/rebuild");
+    expect(said(s)).toContain("Rebuilt the search file: 2 passages.");
+  });
+});
+
+describe("the conversation", () => {
+  it("prints help, hints at plain text, and refuses a second command while one waits", async () => {
+    const s = study();
+    await courseWithConcepts(s);
+    await type(s, "/help");
+    expect(said(s)).toContain("/teach [concept]");
+    await type(s, "hello there");
+    expect(said(s)).toContain("Type /teach to start, or /help.");
+    await type(s, "/drop photosynthesis");
+    await type(s, "words while a list waits");
+    expect(said(s)).toContain("Pick from the list");
+    await type(s, "/due");
+    expect(said(s)).toContain("Finish what Kizuki is asking first");
+    s.cancel();
+    await s.idle();
+  });
+
+  it("asks you to make a course before adding files, and needs a path", async () => {
+    const s = study();
+    await s.start();
+    await type(s, "/add");
+    expect(said(s)).toContain("Name the files to add");
+    await type(s, `/add ${join(files, "bio notes.md").replace(/ /g, "\\ ")}`);
+    expect(said(s)).toContain("Make a course first: /course <name>.");
+  });
+
+  it("asks what a sentence means during review and saves your answer", async () => {
+    const s = new Study({
+      home,
+      env: {},
+      models: {
+        ask: async ({ system, prompt }) => {
+          if (system.includes("concept map")) {
+            const label = /\[(S\d+)\] It happens/.exec(prompt)?.[1];
+            return { concepts: [], unclear: label ? [{ sentence: label }] : [] } as never;
+          }
+          return fakeAsk("gap")({ system, prompt } as never);
+        },
+        embed: fakeEmbed,
+        embedModel: "fake",
+      },
+      checkModels: async () => ({ ok: true, problems: [] }),
+    });
+    await s.start();
+    await type(s, "/course Biology");
+    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    await type(s, "/review");
+    await pick(s);
+    if (s.view().panel) await pick(s);
+    expect(s.view().prompt).toContain("What does it mean?");
+    await type(s, "Where it takes place in the cell.");
+    const [clarification] = (await loadState(home)).clarifications.values();
+    expect(clarification?.answer).toBe("Where it takes place in the cell.");
+    await type(s, "/review");
+    expect(said(s)).toContain("Nothing is waiting for review.");
+  });
+});
+
+describe("after a restart", () => {
+  it("finishes a file added before Kizuki closed, and offers to pick up an open session", async () => {
+    const first = study();
+    await courseWithConcepts(first);
+    await type(first, "/teach photosynthesis");
+    await type(first, "Photosynthesis makes chemical energy from light.");
+    first.cancel();
+    await first.idle();
+
+    const second = study();
+    await second.start();
+    expect(said(second)).toContain("A session is still open.");
+    await type(second, "/teach photosynthesis");
+    expect(second.view().panel?.title).toContain("still open");
+    await pick(second, ["yes"]);
+    expect(said(second)).toContain("How does that fit");
+    second.cancel();
+    await second.idle();
+
+    const third = study();
+    await third.start();
+    await type(third, "/teach photosynthesis");
+    await pick(third, ["no"]);
+    expect(third.view().prompt).toBe("Your explanation");
+    const stopped = [...(await loadState(home)).sessions.values()][0]!;
+    expect(stopped.error).toBe("You stopped this session.");
+  });
+
+  it("reports a file whose processing failed", async () => {
+    const s = new Study({
+      home,
+      env: {},
+      models: { ask: fakeAsk("gap"), embed: async () => { throw new Error("the meaning model is down"); }, embedModel: "fake" },
+      checkModels: async () => ({ ok: true, problems: [] }),
+    });
+    await s.start();
+    await type(s, "/course Biology");
+    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    expect(said(s)).toContain("bio notes.md failed: the meaning model is down. Add the same file again to try again.");
+  });
+
+  it("tries a failed file again when you add the same file, instead of adding it twice", async () => {
+    const broken = new Study({
+      home,
+      env: {},
+      models: { ask: fakeAsk("gap"), embed: async () => { throw new Error("the meaning model is down"); }, embedModel: "fake" },
+      checkModels: async () => ({ ok: true, problems: [] }),
+    });
+    await broken.start();
+    await type(broken, "/course Biology");
+    await type(broken, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    const s = study();
+    await s.start();
+    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    expect(said(s)).toContain("Trying bio notes.md again.");
+    const materials = [...(await loadState(home)).materials.values()];
+    expect(materials.map((m) => m.status)).toEqual(["review"]);
+  });
+});
+
+describe("catches after a restart", () => {
+  it("records a catch for the course's most recent session", async () => {
+    const first = study("gap");
+    await courseWithConcepts(first);
+    await type(first, "/teach");
+    await type(first, "Photosynthesis makes chemical energy from light.");
+    await type(first, "");
+    await pick(first, ["no"]);
+    await pick(first, []);
+    const second = study("gap");
+    await second.start();
+    await type(second, "/catch mixed up the two stages");
+    expect((await loadState(home)).catches[0]?.note).toBe("mixed up the two stages");
+  });
+
+  it("says to finish a session when there is none", async () => {
+    const s = study();
+    await s.start();
+    await type(s, "/course Biology");
+    await type(s, "/catch nothing yet");
+    expect(said(s)).toContain("Finish a session first.");
+  });
+});

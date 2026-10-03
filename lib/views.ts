@@ -58,7 +58,7 @@ export interface TodayView {
   /** Concepts due after today, soonest first. */
   upcoming: DueItem[];
   /** Concepts waiting on prerequisites, with the names of the concepts they wait on in `waitingOn` (an id if the concept is missing). */
-  blocked: { conceptId: string; name: string; courseName: string; waitingOn: string[] }[];
+  blocked: { conceptId: string; name: string; courseId: string; courseName: string; waitingOn: string[] }[];
 }
 
 /** Builds the Today page's lists from the current state. */
@@ -79,6 +79,7 @@ export function todayView(state: State, today: string, timeZone?: string): Today
         return {
           conceptId: c.conceptId,
           name: c.name,
+          courseId: c.courseId,
           courseName: state.courses.get(c.courseId)?.name ?? "",
           waitingOn: p.blockedBy.map((id) => state.concepts.get(id)?.name ?? id),
         };

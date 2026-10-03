@@ -20,11 +20,13 @@ A "Does this fit?" question shows the sentence of the material that differs from
 | The material is wrong. | verdict `material-wrong`, plus your version | {@link lib/sessionFlow!recordAnswers | recordAnswers} saves a correction ({@link lib/commands!addCorrection | addCorrection}) tied to the session, with your answer as its note. Your version is required. |
 | Neither: Kizuki misread what I wrote. | verdict `misread` | No miss and no correction. A small model sometimes sees a disagreement that is not there. |
 
-The form refuses to send a round until every "Does this fit?" question has a choice.
+Kizuki shows these three choices as a pick list, and asks for your version right after "The material is wrong". {@link lib/sessionFlow!recordAnswers | recordAnswers} also checks in code: it refuses a round where a "Does this fit?" question has no choice, or where "the material is wrong" has no version.
 
-## On a source page
+## Outside a session
 
-Every quote links to its passage at `/sources/{passageId}`, which shows the passage with its neighbors, any corrections, and a link to the original file (at the right page for a PDF). "Correct this passage" asks for the wrong text, your version, and an optional note. `addCorrectionAction` refuses the correction unless the wrong text passes the word-for-word quote check against the passage.
+Every source Kizuki shows gets a number, such as `[2] Page 4 of ch1.pdf`. In terminals that support links (iTerm2, Ghostty, WezTerm, VS Code), clicking it opens the file. `/open 2` opens it from the keyboard and says which page to go to.
+
+`/correct 2` records a correction to that source. Kizuki shows the passage, then asks for the wrong words, your version, and an optional note. {@link lib/commands!addCorrection | addCorrection} refuses the correction unless the wrong words pass the word-for-word quote check against the passage.
 
 ## How a correction wins
 
@@ -32,8 +34,8 @@ Corrections live in `corrections.jsonl` as `correction.added` events ({@link lib
 
 - The model sees each correction under its passage: "Your correction: “…” should be “…”."
 - No question may quote a sentence you corrected, and no sentence you corrected is proposed as a miss. {@link lib/teach!isCorrected | isCorrected} matches a correction against any sentence that contains the corrected words, or that the corrected words contain, in any passage. The same wrong words stay wrong wherever they appear, including in a new copy of the file.
-- Wherever Kizuki shows a quote (the `Quote` component), your correction appears under it.
+- Wherever Kizuki shows a passage in full, such as the "Now read the material" list after a session, your correction appears under it.
 
 ## "What does this mean?"
 
-When the model points at a sentence it cannot read, Kizuki records a `clarification.asked` event with the fixed question {@link lib/concepts!UNCLEAR_QUESTION | UNCLEAR_QUESTION}. The course page lists open questions. Your answer ({@link lib/commands!answerClarification | answerClarification}) becomes "Your reading of “…”", shown under the passage to you and to the model in later sessions.
+When the model points at a sentence it cannot read, Kizuki records a `clarification.asked` event with the fixed question {@link lib/concepts!UNCLEAR_QUESTION | UNCLEAR_QUESTION}. `/review` asks the open questions one at a time, after the concepts and links; Enter with nothing typed skips one. Your answer ({@link lib/commands!answerClarification | answerClarification}) becomes "Your reading of “…”", shown under the passage to you and to the model in later sessions.

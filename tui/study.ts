@@ -17,6 +17,7 @@ import {
   startSession,
 } from "../lib/commands";
 import type { Answer, Passage } from "../lib/events";
+import { sha256 } from "../lib/ids";
 import { MAX_ROUNDS, MAX_TRIES } from "../lib/limits";
 import {
   checkModels,
@@ -157,6 +158,7 @@ const HELP = [
   "/teach [concept]      teach a concept back from memory; with no name, the first one due",
   "/due                  what is due, coming up, and waiting",
   "/concepts             the course's confirmed concepts",
+  "/links                the confirmed order; untick a link to remove it",
   "/rename <a> = <b>     rename a concept",
   "/merge <a> into <b>   merge one concept into another",
   "/drop <concept>       drop a concept",
@@ -203,6 +205,7 @@ export class Study {
   private listeners = new Set<() => void>();
   private snapshot?: View;
 
+  /** Makes the controller. Nothing is read or checked until {@link Study.start}. */
   constructor(options: StudyOptions) {
     this.options = options;
     this.home = options.home;
@@ -408,6 +411,8 @@ export class Study {
         return this.startFlow(() => this.sayDue());
       case "concepts":
         return this.startFlow(() => this.concepts());
+      case "links":
+        return this.startFlow(() => this.links());
       case "rename":
         return this.startFlow(() => this.rename(arg));
       case "merge":
@@ -500,6 +505,14 @@ export class Study {
     for (const path of paths) {
       try {
         const bytes = new Uint8Array(await readFile(path));
+        // The same file that failed before is tried again, not added a second time.
+        const hash = sha256(bytes);
+        const failed = [...(await loadState(this.home)).materials.values()].find((m) => m.courseId === courseId && m.sha256 === hash && m.status === "failed");
+        if (failed) {
+          this.say("info", `Trying ${failed.fileName} again.`);
+          this.queue.push(failed.materialId);
+          continue;
+        }
         const materialId = await addMaterial(this.home, {
           courseId,
           fileName: basename(path),
@@ -543,7 +556,7 @@ export class Study {
     if (m.status === "failed") {
       this.say(
         "error",
-        `${m.fileName} failed: ${m.error}. Add it again to try again.`,
+        `${m.fileName} failed: ${m.error}. Add the same file again to try again.`,
       );
       return;
     }
@@ -805,9 +818,24 @@ export class Study {
         "Keep it",
       ))
     )
-      return;
+      return this.say("info", "Nothing changed.");
     await dropConcept(this.home, c.conceptId);
     this.say("done", `Dropped ${c.name}.`);
+  }
+
+  private async links(): Promise<void> {
+    const { state, courseId } = await this.mustCourse();
+    const links = [...state.links.values()].filter((l) => l.courseId === courseId && l.status === "confirmed");
+    if (links.length === 0) return this.say("info", "No confirmed links. /review shows proposed ones.");
+    const name = (id: string) => state.concepts.get(resolveConceptId(state, id))?.name ?? id;
+    const kept = await this.choose({
+      title: "The order you confirmed. Untick a link to remove it, then Enter.",
+      multi: true,
+      items: links.map((l) => ({ id: l.linkId, label: `${name(l.conceptId)} needs ${name(l.needsConceptId)} first`, checked: true })),
+    });
+    const removed = links.filter((l) => !kept.includes(l.linkId));
+    for (const l of removed) await dropLink(this.home, l.linkId);
+    this.say("done", removed.length === 0 ? "Nothing changed." : `Removed ${removed.length} link${removed.length === 1 ? "" : "s"}.`);
   }
 
   // Due and history --------------------------------------------------------
@@ -817,8 +845,7 @@ export class Study {
     const view = todayView(state, this.today());
     const due = view.due.filter((d) => d.courseId === courseId);
     const upcoming = view.upcoming.filter((d) => d.courseId === courseId);
-    const course = state.courses.get(courseId)!;
-    const blocked = view.blocked.filter((b) => b.courseName === course.name);
+    const blocked = view.blocked.filter((b) => b.courseId === courseId);
     if (due.length + upcoming.length + blocked.length === 0)
       return this.say(
         "info",
@@ -1069,7 +1096,7 @@ export class Study {
       this.say(
         "done",
         s.retryOf
-          ? "Clean this time."
+          ? `Clean this time. ${concept.name} still comes back ${plan ? `on ${plan.due}` : "soon"}: your first try sets the schedule.`
           : `Clean. ${concept.name} comes back ${plan ? `on ${plan.due}` : "later"}.`,
       );
     else
@@ -1198,11 +1225,14 @@ export class Study {
   }
 
   private async catchNote(note: string): Promise<void> {
-    if (!this.lastEnded)
-      throw new Error(
-        "Finish a session first. A catch belongs to the session that caught it.",
-      );
-    await recordCatch(this.home, this.lastEnded, note);
+    const { state, courseId } = await this.mustCourse();
+    // The session that just ended, or after a restart the course's most recent one.
+    const latest = [...state.sessions.values()]
+      .filter((x) => x.ended && state.concepts.get(resolveConceptId(state, x.conceptId))?.courseId === courseId)
+      .sort((a, b) => b.ended!.at.localeCompare(a.ended!.at))[0];
+    const sessionId = this.lastEnded ?? latest?.sessionId;
+    if (!sessionId) throw new Error("Finish a session first. A catch belongs to the session that caught it.");
+    await recordCatch(this.home, sessionId, note);
     this.say("done", "Catch recorded.");
   }
 

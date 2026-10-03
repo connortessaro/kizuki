@@ -28,7 +28,7 @@ describe("todayView", () => {
   it("lists due concepts oldest first and shows what blocked ones are waiting on", () => {
     const view = todayView(reduceState(logs()), "2026-09-10", "UTC");
     expect(view.due.map((d) => d.name)).toEqual(["Atoms"]);
-    expect(view.blocked).toEqual([{ conceptId: "b", name: "Bonds", courseName: "Biology", waitingOn: ["Atoms"] }]);
+    expect(view.blocked).toEqual([{ conceptId: "b", name: "Bonds", courseId: "c1", courseName: "Biology", waitingOn: ["Atoms"] }]);
   });
 });
 

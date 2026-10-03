@@ -37,7 +37,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - name: Docs are complete and docs/openapi.json matches the code
+      - name: Every export has a doc comment and every docs link works
         run: pnpm docs:check
       - name: No known high or critical holes in what the app ships
         run: pnpm audit --prod --audit-level high
@@ -89,6 +89,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: The built app starts
+        run: |
+          node bin/kizuki.mjs --help | grep -q "runs in your terminal"
+          test "$(node bin/kizuki.mjs --version)" = "$(node -p "require('./package.json').version")"
 
   coverage:
     name: coverage
@@ -116,38 +120,6 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-          retention-days: 14
-
-  e2e:
-    name: end-to-end
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Set up pnpm (the version in package.json)
-        run: corepack enable
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm build
-      - name: Study loop in a browser, with a fake model server
-        run: pnpm e2e
-      - name: Keep the report and traces
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: e2e-report
-          path: |
-            playwright-report/
-            test-results/
           retention-days: 14
 
   pii:
@@ -190,9 +162,9 @@ jobs:
         # npm packs the release (see release.yml), so npm checks it here.
         run: |
           npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
-          if grep -qE '\.kizuki/|people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|backlog/|\.claude/|kizuki\.config\.json|\.next/cache/|evals/' /tmp/pack.txt; then
+          if grep -qE '\.kizuki/|people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|backlog/|\.claude/|kizuki\.config\.json|evals/|lib/|tui/|docs/' /tmp/pack.txt; then
             echo "::error::a private or unneeded path is in the npm package"
-            grep -E '\.kizuki/|people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|backlog/|\.claude/|kizuki\.config\.json|\.next/cache/|evals/' /tmp/pack.txt
+            grep -E '\.kizuki/|people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|backlog/|\.claude/|kizuki\.config\.json|evals/|lib/|tui/|docs/' /tmp/pack.txt
             exit 1
           fi
           if grep -qE '\.map$' /tmp/pack.txt; then
@@ -200,7 +172,7 @@ jobs:
             grep -E '\.map$' /tmp/pack.txt | head
             exit 1
           fi
-          for needed in bin/kizuki.mjs .next/BUILD_ID LICENSE NOTICE; do
+          for needed in bin/kizuki.mjs dist/kizuki.mjs LICENSE NOTICE; do
             grep -q "$needed" /tmp/pack.txt || { echo "::error::$needed is missing from the npm package"; exit 1; }
           done
           echo "package contents look right"
@@ -222,9 +194,6 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
-          # No fixed version exists. It only arrives through @workflow/nest >
-          # @swc/cli, which Kizuki never runs. Matches pnpm-workspace.yaml.
-          allow-ghsas: GHSA-ch52-4w7c-c8xp
           # Keep the dependency tree permissive-only, matching NOTICE.
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
           # sharp's prebuilt libvips binaries (used by Next.js for images) are

@@ -4,7 +4,7 @@ title: Adding material
 
 # Adding material
 
-You add course files on a course page. Kizuki keeps a copy, reads the text out of it, splits the text into passages that remember where they came from, adds them to search, and proposes concepts for you to review.
+You add course files with `/add <files>`, or by dropping them onto the Kizuki window, which pastes their paths. Kizuki keeps a copy, reads the text out of it, splits the text into passages that remember where they came from, adds them to search, and proposes concepts for you to review.
 
 ## What Kizuki reads
 
@@ -35,14 +35,16 @@ Slides, Word files, and workbooks are zip files of XML. {@link lib/extract/zip!o
 
 Jupyter notebooks (`.ipynb`), images, scanned PDFs, audio, video, `.doc`, `.ppt`, `.xls`, and other formats are refused when you add them, with "Kizuki can't read .ipynb files yet" and the list of formats it does read ({@link lib/commands!addMaterial | addMaterial}). To study a notebook today, export it to markdown or PDF first. Text recognition for images and scans is planned for a later version.
 
-## From upload to review
+## From adding a file to review
 
-1. **Upload.** The course page's form runs `uploadAction`, which calls {@link lib/commands!addMaterial | addMaterial} for each file. It refuses an unknown format and a file whose SHA-256 fingerprint matches a file already in the course (unless that one failed). It copies the bytes to `files/<materialId><ending>` in the data folder and records `material.added` in `materials.jsonl`.
-2. **Processing starts** as a background job, the {@link workflows/material!processMaterial | processMaterial} workflow. Each step lives in `workflows/material/steps.ts` and is safe to run twice: it checks the logs before it writes.
-3. **Read.** {@link lib/materialFlow!readMaterial | readMaterial} runs the reader, then {@link lib/extract!toRecords | toRecords} gives every section and passage an id made from the file's id and its position ({@link lib/ids!stableId | stableId}), so reading the same file again gives the same ids. The passages are written once to `passages.jsonl`. A file with no readable text fails at once, without retries.
+1. **Add.** `/add` or a dropped path reads the file and calls {@link lib/commands!addMaterial | addMaterial}. It refuses an unknown format and a file whose SHA-256 fingerprint matches a file already in the course (unless that one failed). It copies the bytes to `files/<materialId><ending>` in the data folder and records `material.added` in `materials.jsonl`. {@link tui/paths!splitPaths | splitPaths} reads the forms a terminal pastes: quoted paths, spaces escaped with a backslash, and `~` for your home folder.
+2. **Processing starts** in the background while you keep typing. Files go one at a time, and the line under the input says which file Kizuki is reading. {@link lib/run!processMaterial | processMaterial} runs the steps below in order. Each step is safe to run twice: it checks the logs before it writes.
+3. **Read.** {@link lib/materialFlow!readMaterial | readMaterial} runs the reader, then {@link lib/extract!toRecords | toRecords} gives every section and passage an id made from the file's id and its position ({@link lib/ids!stableId | stableId}), so reading the same file again gives the same ids. The passages are written once to `passages.jsonl`.
 4. **Search.** {@link lib/materialFlow!indexMaterial | indexMaterial} adds the passages to the search file with their meaning numbers (see [Passages and sentences](./passages-and-sentences.md)).
 5. **Concepts.** {@link lib/materialFlow!proposeForMaterial | proposeForMaterial} proposes concepts: one for every real heading, made in plain code by {@link lib/concepts!headingConcepts | headingConcepts}, then smaller ideas from the model, checked by {@link lib/concepts!validateConceptReply | validateConceptReply}. The model may also point at sentences it cannot read; each becomes a "what does this mean?" question for you. See [The model never writes facts](./the-model-never-writes-facts.md).
-6. **Your review.** The workflow pauses until you press "Done reviewing: suggest links" on the course page. See [Nothing is saved without your OK](./nothing-saved-without-your-ok.md).
-7. **Links.** {@link lib/materialFlow!proposeLinksForMaterial | proposeLinksForMaterial} asks the model which confirmed concepts need which others first.
+6. **Your review.** Processing stops here, and Kizuki says how many concepts it proposed. The file waits with status `review` in the log until you type `/review`. See [Nothing is saved without your OK](./nothing-saved-without-your-ok.md).
+7. **Links.** After you confirm or drop the concepts, {@link lib/run!finishMaterialReview | finishMaterialReview} records the review and {@link lib/materialFlow!proposeLinksForMaterial | proposeLinksForMaterial} asks the model which confirmed concepts need which others first.
 
-The course page shows each file's status from {@link lib/state!MaterialStatus | MaterialStatus}: waiting, reading the text, building search, finding concepts, ready for your review, suggesting links, done, or failed. A failure records its message ({@link lib/materialFlow!failMaterial | failMaterial}) and the page offers "Try again". A file that has shown the same working status for more than 10 minutes gets "Stuck? Start again". Both start a new run, which skips the steps the logs show are done.
+Each file's status comes from {@link lib/state!MaterialStatus | MaterialStatus}: waiting, reading, indexing, proposing, review, linking, done, or failed. A failure records the model's or the reader's message ({@link lib/materialFlow!failMaterial | failMaterial}), and Kizuki prints it with the file's name. Add the file again to try again.
+
+If you quit while a file is being read, nothing is lost. When Kizuki starts, {@link lib/run!resumeUnfinished | resumeUnfinished} finds files left in waiting, reading, indexing, proposing, or linking and finishes them, skipping the steps the logs show are done.

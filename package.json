@@ -1,8 +1,8 @@
 {
   "name": "kizuki",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "type": "module",
-  "description": "A study tool that runs on your computer. You teach, Kizuki plays the student, and every question quotes your own material.",
+  "description": "A study tool for your terminal. You teach, Kizuki plays the student, and every question quotes your own material.",
   "license": "Apache-2.0",
   "author": "Connor Tessaro",
   "homepage": "https://kizuki.dev",
@@ -19,7 +19,8 @@
     "teach-back",
     "local-first",
     "ollama",
-    "nextjs"
+    "terminal",
+    "tui"
   ],
   "engines": {
     "node": ">=22.18.0"
@@ -28,14 +29,8 @@
     "kizuki": "./bin/kizuki.mjs"
   },
   "files": [
-    "bin/",
-    "!bin/*.test.ts",
-    ".next/",
-    "!.next/cache/",
-    "!.next/dev/",
-    "!.next/**/*.map",
-    "public/",
-    "next.config.ts",
+    "bin/kizuki.mjs",
+    "dist/",
     "README.md",
     "LICENSE",
     "NOTICE"
@@ -45,24 +40,21 @@
     "provenance": true
   },
   "scripts": {
-    "dev": "next dev -H 127.0.0.1",
-    "build": "next build",
-    "start": "next start -H 127.0.0.1",
+    "dev": "node scripts/build.mjs && node bin/kizuki.mjs",
+    "build": "node scripts/build.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "e2e": "playwright test",
     "qc": "pnpm lint && pnpm typecheck && pnpm docs:check && pnpm coverage && pnpm check:pii && pnpm audit --prod --audit-level high",
     "eval": "evalite",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "docs": "node scripts/docs.ts",
+    "docs": "typedoc",
     "check:pii": "node scripts/check-pii.mjs",
-    "prepack": "next build && node scripts/record-links.mjs",
+    "prepack": "node scripts/build.mjs",
     "eval:summary": "node scripts/eval-summary.mjs",
-    "docs:check": "node scripts/docs.ts --check",
-    "docs:site": "node scripts/docs.ts --site",
-    "version": "pnpm run docs && git add docs/openapi.json"
+    "docs:check": "typedoc --emit none",
+    "docs:site": "typedoc"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.55",
@@ -78,7 +70,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@scalar/api-reference": "^1.72.0",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
@@ -91,8 +82,7 @@
     "typedoc": "^0.28.20",
     "typescript": "~6.0",
     "typescript-eslint": "^8.70.1",
-    "vitest": "^4.1.11",
-    "yaml": "^2.9.1"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@10.34.6"
 }
