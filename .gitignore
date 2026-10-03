@@ -36,7 +36,6 @@ kizuki.config.json
 
 # Local planning and agent files
 /backlog/
-.superpowers/
 .remember/
 .claude/skills/
 .claude/*.local.md
@@ -55,4 +54,4 @@ kizuki.config.json
 
 # Kept local, not published
 AGENTS.md
-docs/superpowers/
+docs/specs/
