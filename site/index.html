@@ -17,6 +17,7 @@
       <a class="brand" href="/"><img src="/seal-ki.svg" alt="" width="28" height="28" />Kizuki</a>
       <nav aria-label="Site">
         <a href="#how">How it works</a>
+        <a href="#commands">Commands</a>
         <a href="#setup">Set up</a>
         <a href="https://github.com/connortessaro/kizuki">Source</a>
       </nav>
@@ -39,24 +40,24 @@
           </div>
         </div>
 
-        <figure class="exchange" aria-label="A real teach-back exchange">
-          <div class="turn you">
-            <p class="who">You wrote</p>
-            <p>The Calvin cycle happens in the <mark>thylakoid membranes</mark>. It uses ATP and NADPH to turn carbon dioxide into sugar.</p>
+        <figure class="exchange term" aria-label="A teach-back exchange in the terminal">
+          <div class="bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="line cmd"><span class="mark" aria-hidden="true">›</span> /teach calvin cycle</p>
+          <p class="line note">Explain it from memory. The material stays hidden until you finish.</p>
+          <p class="line you"><span class="mark" aria-hidden="true">›</span> The Calvin cycle happens in the <mark>thylakoid membranes</mark>. It uses ATP and NADPH to turn carbon dioxide into sugar.</p>
+          <p class="line head">Round 1 of up to 3</p>
+          <p class="line ask">
+            The section “The Calvin cycle” of photosynthesis.md says: <q>The Calvin cycle takes place in the stroma.</q> You wrote:
+            <q>thylakoid membranes</q>. How does that fit?
+          </p>
+          <p class="line src">[1] The section “The Calvin cycle” of photosynthesis.md</p>
+          <div class="pick" aria-hidden="true">
+            <p>Which is right?</p>
+            <p class="on">❯ The material is right (I got it wrong)</p>
+            <p>&nbsp; The material is wrong</p>
+            <p>&nbsp; Kizuki misread what I wrote</p>
           </div>
-          <div class="turn kizuki">
-            <p class="who">Kizuki asks</p>
-            <p>
-              The section “The Calvin cycle” of <em>photosynthesis.md</em> says: <q>The Calvin cycle takes place in the stroma.</q> You wrote:
-              <q>thylakoid membranes</q>. How does that fit?
-            </p>
-            <div class="choices" aria-hidden="true">
-              <span>The material is right. I got this wrong.</span>
-              <span>The material is wrong.</span>
-              <span>Kizuki misread me.</span>
-            </div>
-          </div>
-          <figcaption>From a real session with the default small model, running on a laptop.</figcaption>
+          <figcaption>The question comes from a real session with the default small model on a laptop.</figcaption>
         </figure>
       </section>
 
@@ -69,7 +70,7 @@
           </li>
           <li>
             <h3>Confirm the concepts</h3>
-            <p>Kizuki turns each heading into a concept, and a small model suggests ideas inside each section. Kizuki only uses the ones you confirm.</p>
+            <p>Kizuki turns each heading into a concept, and a small model suggests ideas inside each section. Type <code>/review</code> and keep the ones you want. Kizuki uses nothing you didn't confirm.</p>
           </li>
           <li>
             <h3>Explain one without your notes</h3>
@@ -87,6 +88,27 @@
             <p>You tick the points you missed, then read the passages. After misses, you can try again right away. After a clean session Kizuki waits twice as long before the next review; after a miss, the concept comes back tomorrow. If you set an exam date, Kizuki moves reviews before it.</p>
           </li>
         </ol>
+      </section>
+
+      <section id="commands" class="band split" aria-labelledby="commands-title">
+        <div>
+          <h2 id="commands-title">A few commands</h2>
+          <p>Kizuki runs in your terminal like a coding agent. Type <code>/</code> to see every command, or <code>/help</code> for what each one does.</p>
+        </div>
+        <dl class="cmds">
+          <dt><code>/add notes.pdf</code></dt>
+          <dd>Add a file. Dropping it onto the window does the same.</dd>
+          <dt><code>/review</code></dt>
+          <dd>Confirm the concepts and the order Kizuki suggests.</dd>
+          <dt><code>/teach</code></dt>
+          <dd>Explain the first concept that is due.</dd>
+          <dt><code>/due</code></dt>
+          <dd>See what is due now, what comes next, and what waits on something else.</dd>
+          <dt><code>/exam 2026-12-15</code></dt>
+          <dd>Move reviews before your exam.</dd>
+          <dt><code>/open 1</code></dt>
+          <dd>Open source [1] in its file.</dd>
+        </dl>
       </section>
 
       <section class="band split" aria-labelledby="rule-title">
@@ -115,7 +137,7 @@
         <ul class="rules">
           <li>Your data: <code>~/.kizuki</code></li>
           <li>Default models: <code>qwen3.5:2b</code> and <code>nomic-embed-text</code></li>
-          <li>You can use MLX on Apple chips, or bigger hosted models through Vercel AI Gateway. Before Kizuki sends anything off your computer, it asks you.</li>
+          <li>You can use MLX on Apple chips, or bigger hosted models with your own Vercel AI Gateway key (<code>/model gateway</code>). Before Kizuki sends anything off your computer, it asks you.</li>
         </ul>
       </section>
 

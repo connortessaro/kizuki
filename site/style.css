@@ -462,3 +462,115 @@ main {
     animation: none;
   }
 }
+
+/* The hero example, drawn as the terminal app shows it. */
+
+.term {
+  background: var(--ink);
+  color: #e9e6dc;
+  border-color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  padding: 0.9rem 1.2rem 1.1rem;
+}
+
+.term .bar {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.term .bar span {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: #4a4a45;
+}
+
+.term .line {
+  margin: 0 0 0.55rem;
+  overflow-wrap: anywhere;
+}
+
+.term .mark {
+  color: #8f8f86;
+}
+
+.term .note,
+.term .src {
+  color: #a3a399;
+}
+
+.term .src {
+  color: #8fb2d6;
+}
+
+.term .head {
+  color: #e7a6d6;
+  font-weight: 600;
+  margin-top: 0.9rem;
+}
+
+.term .ask {
+  color: #8fdcdc;
+}
+
+.term q {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f4f1e8;
+}
+
+.term .pick {
+  border: 1px solid #8fdcdc;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.term .pick p {
+  margin: 0;
+}
+
+.term .pick p:first-child {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.term .pick .on {
+  color: #8fdcdc;
+}
+
+.term figcaption {
+  color: #8f8f86;
+}
+
+/* Commands */
+
+.cmds {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.7rem 1.2rem;
+  align-items: baseline;
+}
+
+.cmds dt {
+  margin: 0;
+}
+
+.cmds dd {
+  margin: 0;
+  color: var(--stone);
+}
+
+@media (max-width: 560px) {
+  .cmds {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .cmds dd {
+    margin-bottom: 0.7rem;
+  }
+}
