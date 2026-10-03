@@ -6,7 +6,7 @@
     <title>Kizuki: teach it back</title>
     <meta
       name="description"
-      content="A study tool that runs on your computer. You explain a concept in your own words. Kizuki plays the student and asks about what you got wrong, and each question quotes your course material."
+      content="A study tool for your terminal. You explain a concept in your own words. Kizuki plays the student and asks about what you got wrong, and each question quotes your course material."
     />
     <link rel="icon" href="/seal-ki.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/style.css" />
@@ -27,7 +27,7 @@
         <div class="pitch">
           <h1 id="title">Teach it back.</h1>
           <p class="lede">
-            Kizuki is a study tool that plays the student. You explain a concept in your own words, and Kizuki asks about what you got
+            Kizuki is a study tool for your terminal that plays the student. You explain a concept in your own words, and Kizuki asks about what you got
             wrong, what you left out, and what you said vaguely. Each question quotes your course material.
           </p>
           <p class="lede quiet">
@@ -65,7 +65,7 @@
         <ol class="steps">
           <li>
             <h3>Add your material</h3>
-            <p>Slides, PDFs, Word and Excel files, notes. Kizuki reads the text and remembers the page, slide, or cell each passage came from.</p>
+            <p>Slides, PDFs, Word and Excel files, notes. Drop them onto the terminal window. Kizuki reads the text and remembers the page, slide, or cell each passage came from.</p>
           </li>
           <li>
             <h3>Confirm the concepts</h3>
@@ -73,7 +73,7 @@
           </li>
           <li>
             <h3>Explain one without your notes</h3>
-            <p>Write it the way you would explain it to a classmate.</p>
+            <p>Write it the way you would explain it to a classmate. Kizuki keeps the material hidden until you finish, because recalling it beats rereading it.</p>
           </li>
           <li>
             <h3>Answer the student’s questions</h3>
@@ -84,7 +84,7 @@
           </li>
           <li>
             <h3>Confirm what you missed</h3>
-            <p>You tick the points you missed. After a clean session Kizuki waits twice as long before the next review; after a miss, the concept comes back tomorrow. If you set an exam date, Kizuki moves reviews before it.</p>
+            <p>You tick the points you missed, then read the passages. After misses, you can try again right away. After a clean session Kizuki waits twice as long before the next review; after a miss, the concept comes back tomorrow. If you set an exam date, Kizuki moves reviews before it.</p>
           </li>
         </ol>
       </section>
@@ -115,7 +115,7 @@
         <ul class="rules">
           <li>Your data: <code>~/.kizuki</code></li>
           <li>Default models: <code>qwen3.5:2b</code> and <code>nomic-embed-text</code></li>
-          <li>You can use MLX on Apple chips, or a hosted model. Before Kizuki sends anything off your computer, Settings asks you to tick that you understand.</li>
+          <li>You can use MLX on Apple chips, or bigger hosted models through Vercel AI Gateway. Before Kizuki sends anything off your computer, it asks you.</li>
         </ul>
       </section>
 
@@ -134,7 +134,7 @@ ollama pull nomic-embed-text</code></pre>
           <li>
             <h3>Start Kizuki</h3>
             <pre class="wrap"><code>npx kizuki</code></pre>
-            <p>It checks the models, starts, and opens the dashboard in your browser. To keep it installed, run <code>npm install -g kizuki</code> and start it with <code>kizuki</code>.</p>
+            <p>It checks the models and starts in your terminal. Type <code>/help</code> for commands. To keep it installed, run <code>npm install -g kizuki</code> and start it with <code>kizuki</code>.</p>
           </li>
         </ol>
       </section>

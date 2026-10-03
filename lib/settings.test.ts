@@ -46,9 +46,29 @@ describe("settings", () => {
     expect(statSync(homePaths(home).settings).mode & 0o077).toBe(0);
   });
 
-  it("offers MLX and hosted presets", () => {
+  it("offers MLX and AI Gateway presets", () => {
     expect(PRESETS.mlx.chat.baseURL).toBe("http://localhost:8080/v1");
-    expect(PRESETS.hosted.chat.apiKeyEnv).toBe("OPENAI_API_KEY");
+    expect(PRESETS.gateway.chat).toMatchObject({ provider: "gateway", baseURL: "https://ai-gateway.vercel.sh/v4/ai", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+    expect(PRESETS.gateway.embed).toMatchObject({ provider: "gateway", baseURL: "https://ai-gateway.vercel.sh/v4/ai", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+  });
+
+  it("reads settings saved before there was a choice of provider as OpenAI-style servers", async () => {
+    const { provider: _chat, ...chat } = DEFAULT_SETTINGS.chat;
+    const { provider: _embed, ...embed } = DEFAULT_SETTINGS.embed;
+    writeFileSync(homePaths(home).settings, JSON.stringify({ chat, embed }));
+    const read = await readSettings(home);
+    expect([read.chat.provider, read.embed.provider, read.sendOutAllowed]).toEqual(["openai-compatible", "openai-compatible", false]);
+  });
+
+  it("refuses to save settings that send your material out until you agree", async () => {
+    await expect(writeSettings(home, PRESETS.gateway)).rejects.toThrow(/send your material off this computer/);
+    await writeSettings(home, { ...PRESETS.gateway, sendOutAllowed: true });
+    expect((await readSettings(home)).sendOutAllowed).toBe(true);
+  });
+
+  it("does not need your OK for settings that stay on this computer", async () => {
+    await writeSettings(home, PRESETS.mlx);
+    expect((await readSettings(home)).sendOutAllowed).toBe(false);
   });
 });
 

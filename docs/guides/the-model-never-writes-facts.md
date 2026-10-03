@@ -20,7 +20,7 @@ Search, the review schedule, storage, and the "barely used" miss check use no mo
 
 ## Labels instead of quotes
 
-The model sees every sentence with a label such as `[S3]` ({@link lib/sentences!numberSentences | numberSentences}) and answers with labels. {@link lib/sentences!lookupSentence | lookupSentence} looks up the exact sentence, so the model has no way to make up a quote. The word-for-word check ({@link lib/quote!quoteMatches | quoteMatches}) still runs on every quote as a second guard. A label that points nowhere drops the item, and the page counts what was dropped.
+The model sees every sentence with a label such as `[S3]` ({@link lib/sentences!numberSentences | numberSentences}) and answers with labels. {@link lib/sentences!lookupSentence | lookupSentence} looks up the exact sentence, so the model has no way to make up a quote. The word-for-word check ({@link lib/quote!quoteMatches | quoteMatches}) still runs on every quote as a second guard. A label that points nowhere drops the item, and Kizuki says how many items were dropped.
 
 ## Questions are templates
 
@@ -40,7 +40,7 @@ Concepts for real headings do not come from the model at all. {@link lib/concept
 
 ## Reply shapes
 
-The model must reply in a fixed JSON shape. With Ollama or OpenAI the server enforces the shape. With MLX, which ignores shapes, {@link lib/model!askWithShapeInPrompt | askWithShapeInPrompt} puts the shape in the instructions, checks the reply with {@link lib/model!parseJsonReply | parseJsonReply}, and asks once more after a broken reply. A second broken reply is an error. Error messages never include the model's own words, because Kizuki saves errors and shows them on the page.
+The model must reply in a fixed JSON shape. With Ollama or AI Gateway the server enforces the shape. With MLX, which ignores shapes, {@link lib/model!askWithShapeInPrompt | askWithShapeInPrompt} puts the shape in the instructions, checks the reply with {@link lib/model!parseJsonReply | parseJsonReply}, and asks once more after a broken reply. A second broken reply is an error. Error messages never include the model's own words, because Kizuki saves errors and shows them to you.
 
 ## Where this is tested
 

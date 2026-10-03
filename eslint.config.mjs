@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["node_modules/", ".next/", "docs/api/", "next-env.d.ts", ".workflow-data/", ".claude/", ".superpowers/", "app/.well-known/", "backlog/"],
+    ignores: ["node_modules/", "dist/", "coverage/", "docs/api/", ".claude/", "backlog/"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

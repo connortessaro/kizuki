@@ -1,13 +1,11 @@
 # pnpm settings for this single-package repo. pnpm reads its settings from this
 # file, not from package.json or .npmrc.
 
-# Packages allowed to run install scripts. pnpm blocks all others. These are
-# the ones npm used to run: better-sqlite3 and cbor-extract build or fetch native
-# code, the rest check or set up files after install.
+# Packages allowed to run install scripts. pnpm blocks all others.
+# better-sqlite3 builds or fetches native code, esbuild fetches its binary, and
+# vue-demi (used by the evals' report page) sets up files after install.
 allowBuilds:
-  "@swc/core": true
   better-sqlite3: true
-  cbor-extract: true
   esbuild: true
   vue-demi: true
 
@@ -15,15 +13,5 @@ allowBuilds:
 overrides:
   better-sqlite3: ^13.0.3
   undici: ^7.29.1
-  "@workflow/core>nanoid": ^5.1.16
-  "@workflow/core>devalue": ^5.9.4
   "evalite>@fastify/static": ^10.1.4
   "evalite>file-type": ^22.0.0
-
-# Advisories pnpm audit should skip, each with the reason it can't reach users.
-auditConfig:
-  ignoreGhsas:
-    # http-cache-semantics has no fixed version. It only comes in through
-    # @workflow/nest > @swc/cli, which downloads compiler binaries for NestJS
-    # builds. Kizuki never runs it.
-    - GHSA-ch52-4w7c-c8xp

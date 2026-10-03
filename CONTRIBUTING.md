@@ -27,17 +27,18 @@ To try the app with a throwaway data folder:
 KIZUKI_HOME="$(mktemp -d)" pnpm dev
 ```
 
+The code lives in two places. `lib/` holds every study rule in plain TypeScript, with no screen code. `tui/` holds the terminal app: `tui/study.ts` turns commands into calls to `lib/`, and `tui/App.tsx` draws the screen with [Ink](https://github.com/vadimdemedes/ink). `pnpm build` bundles both into `dist/kizuki.mjs`, which `bin/kizuki.mjs` starts.
+
 ## Checks
 
-These are the same checks CI runs. `pnpm qc` runs all but the last two in one go:
+These are the same checks CI runs. `pnpm qc` runs all but the build in one go:
 
 ```bash
 pnpm qc    # lint, types, docs, tests with coverage, personal identifiers, pnpm audit
 pnpm build
-pnpm e2e   # the study loop in a real browser, against a fake model server
 ```
 
-`pnpm coverage` fails if coverage drops below the floor in `vitest.config.ts`; raise the floor when you add tests, never lower it. The report is in `coverage/index.html`. The end-to-end tests need a build first and Playwright's browser once: `pnpm exec playwright install chromium`. They use `e2e/fake-model.mjs` in place of Ollama, so every run is the same.
+`pnpm coverage` fails if coverage drops below the floor in `vitest.config.ts`; raise the floor when you add tests, never lower it. The report is in `coverage/index.html`. The tests of the terminal app (`tui/*.test.ts`, `tui/*.test.tsx`) drive the study loop with fake models and a temporary data folder, so every run is the same. `test/fake-model.mjs` is an OpenAI-style stand-in for Ollama, for trying the built app by hand.
 
 `pnpm eval` runs the model tests against your local Ollama. They are slow and not run in CI; run them when you change a prompt or a guard, and include the scores in your pull request. `node scripts/eval-summary.mjs <file>` prints the averages from `pnpm exec evalite run --outputPath <file>`.
 
@@ -49,10 +50,10 @@ A pull request that breaks one of these will be asked to change.
 - **Guards live in code, not prompts.** A prompt can ask the model to behave; only code can make sure it did.
 - **Nothing is saved without the user's OK.** Anything the model proposes waits for confirmation.
 - **The logs are the truth.** `data/*.jsonl` lines are only ever added, through `appendLog`, one writer at a time. The search file is always rebuildable from the logs.
-- **Workflow steps are safe to run twice.** A step checks the logs before it writes.
+- **Long steps are safe to run twice.** A step in `lib/run.ts` checks the logs before it writes, so Kizuki can pick up where it stopped.
 - **Test first.** Write the failing test, then the code.
-- **Every export has a short doc comment** in plain words. Every route, page, and form action also has an `@openapi` block; see [How these docs are made](docs/guides/how-the-docs-are-made.md). When the HTTP surface changes, run `pnpm run docs` and commit `docs/openapi.json`.
-- **Plain words everywhere.** No jargon in the UI, docs, or names.
+- **Every export has a short doc comment** in plain words; see [How these docs are made](docs/guides/how-the-docs-are-made.md).
+- **Plain words everywhere.** No jargon on screen, in docs, or in names.
 - **No silent failures.** Errors say what went wrong and how to fix it.
 
 ## Never commit personal data
@@ -75,4 +76,4 @@ npm version patch   # or minor / major
 git push --follow-tags
 ```
 
-`npm version` also regenerates `docs/openapi.json`, which names the version, and adds it to the version commit. The release workflow checks that the tag matches `package.json`, runs the checks, builds, and publishes to npm.
+The release workflow checks that the tag matches `package.json`, runs the checks, builds, and publishes to npm.

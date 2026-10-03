@@ -168,6 +168,14 @@ describe("sessions and catches", () => {
 
 describe("corrections", () => {
   it("records a correction and answers a clarification", async () => {
+    await appendLog(home, "passages", [
+      {
+        type: "passages.extracted",
+        at: now(),
+        materialId: "m1",
+        passages: [{ passageId: "p1", materialId: "m1", sectionId: "s1", ordinal: 0, text: "It happens in the chloroplast.", location: {} }],
+      },
+    ]);
     await addCorrection(home, { passageId: "p1", quote: "chloroplast", correction: "chloroplasts", note: "Slide typo" });
     await appendLog(home, "corrections", [{ type: "clarification.asked", at: now(), clarificationId: "cl1", passageId: "p1", quote: "it", question: "Does it mean X?" }]);
     await answerClarification(home, "cl1", "It means photosynthesis.");

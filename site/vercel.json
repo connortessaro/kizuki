@@ -3,7 +3,7 @@
   "installCommand": "cd .. && npx --yes pnpm@10.34.6 install --frozen-lockfile --ignore-scripts",
   "buildCommand": "cd .. && npx --yes pnpm@10.34.6 docs:site && rm -rf site/docs && cp -R docs/api site/docs",
   "outputDirectory": ".",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../lib ../workflows ../app ../proxy.ts ../next.config.ts ../bin/cli.d.mts ../docs ../scripts ../typedoc.json ../package.json ../pnpm-lock.yaml ../pnpm-workspace.yaml",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../lib ../tui ../docs ../scripts ../typedoc.json ../package.json ../pnpm-lock.yaml ../pnpm-workspace.yaml",
   "cleanUrls": true,
   "headers": [
     {

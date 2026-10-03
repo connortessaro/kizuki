@@ -1,5 +1,5 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { embedMany, generateText, Output, type LanguageModel } from "ai";
+import { createGateway, embedMany, generateText, Output, type EmbeddingModel, type LanguageModel } from "ai";
 import { z } from "zod";
 import type { Embedder } from "./search";
 import { isLocalUrl, type ChatSettings, type EmbedSettings, type Settings } from "./settings";
@@ -9,10 +9,20 @@ export type Env = Record<string, string | undefined>;
 
 const PROVIDER = "kizuki";
 
-function provider(baseURL: string, apiKeyEnv: string | undefined, env: Env, transformRequestBody?: (body: Record<string, unknown>) => Record<string, unknown>) {
+function apiKeyFrom(apiKeyEnv: string | undefined, env: Env): string | undefined {
   const apiKey = apiKeyEnv ? env[apiKeyEnv] : undefined;
-  if (apiKeyEnv && !apiKey) throw new Error(`The environment variable ${apiKeyEnv} is not set. Set it where you start Kizuki (for example: ${apiKeyEnv}=... npx kizuki), or clear it in Settings.`);
-  return createOpenAICompatible({ name: PROVIDER, baseURL, apiKey, supportsStructuredOutputs: true, transformRequestBody });
+  if (apiKeyEnv && !apiKey) throw new Error(`The environment variable ${apiKeyEnv} is not set. Set it where you start Kizuki (for example: ${apiKeyEnv}=... kizuki), or pick other models with /model.`);
+  return apiKey;
+}
+
+function provider(baseURL: string, apiKeyEnv: string | undefined, env: Env, transformRequestBody?: (body: Record<string, unknown>) => Record<string, unknown>) {
+  return createOpenAICompatible({ name: PROVIDER, baseURL, apiKey: apiKeyFrom(apiKeyEnv, env), supportsStructuredOutputs: true, transformRequestBody });
+}
+
+/** The AI SDK's own AI Gateway provider. Needs a key: Kizuki never falls back to one it was not told about. */
+function gatewayProvider(baseURL: string, apiKeyEnv: string | undefined, env: Env, fetchImpl?: typeof fetch) {
+  if (!apiKeyEnv) throw new Error("AI Gateway needs an API key. Set the key variable to AI_GATEWAY_API_KEY with /model.");
+  return createGateway({ baseURL, apiKey: apiKeyFrom(apiKeyEnv, env), fetch: fetchImpl });
 }
 
 /**
@@ -59,7 +69,18 @@ export function providerOptionsFor(chat: ChatSettings): Record<string, Record<st
 
 /** The answer model, ready for the AI SDK. The API key, if any, is read from the environment at call time. */
 export function chatModel(chat: ChatSettings, env: Env = process.env): LanguageModel {
+  if (chat.provider === "gateway") return gatewayProvider(chat.baseURL, chat.apiKeyEnv, env).languageModel(chat.model);
   return provider(chat.baseURL, chat.apiKeyEnv, env, requestBodyFor(chat)).chatModel(chat.model);
+}
+
+function embeddingModel(embed: EmbedSettings, env: Env): EmbeddingModel {
+  if (embed.provider === "gateway") return gatewayProvider(embed.baseURL, embed.apiKeyEnv, env).embeddingModel(embed.model);
+  return provider(embed.baseURL, embed.apiKeyEnv, env).embeddingModel(embed.model);
+}
+
+/** The temperature for answers. Hosted reasoning models on AI Gateway reject one, so they get none. */
+function temperatureFor(chat: ChatSettings): number | undefined {
+  return chat.provider === "gateway" ? undefined : 0.2;
 }
 
 /** The words nomic meaning models expect before a passage or a search. Other models get nothing. */
@@ -70,21 +91,10 @@ export function embedPrefix(model: string, kind: "document" | "query"): string {
 
 /**
  * A function that turns texts into numbers for meaning search, using the configured model.
- *
- * @openapi
- * outbound:
- *   POST {baseURL}/embeddings:
- *     description: >-
- *       Turns texts into numbers for meaning search, through the AI SDK: the passages of a file
- *       when it is added (32 at a time) or the search file is rebuilt, and your explanation and
- *       answers when a session looks for related passages. For nomic models each text starts
- *       with `search_document: ` or `search_query: `.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
  */
 export function makeEmbedder(embed: EmbedSettings, env: Env = process.env): Embedder {
   return async (texts, kind) => {
-    const model = provider(embed.baseURL, embed.apiKeyEnv, env).embeddingModel(embed.model);
+    const model = embeddingModel(embed, env);
     const prefix = embedPrefix(embed.model, kind);
     const { embeddings } = await embedMany({ model, values: texts.map((t) => prefix + t) });
     return embeddings;
@@ -116,32 +126,19 @@ export type Ask = <T>(request: { system: string; prompt: string; schema: z.ZodTy
 /**
  * Makes an {@link Ask} function for the configured answer model. With `replyShape: "prompt"`
  * the shape goes into the instructions and Kizuki reads and checks the reply itself.
- *
- * @openapi
- * outbound:
- *   POST {baseURL}/chat/completions:
- *     description: >-
- *       Asks the answer model, through the AI SDK, to propose concepts, prerequisite links, or
- *       questions, or to list what you missed. The body holds Kizuki's instructions, the
- *       labeled sentences of your material, your corrections and readings, and (in a
- *       session) your explanation and answers. Temperature is 0.2. With reasoning `none` it
- *       adds `reasoning_effort: "none"` and `chat_template_kwargs: {"enable_thinking": false}`;
- *       with reply shape `server` it adds a `response_format` with the reply's JSON Schema.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`)."
  */
 export function makeAsk(chat: ChatSettings, env: Env = process.env): Ask {
   return async ({ system, prompt, schema }) => {
     if (chat.replyShape === "prompt") {
       const generate = async (fullSystem: string, fullPrompt: string) =>
-        (await generateText({ model: chatModel(chat, env), system: fullSystem, prompt: fullPrompt, temperature: 0.2, providerOptions: providerOptionsFor(chat) })).text;
+        (await generateText({ model: chatModel(chat, env), system: fullSystem, prompt: fullPrompt, temperature: temperatureFor(chat), providerOptions: providerOptionsFor(chat) })).text;
       return askWithShapeInPrompt(generate, { system, prompt, schema });
     }
     const { output } = await generateText({
       model: chatModel(chat, env),
       system,
       prompt,
-      temperature: 0.2,
+      temperature: temperatureFor(chat),
       output: Output.object({ schema }),
       providerOptions: providerOptionsFor(chat),
     });
@@ -164,27 +161,31 @@ export interface ModelCheck {
 
 /**
  * Checks that the model servers answer and both models are installed, with fix-it messages.
- *
- * @openapi
- * outbound:
- *   GET {baseURL}/models:
- *     description: >-
- *       Lists the models a server has, to check that the answer model and the meaning-search
- *       model are installed. Sent once per server address each time the Today or Settings page loads, and by
- *       the `kizuki` command at start. Gives up after 5 seconds. Carries no study data.
- *     headers:
- *       Authorization: "`Bearer <key>`, only when settings name an API key variable (`apiKeyEnv`). The key is read from that environment variable."
  */
 export async function checkModels(settings: Settings, env: Env = process.env, fetchImpl: typeof fetch = fetch): Promise<ModelCheck> {
   const problems: string[] = [];
   const targets = [
-    { label: "answer model", baseURL: settings.chat.baseURL, model: settings.chat.model, apiKeyEnv: settings.chat.apiKeyEnv },
-    { label: "meaning-search model", baseURL: settings.embed.baseURL, model: settings.embed.model, apiKeyEnv: settings.embed.apiKeyEnv },
+    { label: "answer model", provider: settings.chat.provider, baseURL: settings.chat.baseURL, model: settings.chat.model, apiKeyEnv: settings.chat.apiKeyEnv },
+    { label: "meaning-search model", provider: settings.embed.provider, baseURL: settings.embed.baseURL, model: settings.embed.model, apiKeyEnv: settings.embed.apiKeyEnv },
   ];
   const listings = new Map<string, string[] | null>();
   for (const t of targets) {
     if (t.apiKeyEnv && !env[t.apiKeyEnv]) {
       problems.push(`The environment variable ${t.apiKeyEnv} is not set, so the ${t.label} cannot be reached.`);
+      continue;
+    }
+    if (t.provider === "gateway") {
+      if (!listings.has(t.baseURL)) {
+        try {
+          const { models } = await gatewayProvider(t.baseURL, t.apiKeyEnv, env, fetchImpl).getAvailableModels();
+          listings.set(t.baseURL, models.map((m) => m.id));
+        } catch (error) {
+          listings.set(t.baseURL, null);
+          problems.push(`AI Gateway did not answer at ${t.baseURL} (${(error as Error).message}).`);
+        }
+      }
+      const ids = listings.get(t.baseURL);
+      if (ids && !ids.includes(t.model)) problems.push(`AI Gateway has no ${t.label} "${t.model}". Pick one from https://vercel.com/ai-gateway/models`);
       continue;
     }
     if (!listings.has(t.baseURL)) {

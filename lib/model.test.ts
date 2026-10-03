@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { askWithShapeInPrompt, checkModels, embedPrefix, parseJsonReply, providerOptionsFor, requestBodyFor, shapeInstructions } from "./model";
-import { DEFAULT_SETTINGS } from "./settings";
+import { DEFAULT_SETTINGS, PRESETS } from "./settings";
 
 describe("providerOptionsFor", () => {
   it("turns thinking off when reasoning is none", () => {
@@ -46,6 +46,46 @@ describe("checkModels", () => {
     const hosted = { ...DEFAULT_SETTINGS, chat: { ...DEFAULT_SETTINGS.chat, baseURL: "https://api.openai.com/v1", apiKeyEnv: "OPENAI_API_KEY" } };
     const r = await checkModels(hosted, {}, listing(["qwen3.5:2b", "nomic-embed-text"]));
     expect(r.problems).toContain("The environment variable OPENAI_API_KEY is not set, so the answer model cannot be reached.");
+  });
+
+  describe("on AI Gateway", () => {
+    const gatewayModel = (id: string, modelType: string) => ({
+      id,
+      name: id,
+      specification: { specificationVersion: "v4", provider: id.split("/")[0], modelId: id.split("/")[1] },
+      modelType,
+    });
+    const catalog = (ids: [string, string][]) => {
+      const urls: string[] = [];
+      const fetchImpl = (async (url: string) => {
+        urls.push(String(url));
+        return new Response(JSON.stringify({ models: ids.map(([id, type]) => gatewayModel(id, type)) }), { status: 200 });
+      }) as typeof fetch;
+      return { urls, fetchImpl };
+    };
+    const env = { AI_GATEWAY_API_KEY: "test-key" };
+
+    it("is happy when the gateway lists both models, and asks the gateway's own model list once", async () => {
+      const { urls, fetchImpl } = catalog([
+        ["openai/gpt-5.4-mini", "language"],
+        ["openai/text-embedding-3-small", "embedding"],
+      ]);
+      expect(await checkModels(PRESETS.gateway, env, fetchImpl)).toEqual({ ok: true, problems: [] });
+      expect(urls).toEqual(["https://ai-gateway.vercel.sh/v4/ai/config"]);
+    });
+
+    it("names a model the gateway does not have", async () => {
+      const { fetchImpl } = catalog([["openai/text-embedding-3-small", "embedding"]]);
+      const r = await checkModels(PRESETS.gateway, env, fetchImpl);
+      expect(r.problems).toEqual(['AI Gateway has no answer model "openai/gpt-5.4-mini". Pick one from https://vercel.com/ai-gateway/models']);
+    });
+
+    it("says to set the key before anything is sent", async () => {
+      const { urls, fetchImpl } = catalog([]);
+      const r = await checkModels(PRESETS.gateway, {}, fetchImpl);
+      expect(r.problems[0]).toBe("The environment variable AI_GATEWAY_API_KEY is not set, so the answer model cannot be reached.");
+      expect(urls).toEqual([]);
+    });
   });
 });
 

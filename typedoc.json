@@ -2,17 +2,14 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "lib",
-    "workflows",
-    "app",
-    "proxy.ts",
-    "next.config.ts",
-    "bin/cli.d.mts"
+    "tui"
   ],
   "entryPointStrategy": "expand",
   "exclude": [
     "**/*.test.ts",
+    "**/*.test.tsx",
     "**/test-helpers/**",
-    "**/.well-known/**"
+    "tui/start.ts"
   ],
   "out": "docs/api",
   "name": "Kizuki",
@@ -24,10 +21,9 @@
     "./scripts/typedoc-plugin.mjs"
   ],
   "customCss": "./scripts/typedoc.css",
-  "favicon": "./public/seal-ki.svg",
+  "favicon": "./site/seal-ki.svg",
   "darkHighlightTheme": "light-plus",
   "navigationLinks": {
-    "HTTP API": "/docs/http-api/",
     "GitHub": "https://github.com/connortessaro/kizuki"
   },
   "excludePrivate": true,
@@ -74,8 +70,7 @@
     "@preventInline",
     "@inlineType",
     "@preventExpand",
-    "@expandType",
-    "@openapi"
+    "@expandType"
   ],
   "excludeTags": [
     "@override",
@@ -84,8 +79,7 @@
     "@satisfies",
     "@overload",
     "@inline",
-    "@inlineType",
-    "@openapi"
+    "@inlineType"
   ],
   "validation": {
     "notExported": true,

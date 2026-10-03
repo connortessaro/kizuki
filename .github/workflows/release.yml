@@ -75,8 +75,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Pack the tarball (builds the app first)
         id: pack
-        # npm, not pnpm, packs and publishes: npm leaves the build's links in
-        # .next/node_modules out of the tarball, and `kizuki` recreates them.
+        # npm, not pnpm, packs and publishes, so the tarball lists its
+        # dependencies the way npm installs them for `npx kizuki`.
         run: |
           file=$(npm pack --silent | tail -n 1)
           cp "$file" kizuki.tgz
@@ -100,7 +100,7 @@ jobs:
             --generate-notes \
             --verify-tag \
             --notes-file - <<NOTES
-          Run this release with Node.js 22.18 or newer and Ollama:
+          Run this release in a terminal, with Node.js 22.18 or newer and Ollama:
 
           \`\`\`bash
           npx kizuki

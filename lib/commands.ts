@@ -4,9 +4,11 @@ import { nameKey } from "./concepts";
 import { formatOf } from "./extract/index";
 import { newId, sha256 } from "./ids";
 import { wouldCreateLoop, type Link } from "./links";
+import { MAX_TRIES } from "./limits";
 import { appendLog, withWriteLock } from "./log";
 import { homePaths } from "./paths";
-import { loadState, resolveConceptId, type ConceptState, type State } from "./state";
+import { quoteMatches } from "./quote";
+import { loadPassages, loadState, resolveConceptId, type ConceptState, type State } from "./state";
 
 const now = () => new Date().toISOString();
 
@@ -61,7 +63,7 @@ export async function addMaterial(home: string, input: { courseId: string; fileN
   const storedName = `${materialId}${ext}`;
   const paths = homePaths(home);
   await mkdir(paths.files, { recursive: true, mode: 0o700 });
-  await writeFile(join(/*turbopackIgnore: true*/ paths.files, storedName), input.bytes, { mode: 0o600 });
+  await writeFile(join(paths.files, storedName), input.bytes, { mode: 0o600 });
   await appendLog(home, "materials", [
     {
       type: "material.added",
@@ -170,6 +172,27 @@ export async function startSession(home: string, conceptId: string, explanation:
   return sessionId;
 }
 
+/**
+ * Starts another try at a concept right after a session with misses, again from memory. Each
+ * try points back at the first one. Only allowed after the last try ended with misses, and at
+ * most {@link MAX_TRIES} tries in all. Returns the new session's id.
+ */
+export async function startRetry(home: string, previousSessionId: string, explanation: string): Promise<string> {
+  const state = await loadState(home);
+  const previous = state.sessions.get(previousSessionId);
+  if (!previous) throw new Error(`there is no session ${previousSessionId}`);
+  if (!previous.ended) throw new Error("that session has not ended yet. Finish it before trying again");
+  if (previous.ended.clean) throw new Error("that session was clean, so there is nothing to try again");
+  const first = previous.retryOf ?? previous.sessionId;
+  const tries = [...state.sessions.values()].filter((s) => s.sessionId === first || s.retryOf === first).length;
+  if (tries >= MAX_TRIES) throw new Error(`you have had ${MAX_TRIES} tries at this concept today. It comes back at its next review`);
+  const text = explanation.trim();
+  if (!text) throw new Error("write your explanation first");
+  const sessionId = newId("ses");
+  await appendLog(home, "sessions", [{ type: "session.started", at: now(), sessionId, conceptId: previous.conceptId, explanation: text, retryOf: first }]);
+  return sessionId;
+}
+
 /** Records a catch: something you would have gotten wrong on an exam. Only for a session that has ended. */
 export async function recordCatch(home: string, sessionId: string, note: string): Promise<void> {
   const session = (await loadState(home)).sessions.get(sessionId);
@@ -178,12 +201,15 @@ export async function recordCatch(home: string, sessionId: string, note: string)
   await appendLog(home, "catches", [{ type: "catch.recorded", at: now(), catchId: newId("catch"), sessionId, conceptId: session.conceptId, note: note.trim() }]);
 }
 
-/** Records your correction to the material. From then on your version wins. */
+/** Records your correction to the material. The wrong text must appear in the passage word for word. From then on your version wins. */
 export async function addCorrection(
   home: string,
   input: { passageId: string; quote: string; correction: string; note: string; sessionId?: string },
 ): Promise<void> {
   if (!input.quote.trim() || !input.correction.trim()) throw new Error("a correction needs the wrong text and your version");
+  const passage = (await loadPassages(home)).get(input.passageId);
+  if (!passage) throw new Error("that passage no longer exists");
+  if (!quoteMatches(input.quote, passage.text)) throw new Error("copy the wrong text exactly as it appears in the passage");
   await appendLog(home, "corrections", [
     {
       type: "correction.added",

@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 
 /** The names of the log files in `data/`. Each is a `.jsonl` file: one event per line. */
 export type LogName =
@@ -24,8 +24,6 @@ export interface HomePaths {
   index: string;
   /** The model settings file, `settings.json`. */
   settings: string;
-  /** Where the Workflow SDK keeps its runs. */
-  workflowData: string;
   /** The lock file that makes log writes happen one at a time. */
   lock: string;
   /** The path of one log file. */
@@ -54,21 +52,9 @@ export function homePaths(home: string): HomePaths {
     data,
     index: join(home, "index.sqlite"),
     settings: join(home, "settings.json"),
-    workflowData: join(home, "workflow-data"),
     lock: join(data, ".lock"),
     log: (name) => join(data, `${name}.jsonl`),
   };
-}
-
-/**
- * The data folder a background job may use: only the one Kizuki is running with. Jobs are
- * started with their folder as input, so this stops a request from outside the app from
- * pointing a job at some other folder on the computer.
- */
-export function runHome(home: string, env: Record<string, string | undefined> = process.env): string {
-  const own = kizukiHome(env);
-  if (resolve(/*turbopackIgnore: true*/ home) !== resolve(/*turbopackIgnore: true*/ own)) throw new Error(`${home} is not the data folder Kizuki is running with (${own}), so this job was refused`);
-  return own;
 }
 
 /**

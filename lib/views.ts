@@ -19,7 +19,8 @@ export function catchesThisWeek(state: State, today: string, timeZone?: string):
 /** Works out the review plan for every confirmed concept, counting sessions for merged concepts toward their target. */
 export function reviewPlans(state: State, today: string, timeZone?: string): Map<string, ReviewPlan> {
   const sessions = [...state.sessions.values()]
-    .filter((s) => s.ended)
+    // Only first tries count: another try in the same sitting is practice and never pushes the next review later.
+    .filter((s) => s.ended && !s.retryOf)
     .map((s) => ({ conceptId: resolveConceptId(state, s.conceptId), endedAt: s.ended!.at, clean: s.ended!.clean }));
   const links = [...state.links.values()]
     .filter((l) => l.status === "confirmed")
@@ -57,7 +58,7 @@ export interface TodayView {
   /** Concepts due after today, soonest first. */
   upcoming: DueItem[];
   /** Concepts waiting on prerequisites, with the names of the concepts they wait on in `waitingOn` (an id if the concept is missing). */
-  blocked: { conceptId: string; name: string; courseName: string; waitingOn: string[] }[];
+  blocked: { conceptId: string; name: string; courseId: string; courseName: string; waitingOn: string[] }[];
 }
 
 /** Builds the Today page's lists from the current state. */
@@ -78,6 +79,7 @@ export function todayView(state: State, today: string, timeZone?: string): Today
         return {
           conceptId: c.conceptId,
           name: c.name,
+          courseId: c.courseId,
           courseName: state.courses.get(c.courseId)?.name ?? "",
           waitingOn: p.blockedBy.map((id) => state.concepts.get(id)?.name ?? id),
         };
