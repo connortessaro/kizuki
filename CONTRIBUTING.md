@@ -12,34 +12,34 @@ By contributing you agree that your work is licensed under the [Apache License 2
 
 ## Set up
 
-You need Node.js 22.18 or newer. For the model tests and for running the app you also need [Ollama](https://ollama.com) with `qwen3.5:2b` and `nomic-embed-text`.
+You need Node.js 22.18 or newer and [pnpm](https://pnpm.io/installation) 10. `package.json` pins the exact pnpm version, and pnpm switches to it on its own. For the model tests and for running the app you also need [Ollama](https://ollama.com) with `qwen3.5:2b` and `nomic-embed-text`.
 
 ```bash
 git clone https://github.com/connortessaro/kizuki.git
 cd kizuki
-npm ci
-npm test
+pnpm install
+pnpm test
 ```
 
 To try the app with a throwaway data folder:
 
 ```bash
-KIZUKI_HOME="$(mktemp -d)" npm run dev
+KIZUKI_HOME="$(mktemp -d)" pnpm dev
 ```
 
 ## Checks
 
-These are the same checks CI runs. `npm run qc` runs all but the last two in one go:
+These are the same checks CI runs. `pnpm qc` runs all but the last two in one go:
 
 ```bash
-npm run qc          # lint, types, docs, tests with coverage, personal identifiers, npm audit
-npm run build
-npm run e2e         # the study loop in a real browser, against a fake model server
+pnpm qc    # lint, types, docs, tests with coverage, personal identifiers, pnpm audit
+pnpm build
+pnpm e2e   # the study loop in a real browser, against a fake model server
 ```
 
-`npm run coverage` fails if coverage drops below the floor in `vitest.config.ts`; raise the floor when you add tests, never lower it. The report is in `coverage/index.html`. The end-to-end tests need a build first and Playwright's browser once: `npx playwright install chromium`. They use `e2e/fake-model.mjs` in place of Ollama, so every run is the same.
+`pnpm coverage` fails if coverage drops below the floor in `vitest.config.ts`; raise the floor when you add tests, never lower it. The report is in `coverage/index.html`. The end-to-end tests need a build first and Playwright's browser once: `pnpm exec playwright install chromium`. They use `e2e/fake-model.mjs` in place of Ollama, so every run is the same.
 
-`npm run eval` runs the model tests against your local Ollama. They are slow and not run in CI; run them when you change a prompt or a guard, and include the scores in your pull request. `node scripts/eval-summary.mjs <file>` prints the averages from `npx evalite run --outputPath <file>`.
+`pnpm eval` runs the model tests against your local Ollama. They are slow and not run in CI; run them when you change a prompt or a guard, and include the scores in your pull request. `node scripts/eval-summary.mjs <file>` prints the averages from `pnpm exec evalite run --outputPath <file>`.
 
 ## Rules
 
@@ -51,7 +51,7 @@ A pull request that breaks one of these will be asked to change.
 - **The logs are the truth.** `data/*.jsonl` lines are only ever added, through `appendLog`, one writer at a time. The search file is always rebuildable from the logs.
 - **Workflow steps are safe to run twice.** A step checks the logs before it writes.
 - **Test first.** Write the failing test, then the code.
-- **Every export has a short doc comment** in plain words. Every route, page, and form action also has an `@openapi` block; see [How these docs are made](docs/guides/how-the-docs-are-made.md). When the HTTP surface changes, run `npm run docs` and commit `docs/openapi.json`.
+- **Every export has a short doc comment** in plain words. Every route, page, and form action also has an `@openapi` block; see [How these docs are made](docs/guides/how-the-docs-are-made.md). When the HTTP surface changes, run `pnpm run docs` and commit `docs/openapi.json`.
 - **Plain words everywhere.** No jargon in the UI, docs, or names.
 - **No silent failures.** Errors say what went wrong and how to fix it.
 

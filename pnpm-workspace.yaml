@@ -1,0 +1,20 @@
+# pnpm settings for this single-package repo. pnpm reads its settings from this
+# file, not from package.json or .npmrc.
+
+# Packages allowed to run install scripts. pnpm blocks all others. These are
+# the ones npm used to run: better-sqlite3 and cbor-extract build or fetch native
+# code, the rest check or set up files after install.
+allowBuilds:
+  "@swc/core": true
+  better-sqlite3: true
+  cbor-extract: true
+  esbuild: true
+  vue-demi: true
+
+# Pinned versions for packages deep in the tree, mostly to close known holes.
+overrides:
+  better-sqlite3: ^13.0.3
+  undici: ^7.29.1
+  "@workflow/core>nanoid": ^5.1.16
+  "evalite>@fastify/static": ^10.1.4
+  "evalite>file-type": ^22.0.0

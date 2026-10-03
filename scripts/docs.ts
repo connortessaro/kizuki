@@ -702,7 +702,7 @@ function buildSite(root: string, specFile: string): void {
   copyFileSync(specFile, join(out, "openapi.json"));
   // The package does not export its browser file, so it is read from where npm installs it.
   const viewer = join(root, "node_modules", "@scalar", "api-reference", "dist", "browser", "standalone.js");
-  if (!existsSync(viewer)) throw new Error(`${viewer} is missing. Run npm ci.`);
+  if (!existsSync(viewer)) throw new Error(`${viewer} is missing. Run pnpm install.`);
   copyFileSync(viewer, join(out, "scalar.js"));
   writeFileSync(join(out, "index.html"), viewerPage());
   console.log("HTTP reference written to docs/api/http-api/");
@@ -717,7 +717,7 @@ function main(): void {
   }
   const specFile = join(root, "docs", "openapi.json");
   if (mode === "--site") {
-    if (!existsSync(specFile)) throw new Error("docs/openapi.json is missing. Run npm run docs and commit it.");
+    if (!existsSync(specFile)) throw new Error("docs/openapi.json is missing. Run pnpm run docs and commit it.");
     buildSite(root, specFile);
     return;
   }
@@ -734,7 +734,7 @@ function main(): void {
   if (mode === "--check") {
     const committed = existsSync(specFile) ? readFileSync(specFile, "utf8") : "";
     if (committed !== text) {
-      console.error("\ndocs/openapi.json is out of date with the code. Run npm run docs and commit the result.\n");
+      console.error("\ndocs/openapi.json is out of date with the code. Run pnpm run docs and commit the result.\n");
       process.exit(1);
     }
     console.log("docs/openapi.json matches the code.");

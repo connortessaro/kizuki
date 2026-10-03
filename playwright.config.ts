@@ -22,7 +22,7 @@ export default defineConfig({
   webServer: [
     { command: "node e2e/fake-model.mjs", url: `${model}/models`, reuseExistingServer: false },
     {
-      command: "npx next start -H 127.0.0.1 -p 4871",
+      command: "pnpm exec next start -H 127.0.0.1 -p 4871",
       url: "http://127.0.0.1:4871/courses",
       reuseExistingServer: false,
       env: { KIZUKI_HOME: home, WORKFLOW_TARGET_WORLD: "local", WORKFLOW_LOCAL_DATA_DIR: join(home, "workflow-data"), PORT: "4871" },

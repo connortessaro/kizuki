@@ -16,7 +16,7 @@
     },
     {
       "url": "http://127.0.0.1:3000",
-      "description": "`npm run dev` while working on Kizuki"
+      "description": "`pnpm dev` while working on Kizuki"
     }
   ],
   "security": [],

@@ -9,9 +9,9 @@ These docs come from the code, and checks fail when the two drift apart. You cha
 ## Commands
 
 ```bash
-npm run docs         # write docs/openapi.json, then build the whole site into docs/api/
-npm run docs:check   # what CI runs: fail if the HTTP docs are incomplete or docs/openapi.json is stale
-npm run docs:site    # build the site from the committed docs/openapi.json (the kizuki.dev build)
+pnpm run docs     # write docs/openapi.json, then build the whole site into docs/api/
+pnpm docs:check   # what CI runs: fail if the HTTP docs are incomplete or docs/openapi.json is stale
+pnpm docs:site    # build the site from the committed docs/openapi.json (the kizuki.dev build)
 ```
 
 Open `docs/api/index.html` to read the result. The HTTP reference is at `docs/api/http-api/index.html`; serve `docs/api/` over HTTP to view it, because the viewer loads `openapi.json` next to it.
@@ -64,21 +64,21 @@ The text above `@openapi` becomes the description. A key can name several method
 | `actions` | the `"use server"` file | The request and responses shared by every form |
 | `outbound` | `lib/model.ts` | The requests Kizuki sends to model servers |
 
-`npm run docs:check` fails, naming the file and line, when:
+`pnpm docs:check` fails, naming the file and line, when:
 
 - the server answers an address and method with no docs, or a page's or handler's docs sit in another file;
 - the docs describe an address the server no longer answers (Next.js addresses such as `/_next/static/{path}` are marked `x-framework: true` and must be named in the file that documents them);
 - the code writes a header the docs leave out, or the docs name a header no code writes (headers that Next.js adds for Kizuki, such as `Next-Action`, are listed in `FRAMEWORK_HEADERS` in `scripts/docs.ts` and allowed only while the code that makes Next.js use them is still there);
 - a form action reads a field its docs leave out, or its docs name a field it no longer reads;
 - an entry lacks a summary or responses, a path parameter is undocumented, or a tag has no description;
-- `docs/openapi.json` differs from what the code produces. Run `npm run docs` and commit the file.
+- `docs/openapi.json` differs from what the code produces. Run `pnpm run docs` and commit the file.
 
 `scripts/docs.test.ts` tests each of these failures on a small made-up project.
 
 ## Publishing
 
-kizuki.dev is built by Vercel from `site/`. `site/vercel.json` runs `npm run docs:site` and copies `docs/api/` to `/docs`, so the code docs are at kizuki.dev/docs and the HTTP reference at kizuki.dev/docs/http-api/. Every push to `main` that touches the site or the code the docs describe deploys it, and every pull request gets a preview. CI runs `npm run docs:check` on every pull request and push to `main`. The docs are not part of the npm package.
+kizuki.dev is built by Vercel from `site/`. `site/vercel.json` runs `pnpm docs:site` and copies `docs/api/` to `/docs`, so the code docs are at kizuki.dev/docs and the HTTP reference at kizuki.dev/docs/http-api/. Every push to `main` that touches the site or the code the docs describe deploys it, and every pull request gets a preview. CI runs `pnpm docs:check` on every pull request and push to `main`. The docs are not part of the npm package.
 
-GitHub Pages carries a second copy at connortessaro.github.io/kizuki. `.github/workflows/pages.yml` builds it with `npm run docs:site` on every push to `main` and deploys it.
+GitHub Pages carries a second copy at connortessaro.github.io/kizuki. `.github/workflows/pages.yml` builds it with `pnpm docs:site` on every push to `main` and deploys it.
 
-When you bump the version, `npm version` runs `npm run docs` and adds the new `docs/openapi.json` to the version commit, because the reference names the version.
+When you bump the version, `npm version` runs `pnpm run docs` and adds the new `docs/openapi.json` to the version commit, because the reference names the version.
