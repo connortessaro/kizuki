@@ -133,6 +133,12 @@ export async function recordAnswers(home: string, sessionId: string, round: numb
   if (r.answers) return;
   for (const a of payload.answers) {
     if (!r.questions.some((q) => q.questionId === a.questionId)) throw new Error(`question ${a.questionId} was not asked in round ${round}`);
+    if (a.verdict === "material-wrong" && !a.correction?.trim()) throw new Error("when the material is wrong, write the correct version");
+  }
+  for (const q of r.questions) {
+    if (q.kind === "contradiction" && !payload.answers.find((a) => a.questionId === q.questionId)?.verdict) {
+      throw new Error("for each “how does that fit” question, say whether the material or your explanation is right");
+    }
   }
   for (const a of payload.answers) {
     const q = r.questions.find((x) => x.questionId === a.questionId)!;

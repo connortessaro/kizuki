@@ -7,7 +7,8 @@ import { wouldCreateLoop, type Link } from "./links";
 import { MAX_TRIES } from "./limits";
 import { appendLog, withWriteLock } from "./log";
 import { homePaths } from "./paths";
-import { loadState, resolveConceptId, type ConceptState, type State } from "./state";
+import { quoteMatches } from "./quote";
+import { loadPassages, loadState, resolveConceptId, type ConceptState, type State } from "./state";
 
 const now = () => new Date().toISOString();
 
@@ -200,12 +201,15 @@ export async function recordCatch(home: string, sessionId: string, note: string)
   await appendLog(home, "catches", [{ type: "catch.recorded", at: now(), catchId: newId("catch"), sessionId, conceptId: session.conceptId, note: note.trim() }]);
 }
 
-/** Records your correction to the material. From then on your version wins. */
+/** Records your correction to the material. The wrong text must appear in the passage word for word. From then on your version wins. */
 export async function addCorrection(
   home: string,
   input: { passageId: string; quote: string; correction: string; note: string; sessionId?: string },
 ): Promise<void> {
   if (!input.quote.trim() || !input.correction.trim()) throw new Error("a correction needs the wrong text and your version");
+  const passage = (await loadPassages(home)).get(input.passageId);
+  if (!passage) throw new Error("that passage no longer exists");
+  if (!quoteMatches(input.quote, passage.text)) throw new Error("copy the wrong text exactly as it appears in the passage");
   await appendLog(home, "corrections", [
     {
       type: "correction.added",

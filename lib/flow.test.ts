@@ -112,7 +112,8 @@ describe("material and session flow", () => {
       throw new Error("the model server is not running");
     };
     await expect(runRound(home, sessionId, 1, { ask: down, embed: down })).resolves.toBeUndefined();
-    await recordAnswers(home, sessionId, 1, { answers: [], finish: true });
+    const asked = (await loadState(home)).sessions.get(sessionId)!.rounds[0]!.questions;
+    await recordAnswers(home, sessionId, 1, { answers: asked.map((q) => ({ questionId: q.questionId, text: "", verdict: "material-right" as const })), finish: true });
     await proposeMisses(home, sessionId, { ask: fakeAsk, embed: fakeEmbed });
     await expect(proposeMisses(home, sessionId, { ask: down, embed: down })).resolves.toBeUndefined();
   });

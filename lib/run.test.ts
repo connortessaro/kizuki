@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  addCorrection,
   addMaterial,
   confirmConcept,
   createCourse,
@@ -18,7 +19,7 @@ import {
   type Models,
 } from "./run";
 import type { Embedder } from "./search";
-import { loadState } from "./state";
+import { loadPassages, loadState } from "./state";
 import { tempHome } from "./test-helpers/home";
 
 const MATERIAL = `# Photosynthesis
@@ -289,5 +290,38 @@ describe("asking again until clean", () => {
     const today = state.sessions.get(first)!.ended!.at.slice(0, 10);
     const plan = reviewPlans(state, today, "UTC").get(conceptId)!;
     expect([plan.streak, plan.gapDays, plan.lastSessionAt]).toEqual([0, 1, state.sessions.get(first)!.ended!.at]);
+  });
+});
+
+describe("checks on what you send", () => {
+  async function openRound(ask: Ask): Promise<{ sessionId: string; questionId: string }> {
+    const conceptId = await confirmedConcept();
+    const sessionId = await startSession(home, conceptId, "Photosynthesis makes chemical energy from light.");
+    await continueSession(home, sessionId, { ...models, ask });
+    const q = (await loadState(home)).sessions.get(sessionId)!.rounds[0]!.questions[0]!;
+    return { sessionId, questionId: q.questionId };
+  }
+  const contradiction: Ask = async (request) => {
+    if (request.system.includes("curious student")) {
+      const label = /\[(S\d+)\] It happens in the chloroplast\./.exec(request.prompt)?.[1] ?? "S1";
+      return { questions: [{ kind: "contradiction", sentence: label, term: "" }] } as never;
+    }
+    return fakeAsk(request);
+  };
+
+  it("needs a verdict on every contradiction, and your version when the material is wrong", async () => {
+    const { sessionId, questionId } = await openRound(contradiction);
+    await expect(answerRound(home, sessionId, 1, { answers: [{ questionId, text: "Hmm." }], finish: true }, models)).rejects.toThrow(/say whether the material or your explanation is right/);
+    await expect(answerRound(home, sessionId, 1, { answers: [{ questionId, text: "", verdict: "material-wrong" }], finish: true }, models)).rejects.toThrow(/write the correct version/);
+    await expect(answerRound(home, sessionId, 1, { answers: [], finish: true }, models)).rejects.toThrow(/say whether the material or your explanation is right/);
+  });
+
+  it("saves a correction only when the wrong words appear in the passage word for word", async () => {
+    await confirmedConcept();
+    const passage = [...(await loadPassages(home)).values()].find((p) => p.text.includes("chloroplast"))!;
+    await expect(addCorrection(home, { passageId: passage.passageId, quote: "It happens in the nucleus.", correction: "x", note: "" })).rejects.toThrow(/copy the wrong text exactly/);
+    await expect(addCorrection(home, { passageId: "pas_0000000000000000", quote: "It happens", correction: "x", note: "" })).rejects.toThrow(/no longer exists/);
+    await addCorrection(home, { passageId: passage.passageId, quote: "it happens in the  chloroplast", correction: "It happens in the chloroplast's stroma.", note: "" });
+    expect((await loadState(home)).corrections).toHaveLength(1);
   });
 });
