@@ -57,10 +57,10 @@
     "docs:site": "typedoc"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^3.0.55",
-    "ai": "^7.0.113",
+    "@ai-sdk/openai-compatible": "^3.0.60",
+    "ai": "^7.0.123",
     "better-sqlite3": "^13.0.3",
-    "fast-xml-parser": "^5.11.1",
+    "fast-xml-parser": "^5.11.2",
     "fflate": "^0.8.3",
     "ink": "^7.1.1",
     "react": "^19.3.0",
