@@ -46,7 +46,7 @@ export async function main(argv: string[]): Promise<void> {
   mkdirSync(home, { recursive: true, mode: 0o700 });
   const quit = { now: () => {} };
   const study = new Study({ home, openFile, onQuit: () => quit.now() });
-  const app = render(<App study={study} />, { exitOnCtrlC: false });
+  const app = render(<App study={study} version={version()} home={home} />, { exitOnCtrlC: false });
   quit.now = () => app.unmount();
   await study.start();
   await app.waitUntilExit();

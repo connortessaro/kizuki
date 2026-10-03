@@ -18,6 +18,7 @@ Security fix? Do not open a public pull request. See SECURITY.md.
 pnpm qc    # lint, types, docs, tests with coverage, PII check, pnpm audit
 pnpm build
 pnpm dev   # if a command or a screen changed: try it in a terminal
+cd site && pnpm build   # if site/ changed
 ```
 
 ## Checklist

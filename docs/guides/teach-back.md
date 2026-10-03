@@ -27,7 +27,7 @@ Only the first try sets the schedule. A first try with misses brings the concept
 
 For each round, Kizuki gathers:
 
-- the passages the concept was confirmed with, then passages that search finds for your explanation and answers, up to {@link lib/sessionFlow!MAX_SESSION_PASSAGES | MAX_SESSION_PASSAGES} ([Passages and sentences](./passages-and-sentences.md));
+- the concept's passages plus search matches ([which ones, and how many](./passages-and-sentences.md));
 - every sentence of those passages, labeled `S1`, `S2`, and so on;
 - under each passage, your corrections ("Your correction: “…” should be “…”") and your answers to "what does this mean?" questions;
 - what you wrote so far, and the questions already asked.

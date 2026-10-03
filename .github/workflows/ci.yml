@@ -122,6 +122,33 @@ jobs:
           path: coverage/
           retention-days: 14
 
+  site:
+    name: kizuki.dev
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - name: The site builds to plain files
+        run: pnpm build
+
   pii:
     name: no personal identifiers
     runs-on: ubuntu-latest
@@ -194,6 +221,10 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
+          # braces has no fixed version. It only arrives through site/'s dev
+          # tools (eslint-config-next and the shadcn CLI); none of it ships in
+          # the built site, which is plain HTML and JavaScript.
+          allow-ghsas: GHSA-vfj7-8cjw-p6xm
           # Keep the dependency tree permissive-only, matching NOTICE.
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
           # sharp's prebuilt libvips binaries (used by Next.js for images) are
