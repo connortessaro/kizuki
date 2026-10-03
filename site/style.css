@@ -746,3 +746,76 @@ h3 {
 .foot a {
   padding: 13px 0;
 }
+
+/* Research numbers */
+
+.stats {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.stats.three {
+  margin-top: 28px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.stat {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat .figure {
+  margin: 0;
+  font-size: clamp(44px, 6vw, 64px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat figcaption {
+  margin-top: 1rem;
+  color: var(--ink-2);
+  font-size: 17px;
+}
+
+.stat .cite {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.subhead {
+  margin-top: 96px;
+  text-align: center;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.note {
+  max-width: 40rem;
+  margin: 28px auto 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 834px) {
+  .stats,
+  .stats.three {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav nav a:nth-child(2) {
+    display: none;
+  }
+}

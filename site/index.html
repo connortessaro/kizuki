@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kizuki: teach it back</title>
+    <title>Kizuki: reinventing learning</title>
     <meta
       name="description"
       content="A study tool for your terminal. You explain a concept in your own words. Kizuki plays the student and asks about what you got wrong, and each question quotes your course material."
@@ -17,6 +17,7 @@
       <div class="nav-inner">
         <a class="brand" href="/"><span class="seal" aria-hidden="true"></span>Kizuki</a>
         <nav aria-label="Site">
+          <a href="#research">Research</a>
           <a href="#how">How it works</a>
           <a href="#commands">Commands</a>
           <a href="#setup">Set up</a>
@@ -27,7 +28,7 @@
 
     <main id="main">
       <section class="hero" aria-labelledby="title">
-        <h1 id="title">Teach it back.</h1>
+        <h1 id="title">Reinventing learning.</h1>
         <p class="sub">
           Kizuki is a study tool for your terminal that plays the student. You explain a concept in your own words, and Kizuki asks about what you
           got wrong, what you left out, and what you said vaguely. Each question quotes your course material.
@@ -62,6 +63,50 @@
           </div>
         </figure>
         <p class="caption">The question comes from a real session with the default small model on a laptop.</p>
+      </section>
+
+      <section id="research" class="section" aria-labelledby="research-title">
+        <h2 id="research-title">Built on how memory works.</h2>
+        <p class="lead">Kizuki makes you recall, explain, and come back later. Decades of studies show those three habits beat rereading.</p>
+        <div class="stats">
+          <figure class="stat tile">
+            <p class="figure">50% more</p>
+            <figcaption>remembered a week later by students who practiced recalling a passage, compared with students who reread it: 61% against 40%.</figcaption>
+            <p class="cite"><a href="https://doi.org/10.1111/j.1467-9280.2006.01693.x">Roediger &amp; Karpicke, 2006</a></p>
+          </figure>
+          <figure class="stat tile">
+            <p class="figure">¼ the reading</p>
+            <figcaption>for the same students. The recall group read the passage 3.4 times; the rereading group read it 14.2 times and still remembered less.</figcaption>
+            <p class="cite"><a href="https://doi.org/10.1111/j.1467-9280.2006.01693.x">Roediger &amp; Karpicke, 2006</a></p>
+          </figure>
+          <figure class="stat tile">
+            <p class="figure">77%</p>
+            <figcaption>of students who crammed scored below the average student who spread the same recall practice over days.</figcaption>
+            <p class="cite"><a href="https://doi.org/10.1007/s10648-020-09572-8">Latimier, Peyre &amp; Ramus, 2021</a>, a research review</p>
+          </figure>
+          <figure class="stat tile">
+            <p class="figure">71%</p>
+            <figcaption>of students who studied for a test scored below the average student who prepared to teach the material and then taught it.</figcaption>
+            <p class="cite"><a href="https://doi.org/10.1111/jpr.12221">Kobayashi, 2019</a>, a review of 28 studies</p>
+          </figure>
+        </div>
+
+        <h3 class="subhead">Kizuki, measured.</h3>
+        <div class="stats three">
+          <figure class="stat tile">
+            <p class="figure">92%</p>
+            <figcaption>of planted mistakes caught in Kizuki's model tests, with the default small model on a laptop.</figcaption>
+          </figure>
+          <figure class="stat tile">
+            <p class="figure">0</p>
+            <figcaption>made-up quotes shown. Code checks every quote word for word against your material before you see it.</figcaption>
+          </figure>
+          <figure class="stat tile">
+            <p class="figure">$0</p>
+            <figcaption>to run. No account, and your material stays on your computer.</figcaption>
+          </figure>
+        </div>
+        <p class="note">The study numbers come from published research on these methods, not from Kizuki users. <a href="/docs/documents/How_people_learn.html">Read the full research summary</a>.</p>
       </section>
 
       <section id="how" class="section" aria-labelledby="how-title">
