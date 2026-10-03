@@ -221,6 +221,10 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
+          # braces has no fixed version. It only arrives through site/'s dev
+          # tools (eslint-config-next and the shadcn CLI); none of it ships in
+          # the built site, which is plain HTML and JavaScript.
+          allow-ghsas: GHSA-vfj7-8cjw-p6xm
           # Keep the dependency tree permissive-only, matching NOTICE.
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
           # sharp's prebuilt libvips binaries (used by Next.js for images) are
