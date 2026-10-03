@@ -127,7 +127,7 @@ h3 {
   text-decoration: none;
 }
 
-/* The seal file is orange; shown here as a dark app-style icon through a mask. */
+/* The seal file is the favicon; its shape is reused here through a mask, so the color comes from CSS. */
 .seal {
   width: 22px;
   height: 22px;
