@@ -27,18 +27,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
       - name: Docs are complete and docs/openapi.json matches the code
-        run: npm run docs:check
+        run: pnpm docs:check
       - name: No known high or critical holes in what the app ships
-        run: npm audit --omit=dev --audit-level=high
+        run: pnpm audit --prod --audit-level high
 
   test:
     name: test (node ${{ matrix.node }}, ${{ matrix.os }})
@@ -58,13 +60,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node ${{ matrix.node }}
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
-      - run: npm ci
-      - run: npm test
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
 
   build:
     name: build
@@ -76,13 +80,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
   coverage:
     name: coverage
@@ -94,14 +100,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Tests with coverage (fails below the minimum in vitest.config.ts)
-        run: npm run coverage
+        run: pnpm coverage
       - name: Keep the coverage report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -120,16 +128,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
       - name: Study loop in a browser, with a fake model server
-        run: npm run e2e
+        run: pnpm e2e
       - name: Keep the report and traces
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -167,14 +177,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up pnpm (the version in package.json)
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - name: The npm package holds the app and no private data
+        # npm packs the release (see release.yml), so npm checks it here.
         run: |
           npm pack --dry-run 2>&1 | sed 's/^npm notice //' > /tmp/pack.txt
           if grep -qE '\.kizuki/|people/|transcripts/|days/|signals/|insights/|catches/|alerts/|events/|activity/|state/|backlog/|\.claude/|kizuki\.config\.json|\.next/cache/|evals/' /tmp/pack.txt; then
@@ -209,6 +222,9 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: high
+          # No fixed version exists. It only arrives through @workflow/nest >
+          # @swc/cli, which Kizuki never runs. Matches pnpm-workspace.yaml.
+          allow-ghsas: GHSA-ch52-4w7c-c8xp
           # Keep the dependency tree permissive-only, matching NOTICE.
           deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-2.1, LGPL-3.0
           # sharp's prebuilt libvips binaries (used by Next.js for images) are

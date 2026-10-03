@@ -44,4 +44,4 @@ The model must reply in a fixed JSON shape. With Ollama or OpenAI the server enf
 
 ## Where this is tested
 
-The guards have plain tests with no model (`lib/*.test.ts`). The model tests in `evals/` (run with `npm run eval`) check real small models against hand-written answer keys with planted mistakes.
+The guards have plain tests with no model (`lib/*.test.ts`). The model tests in `evals/` (run with `pnpm eval`) check real small models against hand-written answer keys with planted mistakes.

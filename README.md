@@ -33,7 +33,7 @@ Options: `--port 4000`, `--home ~/my-study-data`, `--no-open`.
    - *Does this fit?* The material says something different from what you wrote. You say which is right: the material, you (the material is wrong, so you correct it), or neither (Kizuki misread you).
    - *Something you left out.* The material has an idea you did not mention.
    - *Say more.* You used vague words.
-4. **Confirm what you missed.** At the end Kizuki lists sentences from the material you may have missed. You tick the ones you really missed.
+4. **Confirm what you missed.** At the end Kizuki lists sentences from the material you may have missed. You tick the ones you missed.
 5. **Review.** A clean session doubles the wait before the next review (1, 2, 4, 8 days, up to 60). A session with misses brings the concept back tomorrow. A concept waits until the concepts it needs are solid. Set an exam date and reviews move before it.
 
 The goal is at least one **catch** a week: something Kizuki caught that you would have gotten wrong on an exam. Record catches on the session page; the History page counts them.
@@ -56,13 +56,13 @@ The defaults are `qwen3.5:2b` for choosing questions and `nomic-embed-text` for 
 ## Develop
 
 ```bash
-npm ci
-npm test          # plain tests, no model needed
-npm run qc        # every check CI runs: lint, types, docs, tests with coverage, PII check, npm audit
-npm run e2e       # the study loop in a browser against a fake model (run npm run build first)
-npm run dev       # dashboard with live reload, on 127.0.0.1 only
-npm run eval      # model tests against your local Ollama (slow)
-npm run docs      # the docs site into docs/api/, and docs/openapi.json (also at kizuki.dev/docs)
+pnpm install
+pnpm test       # plain tests, no model needed
+pnpm qc         # every check CI runs: lint, types, docs, tests with coverage, PII check, pnpm audit
+pnpm e2e        # the study loop in a browser against a fake model (run pnpm build first)
+pnpm dev        # dashboard with live reload, on 127.0.0.1 only
+pnpm eval       # model tests against your local Ollama (slow)
+pnpm run docs   # the docs site into docs/api/, and docs/openapi.json (also at kizuki.dev/docs)
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

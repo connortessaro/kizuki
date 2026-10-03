@@ -36,7 +36,7 @@ The HTTP reference lists these under "Requests Kizuki sends".
 
 ## Host checks
 
-Kizuki has no login. It listens only on `127.0.0.1`: `npm start`, `npm run dev`, and the `kizuki` command all pass `-H 127.0.0.1`. That still leaves one way in from the web: a website could point its own domain name at your computer's address and have your browser send requests there. {@link proxy!proxy | proxy} stops that. It runs before every page, form action, file, and background-job address (all but the built files under `/_next/`) and answers 403 unless {@link lib/hosts!isLocalHost | isLocalHost} says the Host header names this computer: `127.0.0.1`, `localhost`, or `[::1]`, with any port.
+Kizuki has no login. It listens only on `127.0.0.1`: `pnpm start`, `pnpm dev`, and the `kizuki` command all pass `-H 127.0.0.1`. That still leaves one way in from the web: a website could point its own domain name at your computer's address and have your browser send requests there. {@link proxy!proxy | proxy} stops that. It runs before every page, form action, file, and background-job address (all but the built files under `/_next/`) and answers 403 unless {@link lib/hosts!isLocalHost | isLocalHost} says the Host header names this computer: `127.0.0.1`, `localhost`, or `[::1]`, with any port.
 
 More safeguards sit behind the host check:
 

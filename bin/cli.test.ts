@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -65,8 +65,9 @@ describe("native module links", () => {
 describe("packageDir", () => {
   it("finds a package's folder even when its package.json is not exported", async () => {
     const { packageDir } = await import("./cli.mjs");
-    expect(packageDir("sqlite-vec", process.cwd())).toBe(join(process.cwd(), "node_modules", "sqlite-vec"));
-    expect(packageDir("better-sqlite3", process.cwd())).toBe(join(process.cwd(), "node_modules", "better-sqlite3"));
+    // pnpm links node_modules/<name> to its store folder, and Node resolves to the real path.
+    expect(packageDir("sqlite-vec", process.cwd())).toBe(realpathSync(join(process.cwd(), "node_modules", "sqlite-vec")));
+    expect(packageDir("better-sqlite3", process.cwd())).toBe(realpathSync(join(process.cwd(), "node_modules", "better-sqlite3")));
   });
 });
 

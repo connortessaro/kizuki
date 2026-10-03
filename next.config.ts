@@ -79,7 +79,7 @@ export { home as kizukiHomeForConfig };
  *   - url: http://127.0.0.1:3700
  *     description: "`npx kizuki` (change the port with --port)"
  *   - url: http://127.0.0.1:3000
- *     description: "`npm run dev` while working on Kizuki"
+ *     description: "`pnpm dev` while working on Kizuki"
  * tags:
  *   - name: Pages
  *     description: The dashboard's pages. Each reads your data fresh from the logs on every request and returns HTML.
