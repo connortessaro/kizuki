@@ -48,8 +48,16 @@ describe("settings", () => {
 
   it("offers MLX and AI Gateway presets", () => {
     expect(PRESETS.mlx.chat.baseURL).toBe("http://localhost:8080/v1");
-    expect(PRESETS.gateway.chat).toMatchObject({ baseURL: "https://ai-gateway.vercel.sh/v1", apiKeyEnv: "AI_GATEWAY_API_KEY" });
-    expect(PRESETS.gateway.embed).toMatchObject({ baseURL: "https://ai-gateway.vercel.sh/v1", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+    expect(PRESETS.gateway.chat).toMatchObject({ provider: "gateway", baseURL: "https://ai-gateway.vercel.sh/v4/ai", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+    expect(PRESETS.gateway.embed).toMatchObject({ provider: "gateway", baseURL: "https://ai-gateway.vercel.sh/v4/ai", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+  });
+
+  it("reads settings saved before there was a choice of provider as OpenAI-style servers", async () => {
+    const { provider: _chat, ...chat } = DEFAULT_SETTINGS.chat;
+    const { provider: _embed, ...embed } = DEFAULT_SETTINGS.embed;
+    writeFileSync(homePaths(home).settings, JSON.stringify({ chat, embed }));
+    const read = await readSettings(home);
+    expect([read.chat.provider, read.embed.provider, read.sendOutAllowed]).toEqual(["openai-compatible", "openai-compatible", false]);
   });
 
   it("refuses to save settings that send your material out until you agree", async () => {

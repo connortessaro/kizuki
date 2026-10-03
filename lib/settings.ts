@@ -11,8 +11,16 @@ const envName = z
   )
   .optional();
 
+/**
+ * How Kizuki talks to a model server. `openai-compatible`: any server that speaks the OpenAI
+ * format, such as Ollama and MLX. `gateway`: Vercel AI Gateway, through the AI SDK's own
+ * gateway provider.
+ */
+const provider = z.enum(["openai-compatible", "gateway"]).default("openai-compatible");
+
 /** Settings for the model that proposes concepts and asks questions. */
 export const chatSettingsSchema = z.object({
+  provider,
   baseURL: z.url(),
   model: z.string().min(1),
   /** The name of the environment variable that holds the API key. The key itself is never saved. */
@@ -29,6 +37,7 @@ export const chatSettingsSchema = z.object({
 
 /** Settings for the model that turns passages into numbers for meaning search. */
 export const embedSettingsSchema = z.object({
+  provider,
   baseURL: z.url(),
   model: z.string().min(1),
   apiKeyEnv: envName,
@@ -50,24 +59,25 @@ export type EmbedSettings = z.infer<typeof embedSettingsSchema>;
 
 /** Ollama on this computer, with the small models Kizuki is tested with. */
 export const DEFAULT_SETTINGS: Settings = {
-  chat: { baseURL: "http://localhost:11434/v1", model: "qwen3.5:2b", reasoning: "none", replyShape: "server" },
-  embed: { baseURL: "http://localhost:11434/v1", model: "nomic-embed-text" },
+  chat: { provider: "openai-compatible", baseURL: "http://localhost:11434/v1", model: "qwen3.5:2b", reasoning: "none", replyShape: "server" },
+  embed: { provider: "openai-compatible", baseURL: "http://localhost:11434/v1", model: "nomic-embed-text" },
   sendOutAllowed: false,
 };
 
-const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1";
+/** The AI SDK gateway provider's own address. */
+const GATEWAY_URL = "https://ai-gateway.vercel.sh/v4/ai";
 
 /** Ready-made settings: Ollama and MLX on this computer, and Vercel AI Gateway for bigger hosted models. */
 export const PRESETS: Record<"ollama" | "mlx" | "gateway", Settings> = {
   ollama: DEFAULT_SETTINGS,
   mlx: {
-    chat: { baseURL: "http://localhost:8080/v1", model: "mlx-community/Qwen3.5-2B-4bit", reasoning: "none", replyShape: "prompt" },
+    chat: { provider: "openai-compatible", baseURL: "http://localhost:8080/v1", model: "mlx-community/Qwen3.5-2B-4bit", reasoning: "none", replyShape: "prompt" },
     embed: DEFAULT_SETTINGS.embed,
     sendOutAllowed: false,
   },
   gateway: {
-    chat: { baseURL: GATEWAY_URL, model: "openai/gpt-5.4-mini", apiKeyEnv: "AI_GATEWAY_API_KEY", reasoning: "default", replyShape: "server" },
-    embed: { baseURL: GATEWAY_URL, model: "openai/text-embedding-3-small", apiKeyEnv: "AI_GATEWAY_API_KEY" },
+    chat: { provider: "gateway", baseURL: GATEWAY_URL, model: "openai/gpt-5.4-mini", apiKeyEnv: "AI_GATEWAY_API_KEY", reasoning: "default", replyShape: "server" },
+    embed: { provider: "gateway", baseURL: GATEWAY_URL, model: "openai/text-embedding-3-small", apiKeyEnv: "AI_GATEWAY_API_KEY" },
     sendOutAllowed: false,
   },
 };
