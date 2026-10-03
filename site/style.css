@@ -1,25 +1,28 @@
 :root {
-  --paper: #fafaf7;
-  --ink: #1a1a18;
-  --stone: #6b6b66;
-  --rule: #e7e4db;
-  --tint: #f3f0e7;
-  --pencil: #c4761f;
-  --pencil-deep: #8f5412;
-  --mincho: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, "Times New Roman", serif;
-  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --measure: 36rem;
+  --bg: #ffffff;
+  --tile: #f5f5f7;
+  --ink: #1d1d1f;
+  --ink-2: #6e6e73;
+  --line: #d2d2d7;
+  --blue: #0071e3;
+  --blue-press: #0062c4;
+  --link: #0066cc;
+  --sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --term-bg: var(--ink);
-  --term-text: #e9e6dc;
-  --term-dim: #8f8f86;
-  --term-note: #a3a399;
-  --term-link: #8fb2d6;
-  --term-head: #e7a6d6;
-  --term-ask: #8fdcdc;
-  --term-quote: #f4f1e8;
-  --term-dot: #4a4a45;
+  --page: 980px;
+
+  /* macOS Terminal, dark appearance. */
+  --term-bg: #1e1e1e;
+  --term-bar: #2d2d2d;
+  --term-text: #e8e8e8;
+  --term-dim: #8e8e93;
+  --term-link: #64d2ff;
+  --term-head: #ff9ff3;
+  --term-ask: #6ae4e4;
+  --term-pick: #6ae4e4;
 }
 
 * {
@@ -28,39 +31,49 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 64px;
 }
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.022em;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--pencil-deep);
-  text-underline-offset: 0.18em;
-  transition: color 150ms ease;
+  color: var(--link);
+  text-decoration: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
   a:hover {
-    color: var(--ink);
+    text-decoration: underline;
   }
 }
 
-h2,
-h3 {
-  text-wrap: balance;
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-:focus-visible {
-  outline: 2px solid var(--pencil);
-  outline-offset: 3px;
-  border-radius: 2px;
+code,
+pre {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  text-wrap: balance;
 }
 
 .skip {
@@ -71,114 +84,124 @@ h3 {
 .skip:focus {
   left: 1rem;
   top: 1rem;
+  z-index: 10;
   background: var(--ink);
-  color: var(--paper);
+  color: #fff;
   padding: 0.4rem 0.8rem;
-  z-index: 1;
+  border-radius: 8px;
 }
 
-code,
-pre {
-  font-family: var(--mono);
-  font-size: 0.92em;
+/* Top bar */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Header */
-
-.top {
+.nav-inner {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 22px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 1.25rem 1.5rem;
 }
 
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
   color: var(--ink);
-  font-family: var(--mincho);
-  font-size: 1.2rem;
   font-weight: 600;
+  font-size: 17px;
+}
+
+.brand:hover {
   text-decoration: none;
 }
 
-.top nav {
+/* The seal file is orange; shown here as a dark app-style icon through a mask. */
+.seal {
+  width: 22px;
+  height: 22px;
+  background: var(--ink);
+  -webkit-mask: url(/seal-ki.svg) center / contain no-repeat;
+  mask: url(/seal-ki.svg) center / contain no-repeat;
+  border-radius: 5px;
+}
+
+.nav nav {
   display: flex;
-  gap: 1.4rem;
-  margin: -0.625rem 0;
-  font-size: 0.95rem;
+  gap: 1.6rem;
 }
 
-/* The padding makes each link at least 44px tall to tap; the nav's negative margin keeps the header height. */
-.top nav a {
-  padding: 0.625rem 0;
-  color: var(--stone);
-  text-decoration: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .top nav a:hover {
-    color: var(--ink);
-  }
-}
-
-main {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* Hero: the pitch and a real exchange */
-
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: 3rem;
-  align-items: start;
-  padding: 3.5rem 0 5rem;
-}
-
-.pitch h1 {
-  margin: 0 0 1.25rem;
-  font-family: var(--mincho);
-  font-weight: 600;
-  font-size: clamp(2.75rem, 6vw, 4.5rem);
-  line-height: 1.05;
+.nav nav a {
+  color: var(--ink);
+  opacity: 0.8;
+  font-size: 12px;
   letter-spacing: -0.01em;
 }
 
-.lede {
-  max-width: var(--measure);
-  margin: 0 0 1rem;
-  font-size: 1.15rem;
+@media (hover: hover) and (pointer: fine) {
+  .nav nav a:hover {
+    opacity: 1;
+    text-decoration: none;
+  }
 }
 
-.lede.quiet {
-  color: var(--stone);
-  font-size: 1rem;
+/* Hero */
+
+.hero {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 88px 22px 0;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: clamp(48px, 9vw, 96px);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+.sub {
+  max-width: 40rem;
+  margin: 1.4rem auto 0;
+  font-size: clamp(19px, 2.2vw, 24px);
+  line-height: 1.38;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
 }
 
 .start {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.4rem;
   margin-top: 2rem;
+}
+
+.start a {
+  font-size: 17px;
 }
 
 .start > code,
 .copy {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 0.7rem 1.1rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  max-width: 100%;
+  background: var(--blue);
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 980px;
+  font-size: 15px;
+  line-height: 1.3;
 }
 
 .start > code {
@@ -191,7 +214,15 @@ main {
   border: 0;
   font-family: var(--mono);
   cursor: pointer;
-  transition: transform 160ms ease-out;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .copy:hover {
+    background: var(--blue-press);
+  }
 }
 
 .copy:active {
@@ -225,383 +256,171 @@ main {
   white-space: nowrap;
 }
 
-.exchange {
-  margin: 0.5rem 0 0;
-  background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  padding: 1.5rem 1.6rem 1.1rem;
+.name {
+  margin: 1.2rem 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
 }
 
-.turn + .turn {
-  margin-top: 1.4rem;
-  padding-top: 1.4rem;
-  border-top: 1px dashed var(--rule);
+/* The product shot: a macOS Terminal window. */
+
+.window {
+  margin: 64px auto 0;
+  max-width: 760px;
+  text-align: left;
+  background: var(--term-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.5),
+    0 22px 70px 4px rgba(0, 0, 0, 0.28);
 }
 
-.turn p {
-  margin: 0;
+.titlebar {
+  position: relative;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--term-bar);
+  border-bottom: 1px solid #000;
 }
 
-.who {
-  font-size: 0.85rem;
-  color: var(--stone);
-  margin-bottom: 0.35rem !important;
+.light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25);
 }
 
-.you p:last-child {
-  font-family: var(--mincho);
-  font-size: 1.1rem;
-  line-height: 1.7;
+.close {
+  background: #ff5f57;
 }
 
-.exchange mark {
+.min {
+  background: #febc2e;
+}
+
+.zoom {
+  background: #28c840;
+}
+
+.title {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #9a9a9a;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.screen {
+  padding: 18px 20px 20px;
+  color: var(--term-text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.screen .line {
+  margin: 0 0 0.6rem;
+  overflow-wrap: anywhere;
+}
+
+.screen .prompt,
+.screen .note {
+  color: var(--term-dim);
+}
+
+.screen .head {
+  color: var(--term-head);
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.screen .ask {
+  color: var(--term-ask);
+}
+
+.screen .src {
+  color: var(--term-link);
+}
+
+.screen q {
+  quotes: "“" "”";
+  color: #fff;
+}
+
+.screen mark {
   background: none;
   color: inherit;
-  background-image: linear-gradient(var(--pencil), var(--pencil));
+  background-image: linear-gradient(#ffd60a, #ffd60a);
   background-repeat: no-repeat;
-  background-position: 0 92%;
+  background-position: 0 100%;
   background-size: 100% 2px;
-  padding-bottom: 1px;
-  animation: notice 900ms 400ms cubic-bezier(0.3, 0.6, 0.2, 1) both;
+  animation: notice 700ms 650ms var(--ease-out) both;
 }
 
 @keyframes notice {
   from {
     background-size: 0% 2px;
   }
-  to {
-    background-size: 100% 2px;
-  }
 }
 
-.exchange q {
-  quotes: "“" "”";
-  border-left: 3px solid var(--pencil);
-  background: var(--tint);
-  padding: 0.05rem 0.35rem;
-  border-radius: 0 3px 3px 0;
-}
-
-.choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.pick {
   margin-top: 1rem;
-  font-size: 0.88rem;
-}
-
-.choices span {
-  border: 1px dashed var(--rule);
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem;
-  color: var(--stone);
-}
-
-.exchange figcaption {
-  margin-top: 1.2rem;
-  font-size: 0.82rem;
-  color: var(--stone);
-}
-
-/* Sections */
-
-.band {
-  border-top: 1px solid var(--rule);
-  padding: 3.5rem 0;
-}
-
-.band h2 {
-  margin: 0 0 1.5rem;
-  font-family: var(--mincho);
-  font-weight: 600;
-  font-size: 1.75rem;
-  line-height: 1.2;
-}
-
-.band p {
-  max-width: var(--measure);
-}
-
-.split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 3rem;
-}
-
-.split > div p {
-  margin: 0;
-}
-
-.steps {
-  list-style: none;
-  counter-reset: step;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 1.6rem;
-  max-width: 44rem;
-}
-
-.steps li {
-  counter-increment: step;
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  column-gap: 0.75rem;
-}
-
-.steps li::before {
-  content: counter(step);
-  grid-row: span 3;
-  font-family: var(--mincho);
-  font-size: 1.6rem;
-  line-height: 1.2;
-  color: var(--pencil-deep);
-}
-
-.steps h3 {
-  margin: 0 0 0.2rem;
-  font-size: 1.05rem;
-}
-
-.steps p {
-  margin: 0;
-  color: var(--stone);
-}
-
-.steps pre.wrap {
-  white-space: pre-wrap;
-}
-
-.steps pre {
-  margin: 0.5rem 0 0.4rem;
-  background: var(--ink);
-  color: var(--paper);
-  padding: 0.8rem 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-
-.rules {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.rules li {
-  padding: 0.75rem 0 0.75rem 1.1rem;
-  border-bottom: 1px solid var(--rule);
-  position: relative;
-}
-
-.rules li:first-child {
-  padding-top: 0;
-}
-
-.rules li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 1.35rem;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--pencil);
-}
-
-.rules li:first-child::before {
-  top: 0.62rem;
-}
-
-.rules code {
-  background: var(--tint);
-  padding: 0.05rem 0.35rem;
-  border-radius: 3px;
-}
-
-.foot {
-  width: calc(100% - 3rem);
-  max-width: 69rem;
-  margin: 0 auto;
-  padding: 2.5rem 0 3.5rem;
-  border-top: 1px solid var(--rule);
-  color: var(--stone);
-  font-size: 0.9rem;
-}
-
-.foot p {
-  margin: 0 0 0.3rem;
-}
-
-/* Taller to tap. Padding on a link inside a line does not move the text around it. */
-.foot a {
-  padding: 0.875rem 0;
-}
-
-/* Smaller screens */
-
-@media (max-width: 960px) {
-  .hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2rem;
-    padding-top: 1.5rem;
-  }
-
-  .split {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
-  }
-}
-
-@media (max-width: 560px) {
-  .top nav a:first-child {
-    display: none;
-  }
-
-  .exchange {
-    padding: 1.2rem 1.1rem 1rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .exchange mark {
-    animation: none;
-  }
-}
-
-/* The hero example, drawn as the terminal app shows it. */
-
-.term {
-  background: var(--term-bg);
-  color: var(--term-text);
-  border-color: var(--term-bg);
-  font-family: var(--mono);
-  font-size: 0.86rem;
-  line-height: 1.55;
-  padding: 0.9rem 1.2rem 1.1rem;
-}
-
-.term .bar {
-  display: flex;
-  gap: 0.4rem;
-  margin-bottom: 0.9rem;
-}
-
-.term .bar span {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 50%;
-  background: var(--term-dot);
-}
-
-.term .line {
-  margin: 0 0 0.55rem;
-  overflow-wrap: anywhere;
-}
-
-.term .mark {
-  color: var(--term-dim);
-}
-
-.term .note {
-  color: var(--term-note);
-}
-
-.term .src {
-  color: var(--term-link);
-}
-
-.term .head {
-  color: var(--term-head);
-  font-weight: 600;
-  margin-top: 0.9rem;
-}
-
-.term .ask {
-  color: var(--term-ask);
-}
-
-.term q {
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--term-quote);
-}
-
-.term .pick {
-  border: 1px solid var(--term-ask);
+  padding: 8px 12px;
+  border: 1px solid var(--term-pick);
   border-radius: 6px;
-  padding: 0.5rem 0.8rem;
-  margin-top: 0.9rem;
 }
 
-.term .pick p {
+.pick p {
   margin: 0;
 }
 
-.term .pick p:first-child {
+.pick p:first-child {
   font-weight: 600;
-  margin-bottom: 0.2rem;
+  margin-bottom: 2px;
 }
 
-.term .pick .on {
-  color: var(--term-ask);
+.pick .on {
+  color: var(--term-pick);
 }
 
-.term figcaption {
-  color: var(--term-dim);
+.caption {
+  margin: 1.2rem auto 0;
+  font-size: 12px;
+  color: var(--ink-2);
 }
 
-/* Commands */
+/* The one moving moment: the session plays out in order, once. */
 
-.cmds {
-  margin: 0;
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.7rem 1.2rem;
-  align-items: baseline;
+.screen .line,
+.pick {
+  animation: type-in 320ms var(--ease-out) both;
 }
 
-.cmds dt {
-  margin: 0;
+.screen .line:nth-of-type(2) {
+  animation-delay: 70ms;
 }
-
-.cmds dd {
-  margin: 0;
-  color: var(--stone);
+.screen .line:nth-of-type(3) {
+  animation-delay: 140ms;
 }
-
-@media (max-width: 560px) {
-  .cmds {
-    grid-template-columns: 1fr;
-    gap: 0.15rem;
-  }
-
-  .cmds dd {
-    margin-bottom: 0.7rem;
-  }
+.screen .line:nth-of-type(4) {
+  animation-delay: 210ms;
 }
-
-/* The example plays out in order, once, the way a session does: command,
-   explanation, question, choice. Only opacity and transform move. */
-
-.term .line,
-.term .pick {
-  animation: type-in 300ms var(--ease-out) both;
+.screen .line:nth-of-type(5) {
+  animation-delay: 280ms;
 }
-
-.term .line:nth-of-type(2) { animation-delay: 70ms; }
-.term .line:nth-of-type(3) { animation-delay: 140ms; }
-.term .line:nth-of-type(4) { animation-delay: 210ms; }
-.term .line:nth-of-type(5) { animation-delay: 280ms; }
-.term .line:nth-of-type(6) { animation-delay: 350ms; }
-.term .pick { animation-delay: 420ms; }
-
-/* The mistake gets underlined once Kizuki has asked about it. */
-.term mark {
-  animation-delay: 650ms;
+.screen .line:nth-of-type(6) {
+  animation-delay: 350ms;
+}
+.pick {
+  animation-delay: 420ms;
 }
 
 @keyframes type-in {
@@ -609,17 +428,295 @@ main {
     opacity: 0;
     transform: translateY(6px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+}
+
+/* Sections */
+
+.section {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 120px 22px 0;
+}
+
+.section > h2 {
+  font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.07;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-align: center;
+}
+
+.lead {
+  max-width: 36rem;
+  margin: 1rem auto 0;
+  text-align: center;
+  font-size: 21px;
+  line-height: 1.38;
+  color: var(--ink-2);
+}
+
+.tile {
+  background: var(--tile);
+  border-radius: 28px;
+  padding: 36px 36px 40px;
+}
+
+.tile h3 {
+  font-size: 24px;
+  line-height: 1.17;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.tile p {
+  margin: 0.6rem 0 0;
+  color: var(--ink-2);
+}
+
+.tile code {
+  color: var(--ink);
+}
+
+/* Steps: a real sequence, so numbered. */
+
+.steps {
+  list-style: none;
+  margin: 56px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.steps .wide {
+  grid-column: 1 / -1;
+}
+
+.num {
+  display: block;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--blue);
+  margin-bottom: 1.2rem;
+}
+
+/* Commands */
+
+.cmds {
+  margin: 48px auto 0;
+  max-width: 760px;
+  display: grid;
+  gap: 0;
+  padding: 12px 36px;
+}
+
+.cmds > div {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 1.5rem;
+  padding: 18px 0;
+  align-items: baseline;
+}
+
+.cmds > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.cmds dt {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cmds dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* The two promises */
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.big {
+  padding: 48px 44px 52px;
+}
+
+.big h2 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.big > p {
+  margin-top: 1rem;
+  font-size: 19px;
+  line-height: 1.42;
+}
+
+.big ul {
+  margin: 1.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.big li {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 16px;
+}
+
+/* Set up */
+
+.setup {
+  list-style: none;
+  counter-reset: step;
+  max-width: 640px;
+  margin: 56px auto 0;
+  padding: 0;
+}
+
+.setup li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 40px 52px;
+}
+
+.setup li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.setup h3 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.setup p {
+  margin: 0.5rem 0 0;
+  color: var(--ink-2);
+}
+
+.setup pre {
+  margin: 0.8rem 0 0;
+  padding: 16px 18px;
+  background: var(--term-bg);
+  color: var(--term-text);
+  border-radius: 12px;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.setup pre code {
+  font-size: 14px;
+}
+
+/* Footer */
+
+.foot {
+  margin-top: 80px;
+  background: var(--tile);
+  border-top: 1px solid var(--line);
+}
+
+.foot-inner {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 24px 22px 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2rem;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.foot p {
+  margin: 0;
+}
+
+/* Smaller screens */
+
+@media (max-width: 834px) {
+  .steps,
+  .pair {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding-top: 88px;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav nav {
+    gap: 1rem;
+  }
+
+  .nav nav a:first-child {
+    display: none;
+  }
+
+  .hero {
+    padding-top: 56px;
+  }
+
+  .window {
+    margin-top: 44px;
+    border-radius: 10px;
+  }
+
+  .screen {
+    padding: 14px 14px 16px;
+    font-size: 12px;
+  }
+
+  .tile,
+  .big {
+    padding: 28px 24px 30px;
+    border-radius: 22px;
+  }
+
+  .cmds {
+    padding: 4px 24px;
+  }
+
+  .cmds > div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
   }
 }
 
 /* Last, so it wins over the animations above: no movement, everything shown. */
 @media (prefers-reduced-motion: reduce) {
-  .term .line,
-  .term .pick,
-  .term mark {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .screen .line,
+  .pick,
+  .screen mark {
     animation: none;
+  }
+
+  .copy {
+    transition: none;
   }
 }

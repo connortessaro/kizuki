@@ -13,137 +13,126 @@
   </head>
   <body>
     <a class="skip" href="#main">Skip to the content</a>
-    <header class="top">
-      <a class="brand" href="/"><img src="/seal-ki.svg" alt="" width="28" height="28" />Kizuki</a>
-      <nav aria-label="Site">
-        <a href="#how">How it works</a>
-        <a href="#commands">Commands</a>
-        <a href="#setup">Set up</a>
-        <a href="https://github.com/connortessaro/kizuki">Source</a>
-      </nav>
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="/"><span class="seal" aria-hidden="true"></span>Kizuki</a>
+        <nav aria-label="Site">
+          <a href="#how">How it works</a>
+          <a href="#commands">Commands</a>
+          <a href="#setup">Set up</a>
+          <a href="https://github.com/connortessaro/kizuki">Source</a>
+        </nav>
+      </div>
     </header>
 
     <main id="main">
       <section class="hero" aria-labelledby="title">
-        <div class="pitch">
-          <h1 id="title">Teach it back.</h1>
-          <p class="lede">
-            Kizuki is a study tool for your terminal that plays the student. You explain a concept in your own words, and Kizuki asks about what you got
-            wrong, what you left out, and what you said vaguely. Each question quotes your course material.
-          </p>
-          <p class="lede quiet">
-            <span lang="ja">気付き</span> (kizuki) is Japanese for noticing, as in noticing a gap in what you know.
-          </p>
-          <div class="start">
-            <code>npx kizuki</code>
-            <a href="#setup">What you need first</a>
-          </div>
+        <h1 id="title">Teach it back.</h1>
+        <p class="sub">
+          Kizuki is a study tool for your terminal that plays the student. You explain a concept in your own words, and Kizuki asks about what you
+          got wrong, what you left out, and what you said vaguely. Each question quotes your course material.
+        </p>
+        <div class="start">
+          <code>npx kizuki</code>
+          <a href="#setup">What you need first</a>
         </div>
+        <p class="name"><span lang="ja">気付き</span> (kizuki) is Japanese for noticing, as in noticing a gap in what you know.</p>
 
-        <figure class="exchange term" aria-label="A teach-back exchange in the terminal">
-          <div class="bar" aria-hidden="true"><span></span><span></span><span></span></div>
-          <p class="line cmd"><span class="mark" aria-hidden="true">›</span> /teach calvin cycle</p>
-          <p class="line note">Explain it from memory. The material stays hidden until you finish.</p>
-          <p class="line you"><span class="mark" aria-hidden="true">›</span> The Calvin cycle happens in the <mark>thylakoid membranes</mark>. It uses ATP and NADPH to turn carbon dioxide into sugar.</p>
-          <p class="line head">Round 1 of up to 3</p>
-          <p class="line ask">
-            The section “The Calvin cycle” of photosynthesis.md says: <q>The Calvin cycle takes place in the stroma.</q> You wrote:
-            <q>thylakoid membranes</q>. How does that fit?
-          </p>
-          <p class="line src">[1] The section “The Calvin cycle” of photosynthesis.md</p>
-          <div class="pick" aria-hidden="true">
-            <p>Which is right?</p>
-            <p class="on">❯ The material is right (I got it wrong)</p>
-            <p>&nbsp; The material is wrong</p>
-            <p>&nbsp; Kizuki misread what I wrote</p>
+        <figure class="window" aria-label="A teach-back exchange in the terminal">
+          <div class="titlebar" aria-hidden="true">
+            <span class="light close"></span><span class="light min"></span><span class="light zoom"></span>
+            <span class="title">kizuki</span>
           </div>
-          <figcaption>The question comes from a real session with the default small model on a laptop.</figcaption>
+          <div class="screen">
+            <p class="line cmd"><span class="prompt" aria-hidden="true">›</span> /teach calvin cycle</p>
+            <p class="line note">Explain it from memory. The material stays hidden until you finish.</p>
+            <p class="line you"><span class="prompt" aria-hidden="true">›</span> The Calvin cycle happens in the <mark>thylakoid membranes</mark>. It uses ATP and NADPH to turn carbon dioxide into sugar.</p>
+            <p class="line head">Round 1 of up to 3</p>
+            <p class="line ask">
+              The section “The Calvin cycle” of photosynthesis.md says: <q>The Calvin cycle takes place in the stroma.</q> You wrote:
+              <q>thylakoid membranes</q>. How does that fit?
+            </p>
+            <p class="line src">[1] The section “The Calvin cycle” of photosynthesis.md</p>
+            <div class="pick" aria-hidden="true">
+              <p>Which is right?</p>
+              <p class="on">❯ The material is right (I got it wrong)</p>
+              <p>&nbsp; The material is wrong</p>
+              <p>&nbsp; Kizuki misread what I wrote</p>
+            </div>
+          </div>
         </figure>
+        <p class="caption">The question comes from a real session with the default small model on a laptop.</p>
       </section>
 
-      <section id="how" class="band" aria-labelledby="how-title">
-        <h2 id="how-title">How a session goes</h2>
+      <section id="how" class="section" aria-labelledby="how-title">
+        <h2 id="how-title">How a session goes.</h2>
         <ol class="steps">
-          <li>
+          <li class="tile">
+            <span class="num" aria-hidden="true">1</span>
             <h3>Add your material</h3>
             <p>Slides, PDFs, Word and Excel files, notes. Drop them onto the terminal window. Kizuki reads the text and remembers the page, slide, or cell each passage came from.</p>
           </li>
-          <li>
+          <li class="tile">
+            <span class="num" aria-hidden="true">2</span>
             <h3>Confirm the concepts</h3>
             <p>Kizuki turns each heading into a concept, and a small model suggests ideas inside each section. Type <code>/review</code> and keep the ones you want. Kizuki uses nothing you didn't confirm.</p>
           </li>
-          <li>
+          <li class="tile">
+            <span class="num" aria-hidden="true">3</span>
             <h3>Explain one without your notes</h3>
             <p>Write it the way you would explain it to a classmate. Kizuki keeps the material hidden until you finish, because recalling it beats rereading it.</p>
           </li>
-          <li>
+          <li class="tile">
+            <span class="num" aria-hidden="true">4</span>
             <h3>Answer the student’s questions</h3>
-            <p>
-              Up to three rounds. Kizuki asks where your explanation disagrees with the material, what the material says that you left out,
-              and what you meant by vague words.
-            </p>
+            <p>Up to three rounds. Kizuki asks where your explanation disagrees with the material, what the material says that you left out, and what you meant by vague words.</p>
           </li>
-          <li>
+          <li class="tile wide">
+            <span class="num" aria-hidden="true">5</span>
             <h3>Confirm what you missed</h3>
             <p>You tick the points you missed, then read the passages. After misses, you can try again right away. After a clean session Kizuki waits twice as long before the next review; after a miss, the concept comes back tomorrow. If you set an exam date, Kizuki moves reviews before it.</p>
           </li>
         </ol>
       </section>
 
-      <section id="commands" class="band split" aria-labelledby="commands-title">
-        <div>
-          <h2 id="commands-title">A few commands</h2>
-          <p>Kizuki runs in your terminal like a coding agent. Type <code>/</code> to see every command, or <code>/help</code> for what each one does.</p>
-        </div>
-        <dl class="cmds">
-          <dt><code>/add notes.pdf</code></dt>
-          <dd>Add a file. Dropping it onto the window does the same.</dd>
-          <dt><code>/review</code></dt>
-          <dd>Confirm the concepts and the order Kizuki suggests.</dd>
-          <dt><code>/teach</code></dt>
-          <dd>Explain the first concept that is due.</dd>
-          <dt><code>/due</code></dt>
-          <dd>See what is due now, what comes next, and what waits on something else.</dd>
-          <dt><code>/exam 2026-12-15</code></dt>
-          <dd>Move reviews before your exam.</dd>
-          <dt><code>/open 1</code></dt>
-          <dd>Open source [1] in its file.</dd>
+      <section id="commands" class="section" aria-labelledby="commands-title">
+        <h2 id="commands-title">A few commands.</h2>
+        <p class="lead">Kizuki runs in your terminal like a coding agent. Type <code>/</code> to see every command, or <code>/help</code> for what each one does.</p>
+        <dl class="cmds tile">
+          <div><dt><code>/add notes.pdf</code></dt><dd>Add a file. Dropping it onto the window does the same.</dd></div>
+          <div><dt><code>/review</code></dt><dd>Confirm the concepts and the order Kizuki suggests.</dd></div>
+          <div><dt><code>/teach</code></dt><dd>Explain the first concept that is due.</dd></div>
+          <div><dt><code>/due</code></dt><dd>See what is due now, what comes next, and what waits on something else.</dd></div>
+          <div><dt><code>/exam 2026-12-15</code></dt><dd>Move reviews before your exam.</dd></div>
+          <div><dt><code>/open 1</code></dt><dd>Open source [1] in its file.</dd></div>
         </dl>
       </section>
 
-      <section class="band split" aria-labelledby="rule-title">
-        <div>
-          <h2 id="rule-title">It only quotes your material</h2>
-          <p>
-            Kizuki's model can't write facts, quotes, or questions in its own words. The code checks this before you see anything.
-          </p>
+      <section class="section pair" aria-label="What Kizuki promises">
+        <div class="tile big" aria-labelledby="rule-title">
+          <h2 id="rule-title">It only quotes your material.</h2>
+          <p>Kizuki's model can't write facts, quotes, or questions in its own words. The code checks this before you see anything.</p>
+          <ul>
+            <li>The model only points at sentences of your material. Kizuki shows those sentences word for word.</li>
+            <li>Kizuki writes each question from a fixed template around the exact sentence, with a link to where it came from.</li>
+            <li>If nothing in your material matches what you wrote, Kizuki says “not in your material” and asks nothing.</li>
+            <li>When you and your material disagree, you decide. If the slide had a typo, you correct it, and Kizuki uses your version from then on.</li>
+          </ul>
         </div>
-        <ul class="rules">
-          <li>The model only points at sentences of your material. Kizuki shows those sentences word for word.</li>
-          <li>Kizuki writes each question from a fixed template around the exact sentence, with a link to where it came from.</li>
-          <li>If nothing in your material matches what you wrote, Kizuki says “not in your material” and asks nothing.</li>
-          <li>When you and your material disagree, you decide. If the slide had a typo, you correct it, and Kizuki uses your version from then on.</li>
-        </ul>
+        <div class="tile big" aria-labelledby="local-title">
+          <h2 id="local-title">It stays on your computer.</h2>
+          <p>You don't need an account. Kizuki runs a small model through Ollama, and it keeps your files and history in one folder you can copy or delete.</p>
+          <ul>
+            <li>Your data: <code>~/.kizuki</code></li>
+            <li>Default models: <code>qwen3.5:2b</code> and <code>nomic-embed-text</code></li>
+            <li>You can use MLX on Apple chips, or bigger hosted models with your own Vercel AI Gateway key (<code>/model gateway</code>). Before Kizuki sends anything off your computer, it asks you.</li>
+          </ul>
+        </div>
       </section>
 
-      <section class="band split" aria-labelledby="local-title">
-        <div>
-          <h2 id="local-title">It stays on your computer</h2>
-          <p>
-            You don't need an account. Kizuki runs a small model through Ollama, and it keeps your files and history in one folder you can copy
-            or delete.
-          </p>
-        </div>
-        <ul class="rules">
-          <li>Your data: <code>~/.kizuki</code></li>
-          <li>Default models: <code>qwen3.5:2b</code> and <code>nomic-embed-text</code></li>
-          <li>You can use MLX on Apple chips, or bigger hosted models with your own Vercel AI Gateway key (<code>/model gateway</code>). Before Kizuki sends anything off your computer, it asks you.</li>
-        </ul>
-      </section>
-
-      <section id="setup" class="band" aria-labelledby="setup-title">
-        <h2 id="setup-title">Set up</h2>
-        <ol class="steps compact">
+      <section id="setup" class="section" aria-labelledby="setup-title">
+        <h2 id="setup-title">Set up.</h2>
+        <ol class="setup">
           <li>
             <h3>Install Node.js and Ollama</h3>
             <p><a href="https://nodejs.org">Node.js</a> 22.18 or newer, and <a href="https://ollama.com">Ollama</a>.</p>
@@ -155,7 +144,7 @@ ollama pull nomic-embed-text</code></pre>
           </li>
           <li>
             <h3>Start Kizuki</h3>
-            <pre class="wrap"><code>npx kizuki</code></pre>
+            <pre><code>npx kizuki</code></pre>
             <p>It checks the models and starts in your terminal. Type <code>/help</code> for commands. To keep it installed, run <code>npm install -g kizuki</code> and start it with <code>kizuki</code>.</p>
           </li>
         </ol>
@@ -163,8 +152,11 @@ ollama pull nomic-embed-text</code></pre>
     </main>
 
     <footer class="foot">
-      <p>Kizuki is free and open source under the Apache 2.0 license.</p>
-      <p><a href="https://github.com/connortessaro/kizuki">Source and issues on GitHub</a> · <a href="/docs/">Code docs</a></p>
+      <div class="foot-inner">
+        <p>Kizuki is free and open source under the Apache 2.0 license.</p>
+        <p><a href="https://github.com/connortessaro/kizuki">Source and issues on GitHub</a></p>
+        <p><a href="/docs/">Code docs</a></p>
+      </div>
     </footer>
     <script>
       // Turns the start command into a button that copies it. Without this script it stays text you can select.
