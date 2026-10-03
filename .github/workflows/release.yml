@@ -140,11 +140,12 @@ jobs:
           # No dependency cache in the job that can publish: a poisoned cache
           # entry would run here with the right to publish.
           package-manager-cache: false
-          registry-url: https://registry.npmjs.org
+          # No registry-url: it writes an .npmrc whose token line reads an unset
+          # NODE_AUTH_TOKEN, and npm then skips trusted publishing and gets a 404.
       - name: Use an npm that supports trusted publishing
         # Pinned: an unpinned "latest" would run whatever npm publishes next, in the job that can publish.
         run: npm install -g npm@11.20.0
       - run: pnpm install --frozen-lockfile
       # npm publishes, as it packs in the release job: same tarball rules, and npm
       # handles trusted publishing.
-      - run: npm publish
+      - run: npm publish --loglevel verbose

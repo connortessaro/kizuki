@@ -26,7 +26,7 @@
     "node": ">=22.18.0"
   },
   "bin": {
-    "kizuki": "./bin/kizuki.mjs"
+    "kizuki": "bin/kizuki.mjs"
   },
   "files": [
     "bin/kizuki.mjs",
