@@ -21,7 +21,7 @@
     "./scripts/typedoc-plugin.mjs"
   ],
   "customCss": "./scripts/typedoc.css",
-  "favicon": "./site/seal-ki.svg",
+  "favicon": "./site/public/seal-ki.svg",
   "darkHighlightTheme": "light-plus",
   "navigationLinks": {
     "GitHub": "https://github.com/connortessaro/kizuki"

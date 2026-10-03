@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd .. && npx --yes pnpm@10.34.6 install --frozen-lockfile --ignore-scripts",
-  "buildCommand": "cd .. && npx --yes pnpm@10.34.6 docs:site && rm -rf site/docs && cp -R docs/api site/docs",
-  "outputDirectory": ".",
+  "installCommand": "cd .. && npx --yes pnpm@10.34.6 install --frozen-lockfile --ignore-scripts && cd site && npx --yes pnpm@10.34.6 install --frozen-lockfile",
+  "buildCommand": "cd .. && npx --yes pnpm@10.34.6 docs:site && rm -rf site/public/docs && cp -R docs/api site/public/docs && cd site && npx --yes pnpm@10.34.6 build",
+  "outputDirectory": "out",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../lib ../tui ../docs ../scripts ../typedoc.json ../package.json ../pnpm-lock.yaml ../pnpm-workspace.yaml",
   "cleanUrls": true,
   "headers": [
@@ -23,5 +23,6 @@
         }
       ]
     }
-  ]
+  ],
+  "framework": null
 }
