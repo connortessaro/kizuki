@@ -720,3 +720,29 @@ h3 {
     transition: none;
   }
 }
+
+/* Tap targets: links in the top bar and footer get at least 44px of height. */
+.nav nav a {
+  display: inline-block;
+  padding: 14px 0;
+}
+
+.foot a {
+  display: inline-block;
+  padding: 12px 0;
+}
+
+.foot-inner {
+  padding-top: 12px;
+  padding-bottom: 24px;
+  align-items: center;
+}
+
+.brand,
+.start a {
+  padding: 10px 0;
+}
+
+.foot a {
+  padding: 13px 0;
+}
