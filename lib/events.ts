@@ -172,7 +172,15 @@ export type Miss = z.infer<typeof missSchema>;
 
 /** Events in `sessions.jsonl`: one teach-back session from start to end. */
 export const sessionEventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("session.started"), at, sessionId: id, conceptId: id, explanation: z.string().min(1) }),
+  z.object({
+    type: z.literal("session.started"),
+    at,
+    sessionId: id,
+    conceptId: id,
+    explanation: z.string().min(1),
+    /** Set on a second or third try in the same sitting: the first try's session id. */
+    retryOf: id.optional(),
+  }),
   z.object({ type: z.literal("session.running"), at, sessionId: id, runId: z.string() }),
   z.object({
     type: z.literal("session.questions"),

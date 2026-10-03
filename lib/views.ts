@@ -19,7 +19,8 @@ export function catchesThisWeek(state: State, today: string, timeZone?: string):
 /** Works out the review plan for every confirmed concept, counting sessions for merged concepts toward their target. */
 export function reviewPlans(state: State, today: string, timeZone?: string): Map<string, ReviewPlan> {
   const sessions = [...state.sessions.values()]
-    .filter((s) => s.ended)
+    // Only first tries count: another try in the same sitting is practice and never pushes the next review later.
+    .filter((s) => s.ended && !s.retryOf)
     .map((s) => ({ conceptId: resolveConceptId(state, s.conceptId), endedAt: s.ended!.at, clean: s.ended!.clean }));
   const links = [...state.links.values()]
     .filter((l) => l.status === "confirmed")

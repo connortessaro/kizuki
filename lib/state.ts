@@ -155,6 +155,8 @@ export interface SessionState {
   conceptId: string;
   /** Your explanation, trimmed. */
   explanation: string;
+  /** On a second or third try in the same sitting, the first try's session id. Only first tries set the review schedule. */
+  retryOf?: string;
   /** When the session started, as an ISO time string. */
   startedAt: string;
   /** The id of the workflow run that runs the session. `undefined` until it starts. */
@@ -364,6 +366,7 @@ export function reduceState(logs: Logs): State {
         sessionId: e.sessionId,
         conceptId: e.conceptId,
         explanation: e.explanation,
+        retryOf: e.retryOf,
         startedAt: e.at,
         rounds: [],
         missesDropped: 0,

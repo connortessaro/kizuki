@@ -4,6 +4,7 @@ import { nameKey } from "./concepts";
 import { formatOf } from "./extract/index";
 import { newId, sha256 } from "./ids";
 import { wouldCreateLoop, type Link } from "./links";
+import { MAX_TRIES } from "./limits";
 import { appendLog, withWriteLock } from "./log";
 import { homePaths } from "./paths";
 import { loadState, resolveConceptId, type ConceptState, type State } from "./state";
@@ -167,6 +168,27 @@ export async function startSession(home: string, conceptId: string, explanation:
   if (!text) throw new Error("write your explanation first");
   const sessionId = newId("ses");
   await appendLog(home, "sessions", [{ type: "session.started", at: now(), sessionId, conceptId: c.conceptId, explanation: text }]);
+  return sessionId;
+}
+
+/**
+ * Starts another try at a concept right after a session with misses, again from memory. Each
+ * try points back at the first one. Only allowed after the last try ended with misses, and at
+ * most {@link MAX_TRIES} tries in all. Returns the new session's id.
+ */
+export async function startRetry(home: string, previousSessionId: string, explanation: string): Promise<string> {
+  const state = await loadState(home);
+  const previous = state.sessions.get(previousSessionId);
+  if (!previous) throw new Error(`there is no session ${previousSessionId}`);
+  if (!previous.ended) throw new Error("that session has not ended yet. Finish it before trying again");
+  if (previous.ended.clean) throw new Error("that session was clean, so there is nothing to try again");
+  const first = previous.retryOf ?? previous.sessionId;
+  const tries = [...state.sessions.values()].filter((s) => s.sessionId === first || s.retryOf === first).length;
+  if (tries >= MAX_TRIES) throw new Error(`you have had ${MAX_TRIES} tries at this concept today. It comes back at its next review`);
+  const text = explanation.trim();
+  if (!text) throw new Error("write your explanation first");
+  const sessionId = newId("ses");
+  await appendLog(home, "sessions", [{ type: "session.started", at: now(), sessionId, conceptId: previous.conceptId, explanation: text, retryOf: first }]);
   return sessionId;
 }
 

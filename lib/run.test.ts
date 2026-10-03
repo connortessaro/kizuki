@@ -3,8 +3,11 @@ import {
   addMaterial,
   confirmConcept,
   createCourse,
+  startRetry,
   startSession,
 } from "./commands";
+import { endSession } from "./sessionFlow";
+import { reviewPlans } from "./views";
 import type { Ask } from "./model";
 import {
   answerRound,
@@ -236,5 +239,55 @@ describe("a teach-back session", () => {
     const session = (await loadState(home)).sessions.get(sessionId)!;
     expect(session.status).toBe("failed");
     expect(session.error).toContain("ollama serve");
+  });
+});
+
+describe("asking again until clean", () => {
+  async function sessionWithMiss(conceptId: string, retryOf?: string): Promise<string> {
+    const text = "Photosynthesis makes chemical energy from light.";
+    const sessionId = retryOf ? await startRetry(home, retryOf, text) : await startSession(home, conceptId, text);
+    await continueSession(home, sessionId, models);
+    await answerRound(home, sessionId, 1, { answers: [], finish: true }, models);
+    const misses = (await loadState(home)).sessions.get(sessionId)!.misses!;
+    expect(misses.length).toBeGreaterThan(0);
+    await endSession(home, sessionId, [misses[0]!.missId]);
+    return sessionId;
+  }
+
+  it("starts another try of the same concept that points back at the first try", async () => {
+    const conceptId = await confirmedConcept();
+    const first = await sessionWithMiss(conceptId);
+    const second = await startRetry(home, first, "Photosynthesis happens in the chloroplast and makes chemical energy from light.");
+    const s = (await loadState(home)).sessions.get(second)!;
+    expect([s.conceptId, s.retryOf]).toEqual([conceptId, first]);
+  });
+
+  it("refuses another try after a clean session, while a try is still open, and after three tries", async () => {
+    const conceptId = await confirmedConcept();
+    const first = await sessionWithMiss(conceptId);
+    const second = await sessionWithMiss(conceptId, first);
+    const third = await sessionWithMiss(conceptId, second);
+    await expect(startRetry(home, third, "Again.")).rejects.toThrow(/3 tries/);
+
+    const other = await startSession(home, conceptId, "Photosynthesis makes chemical energy from light.");
+    await expect(startRetry(home, other, "Again.")).rejects.toThrow(/has not ended/);
+    await continueSession(home, other, models);
+    await answerRound(home, other, 1, { answers: [], finish: true }, models);
+    await endSession(home, other, []);
+    await expect(startRetry(home, other, "Again.")).rejects.toThrow(/clean/);
+  });
+
+  it("lets only the first try set the next review, so a clean second try still brings the concept back tomorrow", async () => {
+    const conceptId = await confirmedConcept();
+    const first = await sessionWithMiss(conceptId);
+    const second = await startRetry(home, first, "Photosynthesis happens in the chloroplast and makes chemical energy from light.");
+    await continueSession(home, second, models);
+    await answerRound(home, second, 1, { answers: [], finish: true }, models);
+    await endSession(home, second, []);
+    const state = await loadState(home);
+    expect(state.sessions.get(second)!.ended!.clean).toBe(true);
+    const today = state.sessions.get(first)!.ended!.at.slice(0, 10);
+    const plan = reviewPlans(state, today, "UTC").get(conceptId)!;
+    expect([plan.streak, plan.gapDays, plan.lastSessionAt]).toEqual([0, 1, state.sessions.get(first)!.ended!.at]);
   });
 });
