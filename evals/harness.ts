@@ -13,8 +13,10 @@ const MATERIAL_DIR = join(import.meta.dirname, "material");
 
 /**
  * The model settings under test. Defaults to Kizuki's defaults; override with
- * EVAL_CHAT_BASEURL, EVAL_CHAT_MODEL, EVAL_REASONING, EVAL_REPLY_SHAPE, EVAL_EMBED_BASEURL, EVAL_EMBED_MODEL
- * to compare models (for example Ollama against MLX).
+ * EVAL_CHAT_BASEURL, EVAL_CHAT_MODEL, EVAL_CHAT_API_KEY_ENV, EVAL_REASONING, EVAL_REPLY_SHAPE,
+ * EVAL_EMBED_BASEURL, EVAL_EMBED_MODEL, EVAL_EMBED_API_KEY_ENV to compare models (for example
+ * Ollama against MLX or AI Gateway). Setting a hosted address counts as agreeing to send the
+ * eval material out.
  */
 export function evalSettings(env = process.env): Settings {
   return {
@@ -28,7 +30,9 @@ export function evalSettings(env = process.env): Settings {
     embed: {
       baseURL: env.EVAL_EMBED_BASEURL ?? DEFAULT_SETTINGS.embed.baseURL,
       model: env.EVAL_EMBED_MODEL ?? DEFAULT_SETTINGS.embed.model,
+      apiKeyEnv: env.EVAL_EMBED_API_KEY_ENV,
     },
+    sendOutAllowed: true,
   };
 }
 

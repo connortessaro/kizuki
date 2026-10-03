@@ -46,9 +46,21 @@ describe("settings", () => {
     expect(statSync(homePaths(home).settings).mode & 0o077).toBe(0);
   });
 
-  it("offers MLX and hosted presets", () => {
+  it("offers MLX and AI Gateway presets", () => {
     expect(PRESETS.mlx.chat.baseURL).toBe("http://localhost:8080/v1");
-    expect(PRESETS.hosted.chat.apiKeyEnv).toBe("OPENAI_API_KEY");
+    expect(PRESETS.gateway.chat).toMatchObject({ baseURL: "https://ai-gateway.vercel.sh/v1", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+    expect(PRESETS.gateway.embed).toMatchObject({ baseURL: "https://ai-gateway.vercel.sh/v1", apiKeyEnv: "AI_GATEWAY_API_KEY" });
+  });
+
+  it("refuses to save settings that send your material out until you agree", async () => {
+    await expect(writeSettings(home, PRESETS.gateway)).rejects.toThrow(/send your material off this computer/);
+    await writeSettings(home, { ...PRESETS.gateway, sendOutAllowed: true });
+    expect((await readSettings(home)).sendOutAllowed).toBe(true);
+  });
+
+  it("does not need your OK for settings that stay on this computer", async () => {
+    await writeSettings(home, PRESETS.mlx);
+    expect((await readSettings(home)).sendOutAllowed).toBe(false);
   });
 });
 

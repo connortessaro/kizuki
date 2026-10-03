@@ -38,6 +38,8 @@ export const embedSettingsSchema = z.object({
 export const settingsSchema = z.object({
   chat: chatSettingsSchema,
   embed: embedSettingsSchema,
+  /** True once you agreed to send your material to a model off this computer. Settings that send it out can't be saved without it. */
+  sendOutAllowed: z.boolean().default(false),
 });
 /** All model settings. */
 export type Settings = z.infer<typeof settingsSchema>;
@@ -50,18 +52,23 @@ export type EmbedSettings = z.infer<typeof embedSettingsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
   chat: { baseURL: "http://localhost:11434/v1", model: "qwen3.5:2b", reasoning: "none", replyShape: "server" },
   embed: { baseURL: "http://localhost:11434/v1", model: "nomic-embed-text" },
+  sendOutAllowed: false,
 };
 
-/** Ready-made settings for each way of running the answer model. Meaning search stays on Ollama. */
-export const PRESETS: Record<"ollama" | "mlx" | "hosted", Settings> = {
+const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1";
+
+/** Ready-made settings: Ollama and MLX on this computer, and Vercel AI Gateway for bigger hosted models. */
+export const PRESETS: Record<"ollama" | "mlx" | "gateway", Settings> = {
   ollama: DEFAULT_SETTINGS,
   mlx: {
     chat: { baseURL: "http://localhost:8080/v1", model: "mlx-community/Qwen3.5-2B-4bit", reasoning: "none", replyShape: "prompt" },
     embed: DEFAULT_SETTINGS.embed,
+    sendOutAllowed: false,
   },
-  hosted: {
-    chat: { baseURL: "https://api.openai.com/v1", model: "gpt-5-mini", apiKeyEnv: "OPENAI_API_KEY", reasoning: "default", replyShape: "server" },
-    embed: DEFAULT_SETTINGS.embed,
+  gateway: {
+    chat: { baseURL: GATEWAY_URL, model: "openai/gpt-5.4-mini", apiKeyEnv: "AI_GATEWAY_API_KEY", reasoning: "default", replyShape: "server" },
+    embed: { baseURL: GATEWAY_URL, model: "openai/text-embedding-3-small", apiKeyEnv: "AI_GATEWAY_API_KEY" },
+    sendOutAllowed: false,
   },
 };
 
@@ -100,6 +107,10 @@ export async function readSettings(home: string): Promise<Settings> {
 export async function writeSettings(home: string, settings: Settings): Promise<void> {
   const parsed = settingsSchema.safeParse(settings);
   if (!parsed.success) throw new Error(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+  const out = !isLocalUrl(parsed.data.chat.baseURL) || !isLocalUrl(parsed.data.embed.baseURL);
+  if (out && !parsed.data.sendOutAllowed) {
+    throw new Error("these settings send your material off this computer to a hosted model. Agree to that first, then save again.");
+  }
   const path = homePaths(home).settings;
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const tmp = `${path}.${process.pid}.tmp`;
