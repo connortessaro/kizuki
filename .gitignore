@@ -55,4 +55,3 @@ kizuki.config.json
 # Kept local, not published
 AGENTS.md
 docs/specs/
-dist/
