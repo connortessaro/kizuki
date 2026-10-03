@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { homePaths, kizukiHome, runHome, storedFilePath } from "./paths";
+import { homePaths, kizukiHome, storedFilePath } from "./paths";
 
 describe("kizukiHome", () => {
   it("defaults to a hidden folder in the home folder", () => {
@@ -24,30 +24,11 @@ describe("homePaths", () => {
     expect(p.data).toBe("/h/data");
     expect(p.index).toBe("/h/index.sqlite");
     expect(p.settings).toBe("/h/settings.json");
-    expect(p.workflowData).toBe("/h/workflow-data");
     expect(p.lock).toBe("/h/data/.lock");
     expect(p.log("concepts")).toBe("/h/data/concepts.jsonl");
   });
 });
 
-describe("next.config.ts", () => {
-  it("finds the home folder the same way as the app", async () => {
-    const { kizukiHomeForConfig } = await import("../next.config");
-    for (const env of [{}, { KIZUKI_HOME: "~/study" }, { KIZUKI_HOME: "/tmp/x" }, { KIZUKI_HOME: "~" }]) {
-      expect(kizukiHomeForConfig(env)).toBe(kizukiHome(env));
-    }
-  });
-});
-
-describe("runHome", () => {
-  it("accepts the data folder Kizuki is running with", () => {
-    expect(runHome("/tmp/study", { KIZUKI_HOME: "/tmp/study" })).toBe("/tmp/study");
-  });
-
-  it("refuses any other folder, so a request from outside can't point a background job at it", () => {
-    expect(() => runHome("/Users/someone/Downloads/evil", { KIZUKI_HOME: "/tmp/study" })).toThrow(/not the data folder/);
-  });
-});
 
 describe("storedFilePath", () => {
   it("finds a material's copy in files/", () => {

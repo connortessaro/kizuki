@@ -62,7 +62,7 @@ export async function addMaterial(home: string, input: { courseId: string; fileN
   const storedName = `${materialId}${ext}`;
   const paths = homePaths(home);
   await mkdir(paths.files, { recursive: true, mode: 0o700 });
-  await writeFile(join(/*turbopackIgnore: true*/ paths.files, storedName), input.bytes, { mode: 0o600 });
+  await writeFile(join(paths.files, storedName), input.bytes, { mode: 0o600 });
   await appendLog(home, "materials", [
     {
       type: "material.added",
