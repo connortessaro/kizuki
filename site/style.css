@@ -10,6 +10,16 @@
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --measure: 36rem;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --term-bg: var(--ink);
+  --term-text: #e9e6dc;
+  --term-dim: #8f8f86;
+  --term-note: #a3a399;
+  --term-link: #8fb2d6;
+  --term-head: #e7a6d6;
+  --term-ask: #8fdcdc;
+  --term-quote: #f4f1e8;
+  --term-dot: #4a4a45;
 }
 
 * {
@@ -466,9 +476,9 @@ main {
 /* The hero example, drawn as the terminal app shows it. */
 
 .term {
-  background: var(--ink);
-  color: #e9e6dc;
-  border-color: var(--ink);
+  background: var(--term-bg);
+  color: var(--term-text);
+  border-color: var(--term-bg);
   font-family: var(--mono);
   font-size: 0.86rem;
   line-height: 1.55;
@@ -485,7 +495,7 @@ main {
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 50%;
-  background: #4a4a45;
+  background: var(--term-dot);
 }
 
 .term .line {
@@ -494,35 +504,34 @@ main {
 }
 
 .term .mark {
-  color: #8f8f86;
+  color: var(--term-dim);
 }
 
-.term .note,
-.term .src {
-  color: #a3a399;
+.term .note {
+  color: var(--term-note);
 }
 
 .term .src {
-  color: #8fb2d6;
+  color: var(--term-link);
 }
 
 .term .head {
-  color: #e7a6d6;
+  color: var(--term-head);
   font-weight: 600;
   margin-top: 0.9rem;
 }
 
 .term .ask {
-  color: #8fdcdc;
+  color: var(--term-ask);
 }
 
 .term q {
   background: rgba(255, 255, 255, 0.07);
-  color: #f4f1e8;
+  color: var(--term-quote);
 }
 
 .term .pick {
-  border: 1px solid #8fdcdc;
+  border: 1px solid var(--term-ask);
   border-radius: 6px;
   padding: 0.5rem 0.8rem;
   margin-top: 0.9rem;
@@ -538,11 +547,11 @@ main {
 }
 
 .term .pick .on {
-  color: #8fdcdc;
+  color: var(--term-ask);
 }
 
 .term figcaption {
-  color: #8f8f86;
+  color: var(--term-dim);
 }
 
 /* Commands */
@@ -572,5 +581,45 @@ main {
 
   .cmds dd {
     margin-bottom: 0.7rem;
+  }
+}
+
+/* The example plays out in order, once, the way a session does: command,
+   explanation, question, choice. Only opacity and transform move. */
+
+.term .line,
+.term .pick {
+  animation: type-in 300ms var(--ease-out) both;
+}
+
+.term .line:nth-of-type(2) { animation-delay: 70ms; }
+.term .line:nth-of-type(3) { animation-delay: 140ms; }
+.term .line:nth-of-type(4) { animation-delay: 210ms; }
+.term .line:nth-of-type(5) { animation-delay: 280ms; }
+.term .line:nth-of-type(6) { animation-delay: 350ms; }
+.term .pick { animation-delay: 420ms; }
+
+/* The mistake gets underlined once Kizuki has asked about it. */
+.term mark {
+  animation-delay: 650ms;
+}
+
+@keyframes type-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Last, so it wins over the animations above: no movement, everything shown. */
+@media (prefers-reduced-motion: reduce) {
+  .term .line,
+  .term .pick,
+  .term mark {
+    animation: none;
   }
 }
