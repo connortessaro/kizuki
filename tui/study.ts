@@ -276,11 +276,12 @@ export class Study {
       return this.changed();
     }
     if (!text) return;
-    this.say("you", text);
-    if (text.startsWith("/") && !looksLikeFiles(text))
+    const dropped = looksLikeFiles(text);
+    // A dropped file pastes its full path; the file name is enough to show.
+    this.say("you", dropped ? splitPaths(text).map((p) => basename(p)).join(", ") : text);
+    if (text.startsWith("/") && !dropped)
       return this.command(text);
-    if (looksLikeFiles(text))
-      return this.startFlow(() => this.add(splitPaths(text)));
+    if (dropped) return this.startFlow(() => this.add(splitPaths(text)));
     if (this.waitingPick)
       return this.say(
         "hint",
