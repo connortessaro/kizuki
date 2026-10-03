@@ -8,6 +8,7 @@ import type { Embedder } from "../lib/search";
 import { readSettings } from "../lib/settings";
 import { loadState } from "../lib/state";
 import { tempHome } from "../lib/test-helpers/home";
+import { escapePath } from "./paths";
 import { Study } from "./study";
 
 const MATERIAL = `# Photosynthesis
@@ -99,7 +100,7 @@ function said(s: Study): string {
 async function courseWithConcepts(s: Study): Promise<void> {
   await s.start();
   await type(s, "/course Biology");
-  await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+  await type(s, escapePath(join(files, "bio notes.md")));
   expect(said(s)).toContain("2 concepts proposed");
   await type(s, "/review");
   await pick(s); // both concepts, ticked
@@ -145,7 +146,7 @@ describe("adding and reviewing material", () => {
     const s = study();
     await s.start();
     await type(s, "/course Biology");
-    await type(s, `/add ${join(files, "bio notes.md").replace(/ /g, "\\ ")}`);
+    await type(s, `/add ${escapePath(join(files, "bio notes.md"))}`);
     await type(s, "/review");
     const [first] = s.view().panel!.items;
     await pick(s, [first!.id]);
@@ -161,7 +162,7 @@ describe("adding and reviewing material", () => {
     await type(s, "/course Biology");
     await type(s, `/add ${join(files, "nope.md")}`);
     expect(said(s)).toContain("nope.md: no such file");
-    await type(s, `/add ${join(files, "bio notes.md").replace(/ /g, "\\ ")}`);
+    await type(s, `/add ${escapePath(join(files, "bio notes.md"))}`);
     await type(s, "/review");
     s.cancel();
     await s.idle();
@@ -423,7 +424,7 @@ describe("the conversation", () => {
     await s.start();
     await type(s, "/add");
     expect(said(s)).toContain("Name the files to add");
-    await type(s, `/add ${join(files, "bio notes.md").replace(/ /g, "\\ ")}`);
+    await type(s, `/add ${escapePath(join(files, "bio notes.md"))}`);
     expect(said(s)).toContain("Make a course first: /course <name>.");
   });
 
@@ -446,7 +447,7 @@ describe("the conversation", () => {
     });
     await s.start();
     await type(s, "/course Biology");
-    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    await type(s, escapePath(join(files, "bio notes.md")));
     await type(s, "/review");
     await pick(s);
     if (s.view().panel) await pick(s);
@@ -496,7 +497,7 @@ describe("after a restart", () => {
     });
     await s.start();
     await type(s, "/course Biology");
-    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    await type(s, escapePath(join(files, "bio notes.md")));
     expect(said(s)).toContain("bio notes.md failed: the meaning model is down. Add the same file again to try again.");
   });
 
@@ -509,10 +510,10 @@ describe("after a restart", () => {
     });
     await broken.start();
     await type(broken, "/course Biology");
-    await type(broken, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    await type(broken, escapePath(join(files, "bio notes.md")));
     const s = study();
     await s.start();
-    await type(s, join(files, "bio notes.md").replace(/ /g, "\\ "));
+    await type(s, escapePath(join(files, "bio notes.md")));
     expect(said(s)).toContain("Trying bio notes.md again.");
     const materials = [...(await loadState(home)).materials.values()];
     expect(materials.map((m) => m.status)).toEqual(["review"]);

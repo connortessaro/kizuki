@@ -58,3 +58,8 @@ export function looksLikeFiles(text: string): boolean {
     paths.every((p) => existsSync(p) && statSync(p).isFile())
   );
 }
+
+/** Writes a path the way a terminal pastes a dropped file: spaces, quotes, and backslashes get a backslash first. The reverse of {@link splitPaths}. */
+export function escapePath(path: string): string {
+  return path.replace(/[\\\s'"]/g, (ch) => `\\${ch}`);
+}
