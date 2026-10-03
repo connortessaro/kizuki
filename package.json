@@ -1,6 +1,6 @@
 {
   "name": "kizuki",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A study tool for your terminal. You teach, Kizuki plays the student, and every question quotes your own material.",
   "license": "Apache-2.0",
